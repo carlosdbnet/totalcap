@@ -10,6 +10,86 @@
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.print-header {
+  display: none;
+}
+
+/* Regras de Impressão */
+@media print {
+  .sidebar, .header-actions, .table-toolbar, .action-buttons, .search-box, .modal-overlay {
+    display: none !important;
+  }
+
+  .print-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20pt;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10pt;
+  }
+
+  .print-logo {
+    height: 60pt;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .print-title {
+    font-size: 20pt;
+    font-weight: bold;
+    color: black;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+  }
+
+  body, .layout-container, .regioes-container {
+    background: white !important;
+    background-image: none !important;
+    color: black !important;
+    padding: 20pt !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  .glass-panel {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .title {
+    display: none !important;
+  }
+
+  .data-table {
+    min-width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 10pt;
+  }
+
+  .data-table th, .data-table td {
+    border: 1px solid #ccc !important;
+    color: black !important;
+    padding: 8pt !important;
+    text-align: left;
+  }
+
+  .status-badge {
+    border: 1px solid #ccc !important;
+    padding: 2pt 6pt !important;
+    color: black !important;
+    background: transparent !important;
+  }
+}
+
 .btn-primary {
   display: flex;
   align-items: center;

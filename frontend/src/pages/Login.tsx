@@ -22,6 +22,7 @@ const Login: React.FC = () => {
       formData.append('username', email);
       formData.append('password', password);
 
+      // Usando axios diretamente para evitar conflito de headers do cliente api.ts
       const response = await axios.post('http://localhost:8000/api/v1/login/access-token', formData);
       const { access_token } = response.data;
       
@@ -30,6 +31,7 @@ const Login: React.FC = () => {
       login(access_token, userData);
       navigate('/dashboard');
     } catch (err: any) {
+      console.error("Erro no login:", err);
       setError(err.response?.data?.detail || 'E-mail ou senha incorretos.');
     } finally {
       setLoading(false);

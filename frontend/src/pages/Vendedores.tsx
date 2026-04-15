@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, ExternalLink, Printer } from 'lucide-react';
 import api from '../lib/api';
 import './Vendedores.css';
+import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
 interface Area {
   id: number;
@@ -228,6 +229,11 @@ export default function Vendedores() {
 
   return (
     <div className="vendedores-container">
+      <div className="print-header">
+        <img src={logoEmpresa} alt="Logo Empresa" className="print-logo" />
+        <h1 className="print-title">Relatório de Vendedores</h1>
+      </div>
+
       <div className="page-header">
         <h1 className="title">Vendedores</h1>
         <div className="header-actions">

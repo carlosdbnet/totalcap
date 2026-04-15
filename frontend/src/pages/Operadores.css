@@ -1,0 +1,19 @@
+.operadores-container {
+  padding: 2rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@media print {
+  .page-header, .table-toolbar, .action-buttons, .modal-overlay {
+    display: none !important;
+  }
+  
+  .print-header {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #333;
+    padding-bottom: 1rem;
+  }
+}

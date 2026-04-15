@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
 import api from '../lib/api';
 import './Regioes.css';
+import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
 interface Regiao {
   id: number;
@@ -103,6 +104,10 @@ export default function Regioes() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleDelete = async (id: number, nomeRegiao: string) => {
     if (window.confirm(`Tem certeza que deseja excluir a região "${nomeRegiao}"?`)) {
       try {
@@ -117,12 +122,23 @@ export default function Regioes() {
 
   return (
     <div className="regioes-container">
+      <div className="print-header">
+        <img src={logoEmpresa} alt="Logo Empresa" className="print-logo" />
+        <h1 className="print-title">Relatório de Regiões</h1>
+      </div>
+
       <div className="page-header">
         <h1 className="title">Cadastros de Regiões</h1>
-        <button className="btn-primary" onClick={() => openModal('create')}>
-          <Plus size={20} />
-          Nova Região
-        </button>
+        <div className="header-actions">
+          <button className="btn-secondary" onClick={handlePrint}>
+            <Printer size={20} />
+            Imprimir
+          </button>
+          <button className="btn-primary" onClick={() => openModal('create')}>
+            <Plus size={20} />
+            Nova Região
+          </button>
+        </div>
       </div>
 
       <div className="glass-panel table-container">

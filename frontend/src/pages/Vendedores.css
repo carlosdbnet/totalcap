@@ -15,17 +15,45 @@
   gap: 0.75rem;
 }
 
+.print-header {
+  display: none;
+}
+
 /* @media print implementation */
 @media print {
   .sidebar, .header-actions, .table-toolbar, .action-buttons, .search-box {
     display: none !important;
   }
 
+  .print-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20pt;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10pt;
+  }
+
+  .print-logo {
+    height: 60pt;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .print-title {
+    font-size: 20pt;
+    font-weight: bold;
+    color: black;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+  }
+
   body, .layout-container, .vendedores-container {
     background: white !important;
     background-image: none !important;
     color: black !important;
-    padding: 0 !important;
+    padding: 20pt !important;
     margin: 0 !important;
     display: block !important;
   }
@@ -38,11 +66,7 @@
   }
 
   .title {
-    -webkit-text-fill-color: black !important;
-    font-size: 24pt !important;
-    margin-bottom: 20pt !important;
-    display: block !important;
-    text-align: center;
+    display: none !important;
   }
 
   .data-table {

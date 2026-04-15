@@ -73,7 +73,8 @@
   color: var(--text-main);
 }
 
-.nav-item.active, .nav-item.group-open {
+.nav-item.active,
+.nav-item.group-open {
   background: rgba(59, 130, 246, 0.1);
   color: var(--text-main);
 }

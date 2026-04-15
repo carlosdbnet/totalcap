@@ -7,25 +7,11 @@ from app.api.api import api_router
 from app.models.usuario import Usuario
 from app.core.security import get_password_hash
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
+from contextlib import asynccontextmanager
 
-# Adicionando CORS para permitir o VITE (React) consumir a API localmente
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # Para desenvolvimento, ajustar em prod
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(api_router, prefix=settings.API_V1_STR)
-
-@app.on_event("startup")
-def startup_event():
-    # Garantir que as tabelas existem (em producao, usar Alembic)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Garantir que as tabelas existem
     Base.metadata.create_all(bind=engine)
     
     # Criar usuario admin inicial se nao existir
@@ -45,6 +31,24 @@ def startup_event():
             print(f"Usuario admin criado: {settings.FIRST_SUPERUSER}")
     finally:
         db.close()
+    yield
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
+)
+
+# Adicionando CORS para permitir o VITE (React) consumir a API localmente
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Para desenvolvimento, ajustar em prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def read_root():
