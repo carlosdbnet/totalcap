@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Printer, User } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
 import api from '../lib/api';
 import './Operadores.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';

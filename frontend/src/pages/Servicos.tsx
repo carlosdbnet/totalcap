@@ -11,7 +11,7 @@ interface Medida {
 
 interface Desenho {
   id: number;
-  nome: string;
+  descricao: string;
 }
 
 interface Marca {
@@ -35,7 +35,7 @@ interface Servico {
   id_recap: number | null;
   ativo: boolean;
   medida?: { id: number; descricao: string };
-  desenho?: { id: number; nome: string };
+  desenho?: { id: number; descricao: string };
   marca?: { id: number; descricao: string };
   recap?: { id: number; descricao: string };
 }
@@ -338,7 +338,7 @@ export default function Servicos() {
                   <label htmlFor="id_desenho">Desenho</label>
                   <select className="form-select" id="id_desenho" value={formData.id_desenho} onChange={handleChange}>
                     <option value="">Selecione o Desenho</option>
-                    {desenhos.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                    {desenhos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
                   </select>
                 </div>
 
