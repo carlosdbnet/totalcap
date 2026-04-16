@@ -1,7 +1,8 @@
 import os
 import sys
+from contextlib import asynccontextmanager
 
-# Garante que a raiz do projeto est no path para evitar ModuleNotFoundError
+# Garante que a raiz do projeto está no path para evitar ModuleNotFoundError
 sys.path.append(os.getcwd())
 
 from fastapi import FastAPI
@@ -13,37 +14,41 @@ from backend.app.api.api import api_router
 from backend.app.models.usuario import Usuario
 from backend.app.core.security import get_password_hash
 
-from contextlib import asynccontextmanager
-
-# Garantir que as tabelas existem e admin inicial criado
-try:
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    admin = db.query(Usuario).filter(Usuario.email == "admin@totalcap.com").first()
-    if not admin:
-        new_admin = Usuario(
-            email="admin@totalcap.com",
-            hashed_password=get_password_hash("admin123"),
-            is_active=True,
-            is_superuser=True,
-            full_name="Administrator"
-        )
-        db.add(new_admin)
-        db.commit()
-    db.close()
-    print("Banco de dados e admin inicializados com sucesso.")
-except Exception as e:
-    print(f"Erro ao inicializar banco de dados: {e}")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Inicialização do Banco de Dados
+    try:
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        admin = db.query(Usuario).filter(Usuario.email == settings.FIRST_SUPERUSER).first()
+        if not admin:
+            new_admin = Usuario(
+                nome="Administrator",
+                email=settings.FIRST_SUPERUSER,
+                hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+                is_active=True,
+                is_superuser=True
+            )
+            db.add(new_admin)
+            db.commit()
+            print("Admin inicial criado com sucesso.")
+        db.close()
+    except Exception as e:
+        print(f"Aviso na inicialização do DB: {e}")
+    
+    yield
+    # Limpeza se necessário
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
 
-# Adicionando CORS para permitir o VITE (React) consumir a API localmente
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Para desenvolvimento, ajustar em prod
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
