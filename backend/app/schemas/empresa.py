@@ -43,7 +43,5 @@ class EmpresaUpdate(BaseModel):
 
 class EmpresaResponse(EmpresaBase):
     id: int
-    criado_em: datetime
-    atualizado_em: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

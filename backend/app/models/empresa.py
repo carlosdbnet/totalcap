@@ -22,5 +22,3 @@ class Empresa(Base):
     inscmunicipio = Column(String)
     token = Column(String)
     ativo = Column(Boolean, default=True)
-    criado_em = Column(DateTime(timezone=True), server_default=func.now())
-    atualizado_em = Column(DateTime(timezone=True), onupdate=func.now())

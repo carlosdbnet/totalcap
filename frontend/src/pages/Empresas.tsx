@@ -22,7 +22,6 @@ interface Empresa {
   inscmunicipio: string;
   token: string;
   ativo: boolean;
-  criado_em?: string;
 }
 
 export default function Empresas() {
