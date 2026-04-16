@@ -9,10 +9,23 @@ from backend.app.core.security import get_password_hash
 
 from contextlib import asynccontextmanager
 
-# Garantir que as tabelas existem (Especial para Vercel)
+# Garantir que as tabelas existem e admin inicial criado
 try:
     Base.metadata.create_all(bind=engine)
-    print("Banco de dados inicializado com sucesso.")
+    db = SessionLocal()
+    admin = db.query(Usuario).filter(Usuario.email == "admin@totalcap.com").first()
+    if not admin:
+        new_admin = Usuario(
+            email="admin@totalcap.com",
+            hashed_password=get_password_hash("admin123"),
+            is_active=True,
+            is_superuser=True,
+            full_name="Administrator"
+        )
+        db.add(new_admin)
+        db.commit()
+    db.close()
+    print("Banco de dados e admin inicializados com sucesso.")
 except Exception as e:
     print(f"Erro ao inicializar banco de dados: {e}")
 
