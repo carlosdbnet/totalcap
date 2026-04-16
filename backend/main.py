@@ -17,27 +17,40 @@ from backend.app.core.security import get_password_hash
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Inicialização do Banco de Dados
+    print("Iniciando lifespan: Verificando Banco de Dados...")
     try:
         Base.metadata.create_all(bind=engine)
         db = SessionLocal()
         admin = db.query(Usuario).filter(Usuario.email == settings.FIRST_SUPERUSER).first()
+        
+        # Hash da senha padrão
+        hashed_pw = get_password_hash(settings.FIRST_SUPERUSER_PASSWORD)
+        
         if not admin:
+            print(f"Criando admin inicial: {settings.FIRST_SUPERUSER}")
             new_admin = Usuario(
                 nome="Administrator",
                 email=settings.FIRST_SUPERUSER,
-                hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+                hashed_password=hashed_pw,
                 is_active=True,
                 is_superuser=True
             )
             db.add(new_admin)
             db.commit()
             print("Admin inicial criado com sucesso.")
+        else:
+            print(f"Admin já existe. Atualizando senha para garantir acesso.")
+            admin.hashed_password = hashed_pw
+            admin.nome = "Administrator" # Garante campo correto
+            db.commit()
+            print("Senha do admin atualizada.")
+            
         db.close()
     except Exception as e:
-        print(f"Aviso na inicialização do DB: {e}")
+        print(f"ERRO CRÍTICO na inicialização do DB: {e}")
     
     yield
-    # Limpeza se necessário
+    print("Encerrando lifespan.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
