@@ -2,20 +2,27 @@
   "version": 2,
   "buildCommand": "npm run build",
   "installCommand": "npm install --prefix frontend --legacy-peer-deps",
-  "outputDirectory": "public",
   "functions": {
-    "api/index.py": {
+    "api/main.py": {
       "runtime": "@vercel/python"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "destination": "/api/main.py"
+    },
+    {
+      "source": "/(backend|database|frontend/src|frontend/public)/(.*)",
+      "destination": "/404"
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/frontend/dist/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/dist/index.html"
     }
   ]
 }
