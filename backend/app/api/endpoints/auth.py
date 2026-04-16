@@ -18,6 +18,22 @@ def login_access_token(
     """
     OAuth2 compatible token login, retrieve an access token for future requests
     """
+    # Garantia para Vercel: se não houver usuários, cria o admin inicial
+    # Já que o 'lifespan' pode não rodar em serverless
+    user_count = db.query(Usuario).count()
+    if user_count == 0:
+        from app.core.security import get_password_hash
+        admin_user = Usuario(
+            email=settings.FIRST_SUPERUSER,
+            hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+            nome="Admin Totalcap",
+            is_superuser=True,
+            is_active=True
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+
     user = db.query(Usuario).filter(Usuario.email == form_data.username).first()
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
