@@ -1,12 +1,15 @@
-import sys
-import os
+from fastapi import FastAPI
 
+app = FastAPI()
 
-# Adiciona o diretório raiz ao path para que "backend" possa ser importado
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "source": "direct_main_py"}
 
-# Importa o FastAPI app do backend.main
-from backend.main import app as handler
+@app.get("/api/v1/ping")
+def ping():
+    return {"status": "ok", "message": "API Main is alive!"}
 
-# Isso garante que o Vercel encontre o app como 'app' por padrão
-app = handler
+@app.post("/api/v1/login/access-token")
+def mock_login():
+    return {"status": "debug", "message": "Routing to login is working!"}
