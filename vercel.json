@@ -1,13 +1,25 @@
 {
-  "installCommand": "npm install --prefix frontend --legacy-peer-deps",
+  "version": 2,
   "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" }
-  ],
+  "installCommand": "npm install --prefix frontend --legacy-peer-deps",
   "functions": {
     "api/*.py": {
       "runtime": "@vercel/python"
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }

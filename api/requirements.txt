@@ -1,0 +1,10 @@
+fastapi
+pydantic
+pydantic-settings
+sqlalchemy
+psycopg2-binary
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
+requests
