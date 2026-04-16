@@ -138,6 +138,43 @@
   font-weight: 600;
 }
 
+.sub-nav-item.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  margin-top: 0.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.sub-nav-item.group-header:hover {
+  background: rgba(var(--primary-rgb), 0.05);
+}
+
+.sub-nav-item.group-header.open {
+  color: var(--text-main);
+  border-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.nested-sub-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-left: 1rem;
+  margin-bottom: 0.5rem;
+  border-left: 1px dashed rgba(255, 255, 255, 0.1);
+  margin-left: 0.5rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding-top: 1rem;
@@ -232,4 +269,72 @@
   flex: 1;
   overflow-y: auto;
   padding-right: 0.5rem;
+}
+
+/* RESPONSIVIDADE MOBILE */
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    width: 280px;
+    margin: 0;
+    border-radius: 0;
+    transform: translateX(-100%);
+    box-shadow: 15px 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    display: none; /* Não usamos collapse no mobile */
+  }
+
+  .main-content {
+    padding: 0.5rem;
+    height: 100vh;
+  }
+
+  .topbar {
+    padding: 0.5rem 1rem;
+    height: 60px;
+    margin-bottom: 0.5rem;
+  }
+
+  .topbar-left {
+    gap: 0.75rem;
+  }
+
+  .user-profile span {
+    display: none; /* Esconde nome no mobile para poupar espaço */
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .brand h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

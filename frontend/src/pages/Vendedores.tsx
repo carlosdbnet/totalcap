@@ -378,10 +378,9 @@ export default function Vendedores() {
                       />
                       <button 
                         type="button" 
-                        className="btn-cep-search" 
+                        className="btn-search-premium" 
                         onClick={handleCepSearch}
                         disabled={isSubmitting}
-                        title="Buscar endereço automaticamente"
                       >
                         {isSubmitting ? '...' : <Search size={16} />}
                       </button>

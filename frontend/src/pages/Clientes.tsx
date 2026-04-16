@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Printer, User, Home, Mail, DollarSign, Users, CheckCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Printer, User, Home, Mail, DollarSign, Users, CheckCircle, BookOpen } from 'lucide-react';
 import api from '../lib/api';
 import './Clientes.css';
 
@@ -127,6 +127,7 @@ export default function Clientes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [currentId, setCurrentId] = useState<number | null>(null);
+  const [editingEnderecoIdx, setEditingEnderecoIdx] = useState<number | null>(null);
   
   // Default structure for a new contact
   const defaultContato = {
@@ -404,6 +405,7 @@ export default function Clientes() {
   };
 
   const handleAddEndereco = () => {
+    const newIdx = formData.contato.enderecos.length;
     setFormData(prev => ({
       ...prev,
       contato: {
@@ -411,6 +413,7 @@ export default function Clientes() {
         enderecos: [...prev.contato.enderecos, { tipo: 'Entrega', rua: '', numcasa: '', complemento: '', bairro: '', cep: '', cidade: '', uf: '' }]
       }
     }));
+    setEditingEnderecoIdx(newIdx);
   };
 
   const handleRemoveEndereco = (index: number) => {
@@ -539,11 +542,12 @@ export default function Clientes() {
             </div>
             
             <div className="modal-tabs">
-              <button className={`tab-btn ${activeTab === 'geral' ? 'active' : ''}`} onClick={() => setActiveTab('geral')}><User size={16} /> Geral</button>
-              <button className={`tab-btn ${activeTab === 'enderecos' ? 'active' : ''}`} onClick={() => setActiveTab('enderecos')}><Home size={16} /> Endereços</button>
-              <button className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}><Users size={16} /> Social / Cônjuge</button>
-              <button className={`tab-btn ${activeTab === 'financeiro' ? 'active' : ''}`} onClick={() => setActiveTab('financeiro')}><DollarSign size={16} /> Financeiro</button>
-              <button className={`tab-btn ${activeTab === 'contatos' ? 'active' : ''}`} onClick={() => setActiveTab('contatos')}><Mail size={16} /> Contatos & Flags</button>
+              <button type="button" className={`tab-btn ${activeTab === 'geral' ? 'active' : ''}`} onClick={() => setActiveTab('geral')}><User size={16} /> Geral</button>
+              <button type="button" className={`tab-btn ${activeTab === 'enderecos' ? 'active' : ''}`} onClick={() => setActiveTab('enderecos')}><Home size={16} /> Endereços</button>
+              <button type="button" className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}><Users size={16} /> Social / Cônjuge</button>
+              <button type="button" className={`tab-btn ${activeTab === 'financeiro' ? 'active' : ''}`} onClick={() => setActiveTab('financeiro')}><DollarSign size={16} /> Financeiro</button>
+              <button type="button" className={`tab-btn ${activeTab === 'referencias' ? 'active' : ''}`} onClick={() => setActiveTab('referencias')}><BookOpen size={16} /> Referências</button>
+              <button type="button" className={`tab-btn ${activeTab === 'contatos' ? 'active' : ''}`} onClick={() => setActiveTab('contatos')}><Mail size={16} /> Contatos & Flags</button>
             </div>
 
             <form onSubmit={handleSubmit} className="modal-form-scroll">
@@ -601,24 +605,27 @@ export default function Clientes() {
                     {/* SEÇÃO 2: LOCALIZAÇÃO E COMUNICAÇÃO */}
                     <div className="section-title"><Home size={18} /> Localização e Contato</div>
                     <div className="grid-4">
-                        <div className="form-group span-2"><label>Rua</label><input className="form-input" id="contato.rua" value={formData.contato.rua} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Nº</label><input className="form-input" id="contato.numcasa" value={formData.contato.numcasa} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Complemento</label><input className="form-input" id="contato.complemento" value={formData.contato.complemento} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Bairro</label><input className="form-input" id="contato.bairro" value={formData.contato.bairro} onChange={handleChange} /></div>
                         <div className="form-group">
                             <label>CEP</label>
                             <div className="input-with-button">
                                 <input className="form-input" id="contato.cep" value={formData.contato.cep} onChange={handleChange} placeholder="00000-000" />
-                                <button type="button" className="btn-mini-search" onClick={handleCEPSearch} disabled={searchingCEP}>
+                                <button type="button" className="btn-search-premium" onClick={handleCEPSearch} disabled={searchingCEP}>
                                     {searchingCEP ? '...' : <Search size={16} />}
                                 </button>
                             </div>
                         </div>
-                        <div className="form-group"><label>CX Postal</label><input className="form-input" id="contato.cxpostal" value={formData.contato.cxpostal} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Rua</label><input className="form-input" id="contato.rua" value={formData.contato.rua} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Nº</label><input className="form-input" id="contato.numcasa" value={formData.contato.numcasa} onChange={handleChange} /></div>
+                        
+                        <div className="form-group"><label>Bairro</label><input className="form-input" id="contato.bairro" value={formData.contato.bairro} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Complemento</label><input className="form-input" id="contato.complemento" value={formData.contato.complemento} onChange={handleChange} /></div>
                         <div className="form-group"><label>Cidade</label><input className="form-input" id="contato.cidade" value={formData.contato.cidade} onChange={handleChange} /></div>
                         <div className="form-group"><label>UF</label><input className="form-input" id="contato.uf" value={formData.contato.uf} onChange={handleChange} maxLength={2} /></div>
+                        
+                        <div className="form-group"><label>CX Postal</label><input className="form-input" id="contato.cxpostal" value={formData.contato.cxpostal} onChange={handleChange} /></div>
                         <div className="form-group"><label>Cód. Pais</label><input className="form-input" id="contato.codigopais" value={formData.contato.codigopais} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Nome Pais</label><input className="form-input" id="contato.nomepais" value={formData.contato.nomepais} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome Pais</label><input className="form-input" id="contato.nomepais" value={formData.contato.nomepais} onChange={handleChange} /></div>
+                        
                         <div className="form-group"><label>Fone Principal</label><input className="form-input" id="contato.foneprincipal" value={formData.contato.foneprincipal} onChange={handleChange} /></div>
                         <div className="form-group"><label>Contato Comercial</label><input className="form-input" id="contato.contato_comercial" value={formData.contato.contato_comercial} onChange={handleChange} /></div>
                         <div className="form-group"><label>Celular Comercial</label><input className="form-input" id="contato.celular_comercial" value={formData.contato.celular_comercial} onChange={handleChange} /></div>
@@ -635,65 +642,7 @@ export default function Clientes() {
 
                     <div className="section-divider"></div>
 
-                    {/* SEÇÃO 3: SOCIAL E CÔNJUGE */}
-                    <div className="section-title"><Users size={18} /> Social e Cônjuge</div>
-                    <div className="grid-4">
-                        <div className="form-group"><label>Nascimento</label><input type="date" className="form-input" id="contato.datanascto" value={formData.contato.datanascto} onChange={handleChange} /></div>
-                        <div className="form-group">
-                            <label>Sexo</label>
-                            <select className="form-select" id="contato.sexo" value={formData.contato.sexo} onChange={handleChange}>
-                                <option value="M">Masculino</option>
-                                <option value="F">Feminino</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Estado Civil</label>
-                            <select className="form-select" id="contato.ecivil" value={formData.contato.ecivil} onChange={handleChange}>
-                                <option value="S">Solteiro(a)</option>
-                                <option value="C">Casado(a)</option>
-                                <option value="D">Divorciado(a)</option>
-                                <option value="V">Viúvo(a)</option>
-                            </select>
-                        </div>
-                        <div className="form-group span-2"><label>Nome do Pai</label><input className="form-input" id="contato.nomepai" value={formData.contato.nomepai} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome da Mãe</label><input className="form-input" id="contato.nomemae" value={formData.contato.nomemae} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome do Cônjuge</label><input className="form-input" id="contato.nomeconjuge" value={formData.contato.nomeconjuge} onChange={handleChange} /></div>
-                        <div className="form-group"><label>RG Cônjuge</label><input className="form-input" id="contato.rgconjuge" value={formData.contato.rgconjuge} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Nasc. Cônjuge</label><input type="date" className="form-input" id="contato.nasctoconjuge" value={formData.contato.nasctoconjuge} onChange={handleChange} /></div>
-                    </div>
-
-                    <div className="section-divider"></div>
-
-                    {/* SEÇÃO 4: FINANCEIRO E HISTÓRICO */}
-                    <div className="section-title"><DollarSign size={18} /> Financeiro e Histórico</div>
-                    <div className="grid-4">
-                        <div className="form-group"><label>Limite Crédito</label><input type="number" className="form-input" id="contato.limicredito" value={formData.contato.limicredito} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Prazo Máx.</label><input type="number" className="form-input" id="contato.prazomax" value={formData.contato.prazomax} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Dia Fat.</label><input type="number" className="form-input" id="contato.diafat" value={formData.contato.diafat} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Data Cad.</label><input type="date" className="form-input" id="contato.datacad" value={formData.contato.datacad} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Data SPC</label><input type="date" className="form-input" id="contato.dataspc" value={formData.contato.dataspc} onChange={handleChange} /></div>
-                        <div className="form-group"><label>1ª Compra</label><input type="date" className="form-input" id="contato.datapricompra" value={formData.contato.datapricompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Ult. Compra</label><input type="date" className="form-input" id="contato.dataultcompra" value={formData.contato.dataultcompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Qtd. Compras</label><input type="number" className="form-input" id="contato.numcompra" value={formData.contato.numcompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Vlr. 1ª Compra</label><input type="number" className="form-input" id="contato.valpricompra" value={formData.contato.valpricompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Vlr. Maior Compra</label><input type="number" className="form-input" id="contato.valmaicompra" value={formData.contato.valmaicompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Vlr. Ult. Compra</label><input type="number" className="form-input" id="contato.valultcompra" value={formData.contato.valultcompra} onChange={handleChange} /></div>
-                        <div className="form-group span-4"><label>Conceito</label><textarea className="form-input" id="contato.conceito" value={formData.contato.conceito} onChange={handleChange} rows={2} /></div>
-                    </div>
-
-                    <div className="section-divider"></div>
-
-                    {/* SEÇÃO 5: REFERÊNCIAS E OBS */}
-                    <div className="section-title"><CheckCircle size={18} /> Referências e Observações</div>
-                    <div className="grid-2">
-                        <div className="form-group"><label>Ref. SPC</label><textarea className="form-input" id="contato.ref_spc" value={formData.contato.ref_spc} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group"><label>Ref. Financeira</label><textarea className="form-input" id="contato.ref_fin" value={formData.contato.ref_fin} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group"><label>Ref. Comercial</label><textarea className="form-input" id="contato.ref_com" value={formData.contato.ref_com} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group"><label>Ref. Produto</label><textarea className="form-input" id="contato.ref_prod" value={formData.contato.ref_prod} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group span-2"><label>Observações Gerais</label><textarea className="form-input" id="contato.obs" value={formData.contato.obs} onChange={handleChange} rows={4} /></div>
-                    </div>
-
-                    <div className="section-divider"></div>
+                    {/* SEÇÃO 6: PARÂMETROS E FLAGS */}
 
                     {/* SEÇÃO 6: PARÂMETROS E FLAGS */}
                     <div className="section-title"><Users size={18} /> Parâmetros de Sistema e Flags</div>
@@ -781,64 +730,137 @@ export default function Clientes() {
 
                 {activeTab === 'enderecos' && (
                   <div className="tab-content">
-                    <div className="section-title">Endereço Principal</div>
-                    <div className="grid-3">
-                        <div className="form-group span-2"><label>Rua</label><input className="form-input" id="contato.rua" value={formData.contato.rua} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Nº</label><input className="form-input" id="contato.numcasa" value={formData.contato.numcasa} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Bairro</label><input className="form-input" id="contato.bairro" value={formData.contato.bairro} onChange={handleChange} /></div>
-                        <div className="form-group"><label>CEP</label><input className="form-input" id="contato.cep" value={formData.contato.cep} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Cidade</label><input className="form-input" id="contato.cidade" value={formData.contato.cidade} onChange={handleChange} /></div>
-                        <div className="form-group"><label>UF</label><input className="form-input" id="contato.uf" value={formData.contato.uf} onChange={handleChange} maxLength={2} /></div>
+                    <div className="section-header-row standout">
+                        <div className="section-title"><Home size={18} /> Gestão de Endereços Adicionais</div>
+                        <button type="button" className="btn-primary-small pulse-button" onClick={handleAddEndereco}>
+                            <Plus size={14} /> Novo Endereço
+                        </button>
                     </div>
                     
-                    <div className="section-divider"></div>
-                    <div className="section-header-row">
-                        <div className="section-title">Endereços Adicionais (Entrega / Cobrança)</div>
-                        <button type="button" className="btn-icon-text" onClick={handleAddEndereco}><Plus size={16} /> Adicionar</button>
+                    <div className="address-grid-header">
+                        <div className="header-cell">Tipo</div>
+                        <div className="header-cell">Endereço</div>
+                        <div className="header-cell">Cidade/UF</div>
+                        <div className="header-cell">Ações</div>
                     </div>
-                    
-                    {formData.contato.enderecos.map((end, idx) => (
-                      <div key={idx} className="nested-item glass-nested">
-                        <div className="nested-header">
-                            <select value={end.tipo} onChange={(e) => handleEnderecoChange(idx, 'tipo', e.target.value)} className="mini-select">
-                                <option value="Entrega">Entrega</option>
-                                <option value="Cobrança">Cobrança</option>
-                            </select>
-                            <button type="button" className="btn-remove" onClick={() => handleRemoveEndereco(idx)}><Trash2 size={14} /></button>
-                        </div>
-                        <div className="grid-3">
-                            <input className="form-input" placeholder="Rua" value={end.rua} onChange={(e) => handleEnderecoChange(idx, 'rua', e.target.value)} />
-                            <input className="form-input" placeholder="Nº" value={end.numcasa} onChange={(e) => handleEnderecoChange(idx, 'numcasa', e.target.value)} />
-                            <input className="form-input" placeholder="Bairro" value={end.bairro} onChange={(e) => handleEnderecoChange(idx, 'bairro', e.target.value)} />
-                            <div className="input-with-button">
-                                <input className="form-input" placeholder="CEP" value={end.cep} onChange={(e) => handleEnderecoChange(idx, 'cep', e.target.value)} />
-                                <button type="button" className="btn-mini-search" onClick={() => handleNestedCEPSearch(idx)} disabled={searchingCEP}>
-                                    {searchingCEP ? '...' : <Search size={16} />}
-                                </button>
-                            </div>
-                            <input className="form-input" placeholder="Cidade" value={end.cidade} onChange={(e) => handleEnderecoChange(idx, 'cidade', e.target.value)} />
-                        </div>
-                      </div>
-                    ))}
+
+                    <div className="address-grid-body">
+                        {formData.contato.enderecos.length === 0 ? (
+                            <div className="empty-grid-message">Nenhum endereço adicional cadastrado. Clique em "Novo Endereço" para começar.</div>
+                        ) : (
+                            formData.contato.enderecos.map((end, idx) => (
+                                <div key={idx} className={`address-grid-row ${editingEnderecoIdx === idx ? 'editing' : ''}`}>
+                                    {editingEnderecoIdx === idx ? (
+                                        <div className="address-edit-form animate-in">
+                                            <div className="nested-header">
+                                                <select value={end.tipo} onChange={(e) => handleEnderecoChange(idx, 'tipo', e.target.value)} className="mini-select">
+                                                    <option value="Entrega">Entrega</option>
+                                                    <option value="Cobrança">Cobrança</option>
+                                                    <option value="Comercial">Comercial</option>
+                                                    <option value="Outro">Outro</option>
+                                                </select>
+                                                <button type="button" className="btn-icon-close" onClick={() => setEditingEnderecoIdx(null)}><X size={14} /></button>
+                                            </div>
+                                            <div className="grid-4">
+                                                <div className="form-group">
+                                                    <label>CEP</label>
+                                                    <div className="input-with-button">
+                                                        <input className="form-input" placeholder="CEP" value={end.cep} onChange={(e) => handleEnderecoChange(idx, 'cep', e.target.value)} />
+                                                        <button type="button" className="btn-search-premium" onClick={() => handleNestedCEPSearch(idx)} disabled={searchingCEP}>
+                                                            {searchingCEP ? '...' : <Search size={16} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="form-group span-2"><label>Rua</label><input className="form-input" value={end.rua} onChange={(e) => handleEnderecoChange(idx, 'rua', e.target.value)} /></div>
+                                                <div className="form-group"><label>Nº</label><input className="form-input" value={end.numcasa} onChange={(e) => handleEnderecoChange(idx, 'numcasa', e.target.value)} /></div>
+                                                <div className="form-group"><label>Bairro</label><input className="form-input" value={end.bairro} onChange={(e) => handleEnderecoChange(idx, 'bairro', e.target.value)} /></div>
+                                                <div className="form-group"><label>Complemento</label><input className="form-input" value={end.complemento} onChange={(e) => handleEnderecoChange(idx, 'complemento', e.target.value)} /></div>
+                                                <div className="form-group"><label>Cidade</label><input className="form-input" value={end.cidade} onChange={(e) => handleEnderecoChange(idx, 'cidade', e.target.value)} /></div>
+                                                <div className="form-group"><label>UF</label><input className="form-input" value={end.uf} onChange={(e) => handleEnderecoChange(idx, 'uf', e.target.value)} maxLength={2} /></div>
+                                            </div>
+                                            <div className="form-actions-end">
+                                               <button type="button" className="btn-secondary-mini" onClick={() => setEditingEnderecoIdx(null)}>Cancelar</button>
+                                               <button type="button" className="btn-primary-mini" onClick={() => setEditingEnderecoIdx(null)}>Gravar Endereço</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="cell cell-type"><span className="badge-tipo">{end.tipo}</span></div>
+                                            <div className="cell cell-main">{end.rua}, {end.numcasa} {end.bairro ? `- ${end.bairro}` : ''}</div>
+                                            <div className="cell cell-location">{end.cidade || '-'}/{end.uf || '-'}</div>
+                                            <div className="cell cell-actions">
+                                                <button type="button" className="icon-btn edit-small" title="Alterar" onClick={() => setEditingEnderecoIdx(idx)}><Edit2 size={14} /></button>
+                                                <button type="button" className="icon-btn delete-small" title="Remover" onClick={() => handleRemoveEndereco(idx)}><Trash2 size={14} /></button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
                   </div>
                 )}
 
                 {activeTab === 'social' && (
-                  <div className="tab-content grid-2">
-                    <div className="form-group"><label>Nome do Pai</label><input className="form-input" id="contato.nomepai" value={formData.contato.nomepai} onChange={handleChange} /></div>
-                    <div className="form-group"><label>Nome da Mãe</label><input className="form-input" id="contato.nomemae" value={formData.contato.nomemae} onChange={handleChange} /></div>
-                    <div className="form-group"><label>Nome do Cônjuge</label><input className="form-input" id="contato.nomeconjuge" value={formData.contato.nomeconjuge} onChange={handleChange} /></div>
-                    <div className="form-group"><label>RG do Cônjuge</label><input className="form-input" id="contato.rgconjuge" value={formData.contato.rgconjuge} onChange={handleChange} /></div>
-                    <div className="form-group"><label>Nascimento Cônjuge</label><input type="date" className="form-input" id="contato.nasctoconjuge" value={formData.contato.nasctoconjuge} onChange={handleChange} /></div>
+                  <div className="tab-content">
+                    <div className="section-title"><Users size={18} /> Dados Sociais e Cônjuge</div>
+                    <div className="grid-4">
+                        <div className="form-group"><label>Nascimento</label><input type="date" className="form-input" id="contato.datanascto" value={formData.contato.datanascto} onChange={handleChange} /></div>
+                        <div className="form-group">
+                            <label>Sexo</label>
+                            <select className="form-select" id="contato.sexo" value={formData.contato.sexo} onChange={handleChange}>
+                                <option value="M">Masculino</option>
+                                <option value="F">Feminino</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Estado Civil</label>
+                            <select className="form-select" id="contato.ecivil" value={formData.contato.ecivil} onChange={handleChange}>
+                                <option value="S">Solteiro(a)</option>
+                                <option value="C">Casado(a)</option>
+                                <option value="D">Divorciado(a)</option>
+                                <option value="V">Viúvo(a)</option>
+                            </select>
+                        </div>
+                        <div className="form-group span-2"><label>Nome do Pai</label><input className="form-input" id="contato.nomepai" value={formData.contato.nomepai} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome da Mãe</label><input className="form-input" id="contato.nomemae" value={formData.contato.nomemae} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome do Cônjuge</label><input className="form-input" id="contato.nomeconjuge" value={formData.contato.nomeconjuge} onChange={handleChange} /></div>
+                        <div className="form-group"><label>RG Cônjuge</label><input className="form-input" id="contato.rgconjuge" value={formData.contato.rgconjuge} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Nasc. Cônjuge</label><input type="date" className="form-input" id="contato.nasctoconjuge" value={formData.contato.nasctoconjuge} onChange={handleChange} /></div>
+                    </div>
                   </div>
                 )}
 
                 {activeTab === 'financeiro' && (
-                  <div className="tab-content grid-3">
-                    <div className="form-group"><label>Limite de Crédito</label><input type="number" className="form-input" id="contato.limicredito" value={formData.contato.limicredito} onChange={handleChange} /></div>
-                    <div className="form-group"><label>Prazo Máximo (dias)</label><input type="number" className="form-input" id="contato.prazomax" value={formData.contato.prazomax} onChange={handleChange} /></div>
-                    <div className="form-group"><label>Dia de Fat.</label><input type="number" className="form-input" id="contato.diafat" value={formData.contato.diafat} onChange={handleChange} /></div>
-                    <div className="form-group span-3"><label>Conceito / Observação Financeira</label><textarea className="form-input" id="contato.conceito" value={formData.contato.conceito} onChange={handleChange} rows={3} /></div>
+                  <div className="tab-content">
+                    <div className="section-title"><DollarSign size={18} /> Financeiro e Histórico</div>
+                    <div className="grid-4">
+                        <div className="form-group"><label>Limite Crédito</label><input type="number" className="form-input" id="contato.limicredito" value={formData.contato.limicredito} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Prazo Máx.</label><input type="number" className="form-input" id="contato.prazomax" value={formData.contato.prazomax} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Dia Fat.</label><input type="number" className="form-input" id="contato.diafat" value={formData.contato.diafat} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Data Cad.</label><input type="date" className="form-input" id="contato.datacad" value={formData.contato.datacad} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Data SPC</label><input type="date" className="form-input" id="contato.dataspc" value={formData.contato.dataspc} onChange={handleChange} /></div>
+                        <div className="form-group"><label>1ª Compra</label><input type="date" className="form-input" id="contato.datapricompra" value={formData.contato.datapricompra} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Ult. Compra</label><input type="date" className="form-input" id="contato.dataultcompra" value={formData.contato.dataultcompra} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Qtd. Compras</label><input type="number" className="form-input" id="contato.numcompra" value={formData.contato.numcompra} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Vlr. 1ª Compra</label><input type="number" className="form-input" id="contato.valpricompra" value={formData.contato.valpricompra} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Vlr. Maior Compra</label><input type="number" className="form-input" id="contato.valmaicompra" value={formData.contato.valmaicompra} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Vlr. Ult. Compra</label><input type="number" className="form-input" id="contato.valultcompra" value={formData.contato.valultcompra} onChange={handleChange} /></div>
+                        <div className="form-group span-4"><label>Conceito</label><textarea className="form-input" id="contato.conceito" value={formData.contato.conceito} onChange={handleChange} rows={4} /></div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'referencias' && (
+                  <div className="tab-content">
+                    <div className="section-title"><BookOpen size={18} /> Referências e Observações Gerais</div>
+                    <div className="grid-2">
+                        <div className="form-group"><label>Ref. SPC</label><textarea className="form-input" id="contato.ref_spc" value={formData.contato.ref_spc} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group"><label>Ref. Financeira</label><textarea className="form-input" id="contato.ref_fin" value={formData.contato.ref_fin} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group"><label>Ref. Comercial</label><textarea className="form-input" id="contato.ref_com" value={formData.contato.ref_com} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group"><label>Ref. Produto</label><textarea className="form-input" id="contato.ref_prod" value={formData.contato.ref_prod} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group span-2"><label>Observações Gerais</label><textarea className="form-input" id="contato.obs" value={formData.contato.obs} onChange={handleChange} rows={4} /></div>
+                    </div>
                   </div>
                 )}
 

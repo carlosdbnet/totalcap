@@ -23,8 +23,8 @@ const Login: React.FC = () => {
       formData.append('username', email);
       formData.append('password', password);
 
-      // Usando axios diretamente para evitar conflito de headers do cliente api.ts
-      const response = await axios.post('http://localhost:8000/api/v1/login/access-token', formData);
+      // Usando URL relativa para permitir acesso via rede local através do proxy
+      const response = await axios.post('/api/v1/login/access-token', formData);
       const { access_token } = response.data;
       
       const userData = { email, nome: 'Usuário Admin' };

@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
+import OrdemServico from './pages/OrdemServico';
+import ColetaPneus from './pages/ColetaPneus';
+import ReloadPrompt from './components/ReloadPrompt';
 import Areas from './pages/Areas';
 import Regioes from './pages/Regioes';
 import Atividades from './pages/Atividades';
@@ -12,6 +15,7 @@ import Estados from './pages/Estados';
 import Medidas from './pages/Medidas';
 import Desenhos from './pages/Desenhos';
 import Marcas from './pages/Marcas';
+import Empresas from './pages/Empresas';
 import TipoRecapagem from './pages/TipoRecapagem';
 import Servicos from './pages/Servicos';
 import Setores from './pages/Setores';
@@ -55,6 +59,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <ReloadPrompt />
           <Routes>
             <Route path="/login" element={
               <PublicRoute>
@@ -69,8 +74,10 @@ function App() {
             }>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="areas" element={<Areas />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/os" element={<OrdemServico />} />
+              <Route path="/coleta" element={<ColetaPneus />} />
+              <Route path="/areas" element={<Areas />} />
               <Route path="regioes" element={<Regioes />} />
               <Route path="atividades" element={<Atividades />} />
               <Route path="vendedores" element={<Vendedores />} />
@@ -78,8 +85,10 @@ function App() {
               <Route path="cidades" element={<Cidades />} />
               <Route path="estados" element={<Estados />} />
               <Route path="medidas" element={<Medidas />} />
-              <Route path="desenhos" element={<Desenhos />} />
-              <Route path="marcas" element={<Marcas />} />
+              <Route path="/desenhos" element={<Desenhos />} />
+              <Route path="/marcas" element={<Marcas />} />
+              <Route path="/empresas" element={<Empresas />} />
+              <Route path="/clientes" element={<Clientes />} />
               <Route path="tipo-recapagem" element={<TipoRecapagem />} />
               <Route path="servicos" element={<Servicos />} />
               <Route path="setores" element={<Setores />} />

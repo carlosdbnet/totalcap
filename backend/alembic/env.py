@@ -13,6 +13,26 @@ from config import settings
 from app.models.base import Base
 # Importar todos os modelos aqui para que o Alembic os detecte
 from app.models.cliente import Cliente
+from app.models.contato import Contato, ContatoEndereco
+from app.models.area import Area
+from app.models.regiao import Regiao
+from app.models.atividade import Atividade
+from app.models.vendedor import Vendedor
+from app.models.empresa import Empresa
+from app.models.cidade import Cidade
+from app.models.estado import Estado
+from app.models.medida import Medida
+from app.models.marca import Marca
+from app.models.desenho import Desenho
+from app.models.tiporecap import TipoRecapagem
+from app.models.servico import Servico
+from app.models.setor import Setor
+from app.models.departamento import Departamento
+from app.models.operador import Operador
+from app.models.banco import Banco
+from app.models.transportadora import Transportadora
+from app.models.usuario import Usuario
+from app.models.ordem_servico import OrdemServico, OSPneu
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

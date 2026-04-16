@@ -6,16 +6,16 @@ import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
 interface Transportadora {
   id: number;
-  razao_social: string;
-  nome_fantasia: string;
-  cnpj: string;
+  codigo?: string;
+  nome: string;
+  cpfcnpj: string;
   endereco: string;
   cep: string;
   cidade: string;
   uf: string;
   fone: string;
-  email: string;
-  contato: string;
+  fax: string;
+  inscricao: string;
   ativo: boolean;
   datalan?: string;
 }
@@ -33,16 +33,16 @@ export default function Transportadoras() {
   
   // Form state
   const [formData, setFormData] = useState({
-    razao_social: '',
-    nome_fantasia: '',
-    cnpj: '',
+    codigo: '',
+    nome: '',
+    cpfcnpj: '',
     endereco: '',
     cep: '',
     cidade: '',
     uf: '',
     fone: '',
-    email: '',
-    contato: '',
+    fax: '',
+    inscricao: '',
     ativo: true
   });
   
@@ -59,9 +59,9 @@ export default function Transportadoras() {
     } else {
       const lowerSearch = searchTerm.toLowerCase();
       setFilteredTransportadoras(transportadoras.filter(t => 
-        t.razao_social.toLowerCase().includes(lowerSearch) || 
-        t.nome_fantasia?.toLowerCase().includes(lowerSearch) ||
-        t.cnpj?.toLowerCase().includes(lowerSearch)
+        t.nome.toLowerCase().includes(lowerSearch) || 
+        t.cpfcnpj?.toLowerCase().includes(lowerSearch) ||
+        t.codigo?.toLowerCase().includes(lowerSearch)
       ));
     }
   }, [searchTerm, transportadoras]);
@@ -84,31 +84,31 @@ export default function Transportadoras() {
     if (mode === 'edit' && transportadora) {
       setCurrentId(transportadora.id);
       setFormData({
-        razao_social: transportadora.razao_social,
-        nome_fantasia: transportadora.nome_fantasia || '',
-        cnpj: transportadora.cnpj || '',
+        codigo: transportadora.codigo || '',
+        nome: transportadora.nome,
+        cpfcnpj: transportadora.cpfcnpj || '',
         endereco: transportadora.endereco || '',
         cep: transportadora.cep || '',
         cidade: transportadora.cidade || '',
         uf: transportadora.uf || '',
         fone: transportadora.fone || '',
-        email: transportadora.email || '',
-        contato: transportadora.contato || '',
+        fax: transportadora.fax || '',
+        inscricao: transportadora.inscricao || '',
         ativo: transportadora.ativo
       });
     } else {
       setCurrentId(null);
       setFormData({
-        razao_social: '',
-        nome_fantasia: '',
-        cnpj: '',
+        codigo: '',
+        nome: '',
+        cpfcnpj: '',
         endereco: '',
         cep: '',
         cidade: '',
         uf: '',
         fone: '',
-        email: '',
-        contato: '',
+        fax: '',
+        inscricao: '',
         ativo: true
       });
     }
@@ -155,8 +155,8 @@ export default function Transportadoras() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.razao_social.trim()) {
-      setFormError('A razão social é obrigatória.');
+    if (!formData.nome.trim()) {
+      setFormError('O nome/razão social é obrigatório.');
       return;
     }
 
@@ -236,10 +236,10 @@ export default function Transportadoras() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Razão Social</th>
-                  <th>CNPJ</th>
+                  <th>Nome / Razão Social</th>
+                  <th>CPF/CNPJ</th>
                   <th>Cidade/UF</th>
-                  <th>Contato</th>
+                  <th>Inscrição</th>
                   <th>Telefone</th>
                   <th>Status</th>
                   <th>Ações</th>
@@ -252,10 +252,10 @@ export default function Transportadoras() {
                   filteredTransportadoras.map(t => (
                     <tr key={t.id}>
                       <td>#{t.id}</td>
-                      <td><strong>{t.razao_social}</strong></td>
-                      <td>{t.cnpj || '-'}</td>
+                      <td><strong>{t.nome}</strong></td>
+                      <td>{t.cpfcnpj || '-'}</td>
                       <td>{t.cidade}/{t.uf}</td>
-                      <td>{t.contato || '-'}</td>
+                      <td>{t.inscricao || '-'}</td>
                       <td>{t.fone || '-'}</td>
                       <td>
                         <span className={`status-badge ${t.ativo ? 'active' : 'inactive'}`}>
@@ -265,7 +265,7 @@ export default function Transportadoras() {
                       <td>
                         <div className="action-buttons">
                           <button className="icon-btn edit" onClick={() => openModal('edit', t)}><Edit2 size={16} /></button>
-                          <button className="icon-btn delete" onClick={() => handleDelete(t.id, t.razao_social)}><Trash2 size={16} /></button>
+                          <button className="icon-btn delete" onClick={() => handleDelete(t.id, t.nome)}><Trash2 size={16} /></button>
                         </div>
                       </td>
                     </tr>
@@ -290,19 +290,19 @@ export default function Transportadoras() {
                 {formError && <div className="form-error">{formError}</div>}
                 
                 <div className="form-grid">
-                  <div className="form-group full-width">
-                    <label htmlFor="razao_social">Razão Social *</label>
-                    <input className="form-input" id="razao_social" value={formData.razao_social} onChange={handleChange} required />
+                  <div className="form-group">
+                    <label htmlFor="codigo">Código</label>
+                    <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} />
                   </div>
                   
                   <div className="form-group full-width">
-                    <label htmlFor="nome_fantasia">Nome Fantasia</label>
-                    <input className="form-input" id="nome_fantasia" value={formData.nome_fantasia} onChange={handleChange} />
+                    <label htmlFor="nome">Nome / Razão Social *</label>
+                    <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required />
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="cnpj">CNPJ</label>
-                    <input className="form-input" id="cnpj" value={formData.cnpj} onChange={handleChange} />
+                    <label htmlFor="cpfcnpj">CPF/CNPJ</label>
+                    <input className="form-input" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} />
                   </div>
 
                   <div className="form-group">
@@ -329,7 +329,7 @@ export default function Transportadoras() {
                       />
                       <button 
                         type="button" 
-                        className="btn-cep-search" 
+                        className="btn-search-premium" 
                         onClick={handleCepSearch}
                         disabled={isSubmitting}
                       >
@@ -357,13 +357,13 @@ export default function Transportadoras() {
                     <input className="form-input" id="fone" value={formData.fone} onChange={handleChange} />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="email">Email</label>
-                    <input className="form-input" id="email" type="email" value={formData.email} onChange={handleChange} />
+                    <label htmlFor="fax">Fax</label>
+                    <input className="form-input" id="fax" value={formData.fax} onChange={handleChange} />
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="contato">Contato</label>
-                    <input className="form-input" id="contato" value={formData.contato} onChange={handleChange} />
+                    <label htmlFor="inscricao">Inscrição</label>
+                    <input className="form-input" id="inscricao" value={formData.inscricao} onChange={handleChange} />
                   </div>
 
                   <div className="form-group">

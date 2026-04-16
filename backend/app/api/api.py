@@ -18,7 +18,11 @@ from app.api.endpoints import (
     setores,
     departamentos,
     operadores,
-    bancos
+    bancos,
+    empresas,
+    usuarios,
+    ordens_servico,
+    mobos
 )
 
 api_router = APIRouter()
@@ -40,3 +44,7 @@ api_router.include_router(setores.router, prefix="/setores", tags=["setores"])
 api_router.include_router(departamentos.router, prefix="/departamentos", tags=["departamentos"])
 api_router.include_router(operadores.router, prefix="/operadores", tags=["operadores"])
 api_router.include_router(bancos.router, prefix="/bancos", tags=["bancos"])
+api_router.include_router(empresas.router, prefix="/empresas", tags=["empresas"])
+api_router.include_router(usuarios.router, prefix="/usuarios", tags=["usuários"])
+api_router.include_router(ordens_servico.router, prefix="/ordens-servico", tags=["os"])
+api_router.include_router(mobos.router, prefix="/coletas", tags=["coletas"])

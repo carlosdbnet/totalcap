@@ -35,7 +35,7 @@ exit
 cls
 echo Iniciando apenas o Frontend na aba atual...
 cd frontend
-npm run dev
+npm run dev -- --host
 pause
 exit
 
@@ -43,7 +43,7 @@ exit
 cls
 echo Iniciando os servicos em janelas separadas...
 start "Totalcap - Backend" cmd /c "cd backend && ..\.venv\Scripts\uvicorn main:app --reload --host 0.0.0.0 --port 8000"
-start "Totalcap - Frontend" cmd /c "cd frontend && npm run dev"
+start "Totalcap - Frontend" cmd /c "cd frontend && npm run dev -- --host"
 echo Servicos iniciados! Pressione qualquer tecla para fechar este menu.
 pause >nul
 exit
