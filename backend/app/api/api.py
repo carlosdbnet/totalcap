@@ -48,3 +48,20 @@ api_router.include_router(empresas.router, prefix="/empresas", tags=["empresas"]
 api_router.include_router(usuarios.router, prefix="/usuarios", tags=["usuários"])
 api_router.include_router(ordens_servico.router, prefix="/ordens-servico", tags=["os"])
 api_router.include_router(mobos.router, prefix="/coletas", tags=["coletas"])
+@api_router.get("/status")
+def get_status(db: Session = Depends(get_db)):
+    from app.models.usuario import Usuario
+    try:
+        user_count = db.query(Usuario).count()
+        return {
+            "status": "online",
+            "database": "connected",
+            "user_count": user_count,
+            "message": "Admin será criado no primeiro login se count for 0"
+        }
+    except Exception as e:
+        return {
+            "status": "online",
+            "database": "error",
+            "detail": str(e)
+        }

@@ -9,34 +9,16 @@ from app.core.security import get_password_hash
 
 from contextlib import asynccontextmanager
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Garantir que as tabelas existem
+# Garantir que as tabelas existem (Especial para Vercel)
+try:
     Base.metadata.create_all(bind=engine)
-    
-    # Criar usuario admin inicial se nao existir
-    db = SessionLocal()
-    try:
-        user = db.query(Usuario).filter(Usuario.email == settings.FIRST_SUPERUSER).first()
-        if not user:
-            admin_user = Usuario(
-                email=settings.FIRST_SUPERUSER,
-                hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
-                nome="Admin Totalcap",
-                is_superuser=True,
-                is_active=True
-            )
-            db.add(admin_user)
-            db.commit()
-            print(f"Usuario admin criado: {settings.FIRST_SUPERUSER}")
-    finally:
-        db.close()
-    yield
+    print("Banco de dados inicializado com sucesso.")
+except Exception as e:
+    print(f"Erro ao inicializar banco de dados: {e}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    lifespan=lifespan
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Adicionando CORS para permitir o VITE (React) consumir a API localmente
