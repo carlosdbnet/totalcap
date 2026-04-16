@@ -32,6 +32,10 @@ app.add_middleware(
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "source": "main_app_root"}
+
 @app.get("/")
 def read_root():
     return {"message": "Bem-vindo ao Backend do Totalcap!"}
