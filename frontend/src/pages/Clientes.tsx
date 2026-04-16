@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer, User, Home, Mail, DollarSign, Users, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
 import './Clientes.css';
-import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
 interface Endereco {
   id?: number;

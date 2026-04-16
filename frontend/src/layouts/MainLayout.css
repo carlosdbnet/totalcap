@@ -104,7 +104,6 @@
   background: rgba(var(--primary-rgb), 0.1);
   color: var(--text-main);
 }
-|TargetFile:c:\Sistema\Totalcap\frontend\src\layouts\MainLayout.css
 .nav-item.active {
   color: var(--primary);
   border-left: 3px solid var(--primary);
