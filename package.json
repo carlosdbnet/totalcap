@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm run build --prefix frontend && mkdir -p production_build && cp -rv frontend/dist/* production_build/ && cp -rv api production_build/ && cp -rv backend production_build/ && cp -rv database production_build/ && cp -v requirements.txt production_build/",
+    "build": "npm run build --prefix frontend && cp -rv api frontend/dist/ && cp -rv backend frontend/dist/ && cp -rv database frontend/dist/ && cp -v requirements.txt frontend/dist/",
     "install": "npm install --prefix frontend --legacy-peer-deps"
   }
 }
