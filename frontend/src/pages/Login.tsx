@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import logoDbnet from '../assets/images/LogoDbnetLinhas.png';
 import './Login.css';
 
 const Login: React.FC = () => {
@@ -42,6 +43,7 @@ const Login: React.FC = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
+          <img src={logoDbnet} alt="DBnet Logo" className="login-logo" />
           <h1>Totalcap</h1>
           <p>Login de Acesso ao Sistema</p>
         </div>

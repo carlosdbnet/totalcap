@@ -10,7 +10,8 @@ import {
   Monitor,
   ClipboardList,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Menu
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -45,25 +46,27 @@ const menuItems = [
       { label: 'Operadores', path: '/operadores' },
     ]
   },
-  { icon: Settings, label: 'Configuração', path: '/config' },
+  { icon: Settings, label: 'Configuração', path: '/configuracoes' },
 ];
 
 export default function MainLayout() {
   const { logout } = useAuth();
   const [openSubMenus, setOpenSubMenus] = useState<string[]>(['Cadastros']);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleSubMenu = (label: string) => {
+    if (isCollapsed) setIsCollapsed(false);
     setOpenSubMenus(prev => 
       prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
     );
   };
 
   return (
-    <div className="layout-container">
-      <aside className="sidebar glass-panel">
+    <div className={`layout-container ${isCollapsed ? 'is-collapsed' : ''}`}>
+      <aside className={`sidebar glass-panel ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="brand">
           <div className="logo-icon"></div>
-          <h2>Totalcap</h2>
+          {!isCollapsed && <h2>Totalcap</h2>}
         </div>
         
         <nav className="nav-menu">
@@ -127,8 +130,13 @@ export default function MainLayout() {
 
       <main className="main-content">
         <header className="topbar glass-panel">
-          <div className="topbar-search">
-            {/* Espaço para busca ou breadcrumbs */}
+          <div className="topbar-left">
+            <button className="icon-btn collapse-toggle" onClick={() => setIsCollapsed(!isCollapsed)}>
+              <Menu size={20} />
+            </button>
+            <div className="topbar-search">
+              {/* Espaço para busca ou breadcrumbs */}
+            </div>
           </div>
           <div className="topbar-actions">
             <div className="user-profile">

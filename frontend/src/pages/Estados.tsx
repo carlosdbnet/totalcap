@@ -6,7 +6,7 @@ import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
 interface Estado {
   id: number;
-  sigla: string;
+  uf: string;
   nome: string;
   ativo: boolean;
 }
@@ -24,7 +24,7 @@ export default function Estados() {
   
   // Form state
   const [formData, setFormData] = useState({
-    sigla: '',
+    uf: '',
     nome: '',
     ativo: true
   });
@@ -43,7 +43,7 @@ export default function Estados() {
       const lowerSearch = searchTerm.toLowerCase();
       setFilteredEstados(estados.filter(e => 
         e.nome.toLowerCase().includes(lowerSearch) || 
-        e.sigla.toLowerCase().includes(lowerSearch)
+        e.uf.toLowerCase().includes(lowerSearch)
       ));
     }
   }, [searchTerm, estados]);
@@ -66,14 +66,14 @@ export default function Estados() {
     if (mode === 'edit' && estado) {
       setCurrentId(estado.id);
       setFormData({
-        sigla: estado.sigla,
+        uf: estado.uf,
         nome: estado.nome,
         ativo: estado.ativo
       });
     } else {
       setCurrentId(null);
       setFormData({
-        sigla: '',
+        uf: '',
         nome: '',
         ativo: true
       });
@@ -91,13 +91,13 @@ export default function Estados() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.sigla.trim() || !formData.nome.trim()) {
-      setFormError('Sigla e Nome são obrigatórios.');
+    if (!formData.uf.trim() || !formData.nome.trim()) {
+      setFormError('UF e Nome são obrigatórios.');
       return;
     }
 
-    if (formData.sigla.length !== 2) {
-      setFormError('A sigla deve ter exatamente 2 caracteres.');
+    if (formData.uf.length !== 2) {
+      setFormError('A UF deve ter exatamente 2 caracteres.');
       return;
     }
 
@@ -190,7 +190,7 @@ export default function Estados() {
                   filteredEstados.map(e => (
                     <tr key={e.id}>
                       <td>#{e.id}</td>
-                      <td><strong>{e.sigla}</strong></td>
+                      <td><strong>{e.uf}</strong></td>
                       <td>{e.nome}</td>
                       <td>
                         <span className={`status-badge ${e.ativo ? 'active' : 'inactive'}`}>
@@ -226,11 +226,11 @@ export default function Estados() {
                 
                 <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '1.5rem' }}>
                   <div className="form-group">
-                    <label htmlFor="sigla">UF *</label>
+                    <label htmlFor="uf">UF *</label>
                     <input 
                       className="form-input" 
-                      id="sigla" 
-                      value={formData.sigla} 
+                      id="uf" 
+                      value={formData.uf} 
                       onChange={handleChange} 
                       maxLength={2} 
                       placeholder="SP"

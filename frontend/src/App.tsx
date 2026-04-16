@@ -19,6 +19,9 @@ import Operadores from './pages/Operadores';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+import { ThemeProvider } from './context/ThemeContext';
+import Configuracoes from './pages/Configuracoes';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   
@@ -49,41 +52,44 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } />
-          
-          <Route path="/" element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="areas" element={<Areas />} />
-            <Route path="regioes" element={<Regioes />} />
-            <Route path="atividades" element={<Atividades />} />
-            <Route path="vendedores" element={<Vendedores />} />
-            <Route path="transportadoras" element={<Transportadora />} />
-            <Route path="cidades" element={<Cidades />} />
-            <Route path="estados" element={<Estados />} />
-            <Route path="medidas" element={<Medidas />} />
-            <Route path="desenhos" element={<Desenhos />} />
-            <Route path="marcas" element={<Marcas />} />
-            <Route path="tipo-recapagem" element={<TipoRecapagem />} />
-            <Route path="servicos" element={<Servicos />} />
-            <Route path="setores" element={<Setores />} />
-            <Route path="operadores" element={<Operadores />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } />
+            
+            <Route path="/" element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="areas" element={<Areas />} />
+              <Route path="regioes" element={<Regioes />} />
+              <Route path="atividades" element={<Atividades />} />
+              <Route path="vendedores" element={<Vendedores />} />
+              <Route path="transportadoras" element={<Transportadora />} />
+              <Route path="cidades" element={<Cidades />} />
+              <Route path="estados" element={<Estados />} />
+              <Route path="medidas" element={<Medidas />} />
+              <Route path="desenhos" element={<Desenhos />} />
+              <Route path="marcas" element={<Marcas />} />
+              <Route path="tipo-recapagem" element={<TipoRecapagem />} />
+              <Route path="servicos" element={<Servicos />} />
+              <Route path="setores" element={<Setores />} />
+              <Route path="operadores" element={<Operadores />} />
+              <Route path="configuracoes" element={<Configuracoes />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

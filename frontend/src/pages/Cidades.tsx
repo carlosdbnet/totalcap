@@ -8,7 +8,7 @@ interface Cidade {
   id: number;
   nome: string;
   uf: string;
-  codigo_ibge: string;
+  codibge: string;
   ativo: boolean;
 }
 
@@ -27,7 +27,7 @@ export default function Cidades() {
   const [formData, setFormData] = useState({
     nome: '',
     uf: '',
-    codigo_ibge: '',
+    codibge: '',
     ativo: true
   });
   
@@ -46,7 +46,7 @@ export default function Cidades() {
       setFilteredCidades(cidades.filter(c => 
         c.nome.toLowerCase().includes(lowerSearch) || 
         c.uf.toLowerCase().includes(lowerSearch) ||
-        c.codigo_ibge?.toLowerCase().includes(lowerSearch)
+        c.codibge?.toLowerCase().includes(lowerSearch)
       ));
     }
   }, [searchTerm, cidades]);
@@ -71,7 +71,7 @@ export default function Cidades() {
       setFormData({
         nome: cidade.nome,
         uf: cidade.uf,
-        codigo_ibge: cidade.codigo_ibge || '',
+        codibge: cidade.codibge || '',
         ativo: cidade.ativo
       });
     } else {
@@ -79,7 +79,7 @@ export default function Cidades() {
       setFormData({
         nome: '',
         uf: '',
-        codigo_ibge: '',
+        codibge: '',
         ativo: true
       });
     }
@@ -193,7 +193,7 @@ export default function Cidades() {
                       <td>#{c.id}</td>
                       <td><strong>{c.nome}</strong></td>
                       <td>{c.uf}</td>
-                      <td>{c.codigo_ibge || '-'}</td>
+                      <td>{c.codibge || '-'}</td>
                       <td>
                         <span className={`status-badge ${c.ativo ? 'active' : 'inactive'}`}>
                           {c.ativo ? 'Ativo' : 'Inativo'}
@@ -237,8 +237,8 @@ export default function Cidades() {
                     <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} required />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="codigo_ibge">Código IBGE</label>
-                    <input className="form-input" id="codigo_ibge" value={formData.codigo_ibge} onChange={handleChange} />
+                    <label htmlFor="codibge">Código IBGE</label>
+                    <input className="form-input" id="codibge" value={formData.codibge} onChange={handleChange} />
                   </div>
                 </div>
 

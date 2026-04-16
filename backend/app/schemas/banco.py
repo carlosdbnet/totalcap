@@ -1,22 +1,21 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime
 
-class CidadeBase(BaseModel):
+class BancoBase(BaseModel):
+    codigo: Optional[str] = None
     nome: str
-    uf: str
-    codibge: Optional[str] = None
     ativo: Optional[bool] = True
 
-class CidadeCreate(CidadeBase):
+class BancoCreate(BancoBase):
     pass
 
-class CidadeUpdate(BaseModel):
+class BancoUpdate(BaseModel):
+    codigo: Optional[str] = None
     nome: Optional[str] = None
-    uf: Optional[str] = None
-    codibge: Optional[str] = None
     ativo: Optional[bool] = None
 
-class Cidade(CidadeBase):
+class Banco(BancoBase):
     id: int
 
     class Config:

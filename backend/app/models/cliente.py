@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.models.base import Base
 
 class Cliente(Base):
@@ -12,3 +13,6 @@ class Cliente(Base):
     telefone = Column(String, nullable=True)
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    
+    id_contato = Column(Integer, ForeignKey("contato.id"), nullable=True)
+    contato = relationship("Contato")
