@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Package, Search, Plus, Trash2, Edit2, X, DollarSign, List, Shield, Info, ClipboardList, Printer, Camera, Loader2 } from 'lucide-react';
+import { Package, Search, Plus, Trash2, Edit2, X, DollarSign, Shield, Info, ClipboardList, Printer, Camera, Loader2 } from 'lucide-react';
 import api from '../lib/api';
 import './ColetaPneus.css';
 
@@ -313,7 +313,7 @@ export default function ColetaPneus() {
 
       // Se o modal estiver aberto, mescla os dados; senão, abre uma nova coleta com os dados
       if (isModalOpen) {
-        setFormData(prev => ({
+        setFormData((prev: any) => ({
           ...prev,
           pneus: [...prev.pneus, ...mockResult.pneus]
         }));

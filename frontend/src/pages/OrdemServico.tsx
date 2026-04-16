@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   Plus, Search, Edit2, Trash2, X, Printer, Package, 
   User, Truck, Calendar, FileText, Settings, 
-  Trash, ChevronRight, Hash, DollarSign 
+  Hash, DollarSign 
 } from 'lucide-react';
 import api from '../lib/api';
 import './OrdemServico.css';
@@ -272,9 +272,6 @@ export default function OrdemServico() {
     }
   };
 
-  const calculateTotal = () => {
-    return formData.pneus.reduce((sum: number, p: any) => sum + (parseFloat(p.valor) || 0), 0);
-  };
 
   return (
     <div className="os-container">

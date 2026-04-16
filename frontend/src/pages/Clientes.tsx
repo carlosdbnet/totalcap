@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Printer, User, Home, Mail, DollarSign, Users, CheckCircle, BookOpen } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Printer, User, Home, Mail, DollarSign, Users, BookOpen } from 'lucide-react';
 import api from '../lib/api';
 import './Clientes.css';
 
