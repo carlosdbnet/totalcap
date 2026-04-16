@@ -35,3 +35,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 def read_root():
     return {"message": "Bem-vindo ao Backend do Totalcap!"}
+
+@app.get("/api/v1/ping")
+def ping():
+    return {"status": "ok", "message": "Backend respondendo corretamente na Vercel!"}
