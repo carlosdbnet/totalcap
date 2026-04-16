@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.atividade import Atividade
-from app.schemas.atividade import AtividadeCreate, AtividadeUpdate
+from backend.app.models.atividade import Atividade
+from backend.app.schemas.atividade import AtividadeCreate, AtividadeUpdate
 
 class AtividadeRepository:
     def get(self, db: Session, id: int) -> Atividade | None:

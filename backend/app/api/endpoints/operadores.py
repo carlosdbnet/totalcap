@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from database import get_db
-from app.models.operador import Operador as OperadorModel
-from app.schemas.operador import Operador, OperadorCreate, OperadorUpdate
+from backend.database import get_db
+from backend.app.models.operador import Operador as OperadorModel
+from backend.app.schemas.operador import Operador, OperadorCreate, OperadorUpdate
 
 router = APIRouter()
 

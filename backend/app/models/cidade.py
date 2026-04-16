@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from app.models.base import Base
+from backend.app.models.base import Base
 
 class Cidade(Base):
     __tablename__ = "cidade"

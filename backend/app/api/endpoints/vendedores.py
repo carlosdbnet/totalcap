@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Any
 
-from database import get_db
-from app.schemas.vendedor import VendedorResponse, VendedorCreate, VendedorUpdate
-from app.services.vendedor import vendedor_service
+from backend.database import get_db
+from backend.app.schemas.vendedor import VendedorResponse, VendedorCreate, VendedorUpdate
+from backend.app.services.vendedor import vendedor_service
 
 router = APIRouter()
 

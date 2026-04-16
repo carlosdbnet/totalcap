@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from database import engine
+from backend.database import engine
 
 def check_cliente_contato():
     tables = ['clientes', 'contato', 'contato_endereco', 'contato_email', 'contato_info']

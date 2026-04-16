@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from database import get_db
-from app.models.servico import Servico as ServicoModel
-from app.schemas.servico import Servico, ServicoCreate, ServicoUpdate
+from backend.database import get_db
+from backend.app.models.servico import Servico as ServicoModel
+from backend.app.schemas.servico import Servico, ServicoCreate, ServicoUpdate
 
 router = APIRouter()
 

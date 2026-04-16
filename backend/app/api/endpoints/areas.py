@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Any
 
-from database import get_db
-from app.schemas.area import AreaResponse, AreaCreate, AreaUpdate
-from app.services.area import area_service
+from backend.database import get_db
+from backend.app.schemas.area import AreaResponse, AreaCreate, AreaUpdate
+from backend.app.services.area import area_service
 
 router = APIRouter()
 

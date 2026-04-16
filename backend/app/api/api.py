@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import (
+from backend.app.api.endpoints import (
     clientes, 
     areas, 
     regioes, 
@@ -50,7 +50,7 @@ api_router.include_router(ordens_servico.router, prefix="/ordens-servico", tags=
 api_router.include_router(mobos.router, prefix="/coletas", tags=["coletas"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
-    from app.models.usuario import Usuario
+    from backend.app.models.usuario import Usuario
     try:
         user_count = db.query(Usuario).count()
         return {

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.cliente import Cliente
-from app.schemas.cliente import ClienteCreate, ClienteUpdate
+from backend.app.models.cliente import Cliente
+from backend.app.schemas.cliente import ClienteCreate, ClienteUpdate
 
 class ClienteRepository:
     def get(self, db: Session, id: int) -> Cliente | None:

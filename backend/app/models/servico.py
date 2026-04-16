@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from backend.app.models.base import Base
 
 class Servico(Base):
     __tablename__ = "servico"

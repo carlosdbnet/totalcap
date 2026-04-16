@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.atividade import atividade_repo
-from app.schemas.atividade import AtividadeCreate, AtividadeUpdate
+from backend.app.repositories.atividade import atividade_repo
+from backend.app.schemas.atividade import AtividadeCreate, AtividadeUpdate
 from fastapi import HTTPException
 
 class AtividadeService:

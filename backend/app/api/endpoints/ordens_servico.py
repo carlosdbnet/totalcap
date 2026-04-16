@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import Any, List
-from database import get_db
-from app.models.ordem_servico import OrdemServico as OSModel, OSPneu as PneuModel
-from app.schemas.ordem_servico import OrdemServicoResponse, OrdemServicoCreate, OrdemServicoUpdate
+from backend.database import get_db
+from backend.app.models.ordem_servico import OrdemServico as OSModel, OSPneu as PneuModel
+from backend.app.schemas.ordem_servico import OrdemServicoResponse, OrdemServicoCreate, OrdemServicoUpdate
 
 router = APIRouter()
 

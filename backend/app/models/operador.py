@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from backend.app.models.base import Base
 
 class Operador(Base):
     __tablename__ = "operador"

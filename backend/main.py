@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine, Base
-from config import settings
-from app.api.api import api_router
-from app.models.usuario import Usuario
-from app.core.security import get_password_hash
+from backend.database import SessionLocal, engine, Base
+from backend.config import settings
+from backend.app.api.api import api_router
+from backend.app.models.usuario import Usuario
+from backend.app.core.security import get_password_hash
 
 from contextlib import asynccontextmanager
 

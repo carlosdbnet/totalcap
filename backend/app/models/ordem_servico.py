@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Numeric, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from backend.app.models.base import Base
 
 class OrdemServico(Base):
     __tablename__ = "ordem_servico"

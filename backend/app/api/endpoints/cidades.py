@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.cidade import Cidade as CidadeModel
-from app.schemas.cidade import Cidade, CidadeCreate, CidadeUpdate
+from backend.database import get_db
+from backend.app.models.cidade import Cidade as CidadeModel
+from backend.app.schemas.cidade import Cidade, CidadeCreate, CidadeUpdate
 
 router = APIRouter()
 

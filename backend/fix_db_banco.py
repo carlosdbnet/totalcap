@@ -3,7 +3,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.getcwd(), 'backend'))
-from config import settings
+from backend.config import settings
 
 engine = create_engine(settings.POSTGRES_URL)
 

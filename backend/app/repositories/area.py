@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.area import Area
-from app.schemas.area import AreaCreate, AreaUpdate
+from backend.app.models.area import Area
+from backend.app.schemas.area import AreaCreate, AreaUpdate
 
 class AreaRepository:
     def get(self, db: Session, id: int) -> Area | None:

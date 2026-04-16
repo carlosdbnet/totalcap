@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.getcwd())
 
-from database import SessionLocal
+from backend.database import SessionLocal
 from sqlalchemy import text
 
 def check_lookups():

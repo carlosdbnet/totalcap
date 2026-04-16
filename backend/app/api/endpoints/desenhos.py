@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.desenho import Desenho as DesenhoModel
-from app.schemas.desenho import Desenho, DesenhoCreate, DesenhoUpdate
+from backend.database import get_db
+from backend.app.models.desenho import Desenho as DesenhoModel
+from backend.app.schemas.desenho import Desenho, DesenhoCreate, DesenhoUpdate
 
 router = APIRouter()
 

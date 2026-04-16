@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.empresa import Empresa
-from app.schemas.empresa import EmpresaCreate, EmpresaUpdate
+from backend.app.models.empresa import Empresa
+from backend.app.schemas.empresa import EmpresaCreate, EmpresaUpdate
 
 class EmpresaRepository:
     def get(self, db: Session, id: int) -> Empresa | None:

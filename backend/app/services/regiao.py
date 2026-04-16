@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.regiao import regiao_repo
-from app.schemas.regiao import RegiaoCreate, RegiaoUpdate
+from backend.app.repositories.regiao import regiao_repo
+from backend.app.schemas.regiao import RegiaoCreate, RegiaoUpdate
 from fastapi import HTTPException
 
 class RegiaoService:

@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.setor import Setor as SetorModel
-from app.schemas.setor import Setor, SetorCreate, SetorUpdate
+from backend.database import get_db
+from backend.app.models.setor import Setor as SetorModel
+from backend.app.schemas.setor import Setor, SetorCreate, SetorUpdate
 
 router = APIRouter()
 

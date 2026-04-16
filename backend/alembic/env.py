@@ -9,30 +9,30 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from config import settings
-from app.models.base import Base
+from backend.config import settings
+from backend.app.models.base import Base
 # Importar todos os modelos aqui para que o Alembic os detecte
-from app.models.cliente import Cliente
-from app.models.contato import Contato, ContatoEndereco
-from app.models.area import Area
-from app.models.regiao import Regiao
-from app.models.atividade import Atividade
-from app.models.vendedor import Vendedor
-from app.models.empresa import Empresa
-from app.models.cidade import Cidade
-from app.models.estado import Estado
-from app.models.medida import Medida
-from app.models.marca import Marca
-from app.models.desenho import Desenho
-from app.models.tiporecap import TipoRecapagem
-from app.models.servico import Servico
-from app.models.setor import Setor
-from app.models.departamento import Departamento
-from app.models.operador import Operador
-from app.models.banco import Banco
-from app.models.transportadora import Transportadora
-from app.models.usuario import Usuario
-from app.models.ordem_servico import OrdemServico, OSPneu
+from backend.app.models.cliente import Cliente
+from backend.app.models.contato import Contato, ContatoEndereco
+from backend.app.models.area import Area
+from backend.app.models.regiao import Regiao
+from backend.app.models.atividade import Atividade
+from backend.app.models.vendedor import Vendedor
+from backend.app.models.empresa import Empresa
+from backend.app.models.cidade import Cidade
+from backend.app.models.estado import Estado
+from backend.app.models.medida import Medida
+from backend.app.models.marca import Marca
+from backend.app.models.desenho import Desenho
+from backend.app.models.tiporecap import TipoRecapagem
+from backend.app.models.servico import Servico
+from backend.app.models.setor import Setor
+from backend.app.models.departamento import Departamento
+from backend.app.models.operador import Operador
+from backend.app.models.banco import Banco
+from backend.app.models.transportadora import Transportadora
+from backend.app.models.usuario import Usuario
+from backend.app.models.ordem_servico import OrdemServico, OSPneu
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

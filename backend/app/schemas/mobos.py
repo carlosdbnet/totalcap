@@ -1,8 +1,8 @@
 from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel
-from app.schemas.contato import ContatoBase
-from app.schemas.vendedor import VendedorBase
+from backend.app.schemas.contato import ContatoBase
+from backend.app.schemas.vendedor import VendedorBase
 
 class MobPneuBase(BaseModel):
     id_medida: Optional[int] = None

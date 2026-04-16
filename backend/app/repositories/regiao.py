@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.regiao import Regiao
-from app.schemas.regiao import RegiaoCreate, RegiaoUpdate
+from backend.app.models.regiao import Regiao
+from backend.app.schemas.regiao import RegiaoCreate, RegiaoUpdate
 
 class RegiaoRepository:
     def get(self, db: Session, id: int) -> Regiao | None:

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, CHAR, TIMESTAMP
 from sqlalchemy.sql import func
-from app.models.base import Base
+from backend.app.models.base import Base
 
 class Banco(Base):
     __tablename__ = "banco"

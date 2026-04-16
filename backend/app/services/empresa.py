@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.empresa import empresa_repo
-from app.schemas.empresa import EmpresaCreate, EmpresaUpdate
+from backend.app.repositories.empresa import empresa_repo
+from backend.app.schemas.empresa import EmpresaCreate, EmpresaUpdate
 from fastapi import HTTPException
 
 class EmpresaService:

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
-from app.models.vendedor import Vendedor
-from app.schemas.vendedor import VendedorCreate, VendedorUpdate
+from backend.app.models.vendedor import Vendedor
+from backend.app.schemas.vendedor import VendedorCreate, VendedorUpdate
 
 class VendedorRepository:
     def get(self, db: Session, id: int) -> Vendedor | None:

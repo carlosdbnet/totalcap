@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.marca import Marca as MarcaModel
-from app.schemas.marca import Marca, MarcaCreate, MarcaUpdate
+from backend.database import get_db
+from backend.app.models.marca import Marca as MarcaModel
+from backend.app.schemas.marca import Marca, MarcaCreate, MarcaUpdate
 
 router = APIRouter()
 

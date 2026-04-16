@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.vendedor import vendedor_repo
-from app.schemas.vendedor import VendedorCreate, VendedorUpdate
+from backend.app.repositories.vendedor import vendedor_repo
+from backend.app.schemas.vendedor import VendedorCreate, VendedorUpdate
 from fastapi import HTTPException
 
 class VendedorService:

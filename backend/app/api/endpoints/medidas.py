@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.medida import Medida as MedidaModel
-from app.schemas.medida import Medida, MedidaCreate, MedidaUpdate
+from backend.database import get_db
+from backend.app.models.medida import Medida as MedidaModel
+from backend.app.schemas.medida import Medida, MedidaCreate, MedidaUpdate
 
 router = APIRouter()
 

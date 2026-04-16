@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.transportadora import Transportadora as TransportadoraModel
-from app.schemas.transportadora import Transportadora, TransportadoraCreate, TransportadoraUpdate
+from backend.database import get_db
+from backend.app.models.transportadora import Transportadora as TransportadoraModel
+from backend.app.schemas.transportadora import Transportadora, TransportadoraCreate, TransportadoraUpdate
 
 router = APIRouter()
 

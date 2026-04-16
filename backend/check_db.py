@@ -1,6 +1,6 @@
-from database import SessionLocal
-from app.models.area import Area
-from app.models.regiao import Regiao
+from backend.database import SessionLocal
+from backend.app.models.area import Area
+from backend.app.models.regiao import Regiao
 from sqlalchemy import text
 
 def check_db():

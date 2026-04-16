@@ -3,11 +3,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app.core import security
-from app.models.usuario import Usuario
-from app.schemas.usuario import Token
-from database import get_db
-from config import settings
+from backend.app.core import security
+from backend.app.models.usuario import Usuario
+from backend.app.schemas.usuario import Token
+from backend.database import get_db
+from backend.config import settings
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ def login_access_token(
     # Já que o 'lifespan' pode não rodar em serverless
     user_count = db.query(Usuario).count()
     if user_count == 0:
-        from app.core.security import get_password_hash
+        from backend.app.core.security import get_password_hash
         admin_user = Usuario(
             email=settings.FIRST_SUPERUSER,
             hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),

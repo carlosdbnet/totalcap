@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from database import engine
+from backend.database import engine
 
 def check_servico():
     with engine.connect() as conn:

@@ -1,5 +1,5 @@
-from database import SessionLocal
-from app.models.regiao import Regiao
+from backend.database import SessionLocal
+from backend.app.models.regiao import Regiao
 
 def seed_regiao():
     db = SessionLocal()

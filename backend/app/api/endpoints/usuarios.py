@@ -2,11 +2,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api import deps
-from app.core import security
-from app.models.usuario import Usuario
-from app.schemas.usuario import PasswordChangeResponse, UpdatePassword
-from database import get_db
+from backend.app.api import deps
+from backend.app.core import security
+from backend.app.models.usuario import Usuario
+from backend.app.schemas.usuario import PasswordChangeResponse, UpdatePassword
+from backend.database import get_db
 
 router = APIRouter()
 

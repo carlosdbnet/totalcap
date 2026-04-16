@@ -1,10 +1,10 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from database import get_db
-from app.models.cliente import Cliente as ClienteModel
-from app.models.contato import Contato as ContatoModel, ContatoEndereco, ContatoEmail, ContatoInfo
-from app.schemas.contato import Cliente, ClienteCreate, ClienteUpdate
+from backend.database import get_db
+from backend.app.models.cliente import Cliente as ClienteModel
+from backend.app.models.contato import Contato as ContatoModel, ContatoEndereco, ContatoEmail, ContatoInfo
+from backend.app.schemas.contato import Cliente, ClienteCreate, ClienteUpdate
 
 router = APIRouter()
 

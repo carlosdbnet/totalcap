@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.area import area_repo
-from app.schemas.area import AreaCreate, AreaUpdate
+from backend.app.repositories.area import area_repo
+from backend.app.schemas.area import AreaCreate, AreaUpdate
 from fastapi import HTTPException
 
 class AreaService:

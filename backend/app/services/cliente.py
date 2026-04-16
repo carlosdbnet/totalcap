@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.cliente import cliente_repo
-from app.schemas.cliente import ClienteCreate, ClienteUpdate
+from backend.app.repositories.cliente import cliente_repo
+from backend.app.schemas.cliente import ClienteCreate, ClienteUpdate
 from fastapi import HTTPException
 
 class ClienteService:

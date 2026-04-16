@@ -1,4 +1,4 @@
-from database import SessionLocal
+from backend.database import SessionLocal
 from sqlalchemy import text
 
 def check_usuario():

@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.tiporecap import TipoRecapagem as TipoRecapagemModel
-from app.schemas.tiporecap import TipoRecapagem, TipoRecapagemCreate, TipoRecapagemUpdate
+from backend.database import get_db
+from backend.app.models.tiporecap import TipoRecapagem as TipoRecapagemModel
+from backend.app.schemas.tiporecap import TipoRecapagem, TipoRecapagemCreate, TipoRecapagemUpdate
 
 router = APIRouter()
 

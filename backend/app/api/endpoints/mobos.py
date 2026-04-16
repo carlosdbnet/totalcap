@@ -2,10 +2,10 @@ from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
-from app.models.mobos import MobOS, MobPneu
-from app.schemas.mobos import MobOSCreate, MobOSUpdate, MobOS as MobOSSchema
-from database import get_db
+from backend.app.api import deps
+from backend.app.models.mobos import MobOS, MobPneu
+from backend.app.schemas.mobos import MobOSCreate, MobOSUpdate, MobOS as MobOSSchema
+from backend.database import get_db
 
 router = APIRouter()
 

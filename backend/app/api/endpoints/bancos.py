@@ -1,9 +1,9 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from app.models.banco import Banco as BancoModel
-from app.schemas.banco import Banco, BancoCreate, BancoUpdate
+from backend.database import get_db
+from backend.app.models.banco import Banco as BancoModel
+from backend.app.schemas.banco import Banco, BancoCreate, BancoUpdate
 
 router = APIRouter()
 
