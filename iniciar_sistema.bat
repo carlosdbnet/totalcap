@@ -26,15 +26,13 @@ goto menu
 :backend
 cls
 echo Iniciando apenas o Backend na aba atual...
-cd backend
-..\.venv\Scripts\uvicorn main:app --reload --host 0.0.0.0 --port 8000
+.venv\Scripts\uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 pause
 exit
 
 :frontend
 cls
 echo Iniciando apenas o Frontend na aba atual...
-cd frontend
 npm run dev -- --host
 pause
 exit
@@ -42,8 +40,8 @@ exit
 :all
 cls
 echo Iniciando os servicos em janelas separadas...
-start "Totalcap - Backend" cmd /c "cd backend && ..\.venv\Scripts\uvicorn main:app --reload --host 0.0.0.0 --port 8000"
-start "Totalcap - Frontend" cmd /c "cd frontend && npm run dev -- --host"
+start "Totalcap - Backend" cmd /c ".venv\Scripts\uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+start "Totalcap - Frontend" cmd /c "npm run dev -- --host"
 echo Servicos iniciados! Pressione qualquer tecla para fechar este menu.
 pause >nul
 exit

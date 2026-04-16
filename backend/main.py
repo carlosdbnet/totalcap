@@ -1,3 +1,9 @@
+import os
+import sys
+
+# Garante que a raiz do projeto est no path para evitar ModuleNotFoundError
+sys.path.append(os.getcwd())
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
