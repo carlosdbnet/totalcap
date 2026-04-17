@@ -16,6 +16,7 @@ export default function Areas() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal state
@@ -49,10 +50,13 @@ export default function Areas() {
   const fetchAreas = async () => {
     try {
       setLoading(true);
+      setFetchError(null);
       const response = await api.get('/areas/');
+      console.log("Áreas carregadas:", response.data);
       setAreas(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao buscar áreas:", error);
+      setFetchError(error.message || "Erro de conexão com o servidor.");
     } finally {
       setLoading(false);
     }
@@ -130,6 +134,10 @@ export default function Areas() {
       <div className="page-header">
         <h1 className="title">Cadastros de Áreas</h1>
         <div className="header-actions">
+          <button className="btn-secondary" onClick={fetchAreas} title="Recarregar dados">
+            <Search size={20} />
+            Atualizar Lista
+          </button>
           <button className="btn-secondary" onClick={handlePrint}>
             <Printer size={20} />
             Imprimir
@@ -153,6 +161,13 @@ export default function Areas() {
             />
           </div>
         </div>
+
+        {fetchError && (
+          <div className="error-banner" style={{ margin: '0 1.5rem 1rem 1.5rem', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Search size={20} />
+            <span>Erro ao carregar áreas: {fetchError}. Verifique a conexão com o servidor.</span>
+          </div>
+        )}
 
         {loading ? (
           <div className="loading-state">Carregando dados...</div>

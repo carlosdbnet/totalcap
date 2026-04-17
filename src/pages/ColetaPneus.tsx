@@ -34,7 +34,7 @@ interface MobOS {
   msgmob: string;
   id_vendedor: number;
   datalan: string;
-  sincronizado: string;
+  sincronizado: boolean;
   pneus: MobPneu[];
   contato?: { nome: string };
   vendedor?: { nome: string };
@@ -58,6 +58,7 @@ export default function ColetaPneus() {
   const [coletas, setColetas] = useState<MobOS[]>([]);
   const [filteredColetas, setFilteredColetas] = useState<MobOS[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Lookups
@@ -151,10 +152,13 @@ export default function ColetaPneus() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setFetchError(null);
       const response = await api.get('/coletas/');
+      console.log("Coletas carregadas:", response.data);
       setColetas(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao buscar Coletas:", error);
+      setFetchError(error.message || "Erro de conexão com o servidor.");
     } finally {
       setLoading(false);
     }
@@ -646,7 +650,17 @@ export default function ColetaPneus() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <button className="btn-secondary" onClick={fetchData} title="Recarregar dados">
+          <Loader2 className={loading ? "spinning" : ""} size={18} /> Atualizar Lista
+        </button>
       </div>
+
+      {fetchError && (
+        <div className="error-banner" style={{ margin: '0 2rem 1rem 2rem', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertCircle size={20} />
+          <span>Erro ao carregar dados: {fetchError}. Verifique se o servidor está rodando.</span>
+        </div>
+      )}
 
       <div className="data-grid-container glass-panel">
         {loading ? (
@@ -678,11 +692,11 @@ export default function ColetaPneus() {
                       style={{ cursor: 'pointer' }}
                     >
                       <td><span className="os-number">#{coleta.id}</span></td>
-                      <td>{new Date(coleta.dataos).toLocaleDateString('pt-BR')}</td>
+                      <td>{coleta.dataos ? new Date(coleta.dataos).toLocaleDateString('pt-BR') : '---'}</td>
                       <td>{coleta.contato?.nome || 'Cliente não encontrado'}</td>
                       <td>{coleta.vendedor?.nome || '---'}</td>
-                      <td><span className="badge-info highlight">{coleta.pneus.length} pneu(s)</span></td>
-                      <td className="valor-cell-readonly">R$ {parseFloat(coleta.vtotal.toString()).toFixed(2)}</td>
+                      <td><span className="badge-info highlight">{(coleta.pneus?.length || 0)} pneu(s)</span></td>
+                      <td className="valor-cell-readonly">R$ {parseFloat((coleta.vtotal || 0).toString()).toFixed(2)}</td>
                       <td>
                         <span className={`status-badge-item status-${coleta.sincronizado ? 'pronto' : 'aguardando'}`}>
                           {coleta.sincronizado ? 'Sim' : 'Não'}

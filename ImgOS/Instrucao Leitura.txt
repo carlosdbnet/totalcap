@@ -1,0 +1,40 @@
+Leia o campo Numero ordem servico, Data abaixo, , CNPJ/CPF, e Nome/Razao Social, na leitura de itens quando encontrar caracter " considere o conteudo do item anterior, no rodape leia o vendedor.
+
+IA (GPT-4o-mini) - 17/04/2026, 01:01:57
+-----------------------------------
+Medida: 275/80
+Marca: Xori
+Série: JH1C
+Fogo: Roberto
+DOT: 49/24
+-----------------------------------
+Mapeamento: Medida ID 0, Marca ID 0
+Status: Dados aplicados ao formulário.
+
+
+{  "numero_ordem_servico": "67694",  "data": "14/04/26",  "cnpj_cpf": "",  "nome_razao_social": "Cingu Log",  "itens": [    {      "medida": "275/80",      "piso": "",      "marca": "Xbri",      "numero_serie": "JH1C",      "dot": "4424",      "d_origem": "Kobasto",      "r": "",      "numero_fogo": "",      "desenho": "VLC",      "valor": "",      "observacao": ""    }  ],  "vendedor": "Fabio"}
+Observações da leitura:
+
+
+Número OS: 67694 (canto superior direito).
+
+
+Data: manuscrito parece 14/04/26.
+
+
+CNPJ/CPF: campo está em branco.
+
+
+Nome/Razão Social: leitura manuscrita mais provável “Cingu Log”.
+
+
+Item encontrado: apenas uma linha preenchida.
+
+
+Regra do caractere ": não aparece na linha de itens, então não foi necessário repetir valores.
+
+
+Vendedor no rodapé: assinatura “Fabio”.
+
+
+Se quiser, também posso te mostrar como transformar esse tipo de leitura em prompt para IA OCR que retorna exatamente esse JSON para usar no seu sistema React Native + FastAPI.
