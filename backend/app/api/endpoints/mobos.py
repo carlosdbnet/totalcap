@@ -22,7 +22,7 @@ def read_mobos(
         joinedload(MobOS.pneus),
         joinedload(MobOS.contato),
         joinedload(MobOS.vendedor)
-    ).offset(skip).limit(limit).all()
+    ).order_by(MobOS.id.desc()).offset(skip).limit(limit).all()
     return coletas
 
 @router.post("/", response_model=MobOSSchema, status_code=status.HTTP_201_CREATED)
@@ -38,13 +38,38 @@ def create_mobos(
     total_valor = sum(p.valor for p in obj_in.pneus)
     qtd_pneu = len(obj_in.pneus)
 
+    # Verifica duplicidade do Número da OS
+    if obj_in.numeroos:
+        existing = db.query(MobOS).filter(MobOS.numeroos == obj_in.numeroos).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Já existe uma coleta com o número da OS {obj_in.numeroos}."
+            )
+
     # Create main OS
     db_obj = MobOS(
-        id_contato=obj_in.id_contato,
+        id_contato=obj_in.id_contato if obj_in.id_contato and obj_in.id_contato > 0 else None,
         qpneu=qtd_pneu,
         vtotal=total_valor,
         msgmob=obj_in.msgmob,
-        id_vendedor=obj_in.id_vendedor
+        id_vendedor=obj_in.id_vendedor,
+        
+        # Novos campos salvos no banco
+        numeroos=obj_in.numeroos,
+        cpfcnpj=obj_in.cpfcnpj,
+        nome=obj_in.nome,
+        endereco=obj_in.endereco,
+        cidade=obj_in.cidade,
+        uf=obj_in.uf,
+        fone=obj_in.fone,
+        veiculo=obj_in.veiculo,
+        formapagto=obj_in.formapagto,
+        vendedor_ocr=obj_in.vendedor_ocr,
+        servicocomgarantia=obj_in.servicocomgarantia,
+        tipoveiculo=obj_in.tipoveiculo,
+        somentesepar=obj_in.somentesepar,
+        podealterardesenho=obj_in.podealterardesenho
     )
     db.add(db_obj)
     db.flush() # Get ID
@@ -68,8 +93,7 @@ def create_mobos(
             garantia=pneu_in.garantia,
             obs=pneu_in.obs,
             medidanova=pneu_in.medidanova,
-            marcanova=pneu_in.marcanova,
-            id_vendedor=pneu_in.id_vendedor if pneu_in.id_vendedor else None
+            marcanova=pneu_in.marcanova
         )
         db.add(db_pneu)
         
@@ -120,11 +144,26 @@ def update_mobos(
     qtd_pneu = len(obj_in.pneus)
 
     # 1. Update main entity fields
-    db_obj.id_contato = obj_in.id_contato
+    db_obj.id_contato = obj_in.id_contato if obj_in.id_contato and obj_in.id_contato > 0 else None
     db_obj.msgmob = obj_in.msgmob
     db_obj.id_vendedor = obj_in.id_vendedor
     db_obj.qpneu = qtd_pneu
     db_obj.vtotal = total_valor
+    
+    # Novos campos atualizados (numeroos REMOVIDO para garantir imutabilidade)
+    db_obj.cpfcnpj = obj_in.cpfcnpj
+    db_obj.nome = obj_in.nome
+    db_obj.endereco = obj_in.endereco
+    db_obj.cidade = obj_in.cidade
+    db_obj.uf = obj_in.uf
+    db_obj.fone = obj_in.fone
+    db_obj.veiculo = obj_in.veiculo
+    db_obj.formapagto = obj_in.formapagto
+    db_obj.vendedor_ocr = obj_in.vendedor_ocr
+    db_obj.servicocomgarantia = obj_in.servicocomgarantia
+    db_obj.tipoveiculo = obj_in.tipoveiculo
+    db_obj.somentesepar = obj_in.somentesepar
+    db_obj.podealterardesenho = obj_in.podealterardesenho
         
     # 2. Sync Pneus (Details)
     existing_pneus = {p.id: p for p in db_obj.pneus}
@@ -157,8 +196,7 @@ def update_mobos(
                 garantia=pneu_in.garantia,
                 obs=pneu_in.obs,
                 medidanova=pneu_in.medidanova,
-                marcanova=pneu_in.marcanova,
-                id_vendedor=pneu_in.id_vendedor if pneu_in.id_vendedor else None
+                marcanova=pneu_in.marcanova
             )
             db.add(new_pneu)
 

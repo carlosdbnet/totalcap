@@ -21,7 +21,7 @@ class MobPneuBase(BaseModel):
     obs: Optional[str] = None
     medidanova: Optional[str] = None
     marcanova: Optional[str] = None
-    id_vendedor: Optional[int] = None
+    desenhonovo: Optional[str] = None
 
 class MobPneuCreate(MobPneuBase):
     pass
@@ -33,17 +33,32 @@ class MobPneu(MobPneuBase):
     id: int
     id_mobos: int
     datalan: Optional[datetime] = None
-    sincronizado: Optional[str] = "N"
     
     class Config:
         from_attributes = True
 
 class MobOSBase(BaseModel):
-    id_contato: int
+    id_contato: Optional[int] = None
     qpneu: Optional[int] = 0
     vtotal: Optional[float] = 0.0
     msgmob: Optional[str] = None
-    id_vendedor: Optional[int] = None
+    id_vendedor: int
+    
+    # Novos campos do cabeçalho (Normalizados para minúsculo)
+    numeroos: Optional[int] = None
+    cpfcnpj: Optional[str] = None
+    nome: Optional[str] = None
+    endereco: Optional[str] = None
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
+    fone: Optional[str] = None
+    veiculo: Optional[str] = None
+    formapagto: Optional[str] = None
+    vendedor_ocr: Optional[str] = None
+    servicocomgarantia: Optional[str] = None
+    tipoveiculo: Optional[str] = None
+    somentesepar: Optional[str] = None
+    podealterardesenho: Optional[str] = None
 
 class MobOSCreate(MobOSBase):
     pneus: List[MobPneuCreate] = []
@@ -55,7 +70,7 @@ class MobOS(MobOSBase):
     id: int
     dataos: Optional[datetime] = None
     datalan: Optional[datetime] = None
-    sincronizado: Optional[str] = "N"
+    sincronizado: Optional[bool] = False
     pneus: List[MobPneu] = []
     contato: Optional[ContatoBase] = None
     vendedor: Optional[VendedorBase] = None

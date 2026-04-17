@@ -129,6 +129,9 @@ class ContatoBase(BaseModel):
     flagvendedor: Optional[bool] = False
     ativo: Optional[bool] = True
 
+    class Config:
+        from_attributes = True
+
 class ContatoCreate(ContatoBase):
     enderecos: Optional[List[ContatoEnderecoCreate]] = []
     emails: Optional[List[ContatoEmailCreate]] = []

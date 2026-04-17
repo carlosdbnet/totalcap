@@ -1,10 +1,11 @@
 import os
 import sys
 
-# Garante que a raiz do projeto est no path para que o 'backend' seja encontrado
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Garante que a raiz do projeto e a pasta backend estão no path
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from backend.main import app as handler
+from backend.main import app
 
-# A Vercel procura por uma variavel 'app' ou 'handler'
-app = handler
+# Exporta para o Vercel
+# O Vercel Python runtime espera uma variável 'app' no nível superior
+instance = app

@@ -24,7 +24,8 @@ from backend.app.api.endpoints import (
     empresas,
     usuarios,
     ordens_servico,
-    mobos
+    mobos,
+    ocr
 )
 
 api_router = APIRouter()
@@ -50,6 +51,7 @@ api_router.include_router(empresas.router, prefix="/empresas", tags=["empresas"]
 api_router.include_router(usuarios.router, prefix="/usuarios", tags=["usuários"])
 api_router.include_router(ordens_servico.router, prefix="/ordens-servico", tags=["os"])
 api_router.include_router(mobos.router, prefix="/coletas", tags=["coletas"])
+api_router.include_router(ocr.router, prefix="/ocr", tags=["ocr"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
     from backend.app.models.usuario import Usuario

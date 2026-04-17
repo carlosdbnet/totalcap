@@ -17,6 +17,8 @@ class VendedorBase(BaseModel):
     cargo: Optional[str] = None
     ativo: Optional[bool] = True
 
+    model_config = ConfigDict(from_attributes=True)
+
 class VendedorCreate(VendedorBase):
     pass
 
