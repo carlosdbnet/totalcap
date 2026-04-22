@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Search, Plus, Trash2, Edit2, X, DollarSign, Shield, Info, ClipboardList, Printer, Camera, Loader2, AlertCircle, User, FilePlus, Calendar, Save } from 'lucide-react';
+import { Package, Search, Plus, Trash2, Edit2, Eye, X, DollarSign, Shield, Info, ClipboardList, Printer, Camera, Loader2, AlertCircle, User, FilePlus, Calendar, Save } from 'lucide-react';
 import api from '../lib/api';
 import './ColetaPneus.css';
 
@@ -111,7 +111,7 @@ export default function ColetaPneus() {
       return parsed.isOpen || false;
     } catch { return false; }
   });
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -331,17 +331,17 @@ export default function ColetaPneus() {
       }, 'Clientes'),
       loadResource('/vendedores/', setVendedores, 'Vendedores'),
       loadResource('/medidas/', setMedidas, 'Medidas'),
-      loadResource('/produtos/', setMarcas, 'Marcas'),
+      loadResource('/marcas/', setMarcas, 'Marcas'),
       loadResource('/desenhos/', setDesenhos, 'Desenhos'),
       loadResource('/tipo-recapagem/', setTiposRecap, 'Tipos de Recapagem'),
     ]);
   };
 
-  const openModal = (mode: 'create' | 'edit', coleta?: MobOS) => {
+  const openModal = (mode: 'create' | 'edit' | 'view', coleta?: MobOS) => {
     setFormError('');
     setModalMode(mode);
     setIsModalOpen(true);
-    if (mode === 'edit' && coleta) {
+    if ((mode === 'edit' || mode === 'view') && coleta) {
       setCurrentId(coleta.id);
       setFormData({
         id_contato: coleta.id_contato,
@@ -948,12 +948,22 @@ export default function ColetaPneus() {
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
                         <button 
-                          className={`icon-btn success ${coleta.status !== 'Ok' ? 'disabled' : ''}`} 
-                          onClick={(e) => { e.stopPropagation(); if (coleta.status === 'Ok') handleGenerateOS(coleta.id); }} 
-                          title={coleta.status === 'Ok' ? "Gerar Ordem de Serviço" : "É necessário validar (status Ok) antes de gerar OS"} 
-                          disabled={coleta.status !== 'Ok'}
+                          className={`icon-btn warning ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
+                          onClick={(e) => { e.stopPropagation(); handleGenerateOS(coleta.id); }} 
+                          title="Gerar Ordem de Serviço" 
+                          disabled={coleta.status === 'GOS'}
+                          style={{ minWidth: '95px', background: '#f59e0b' }}
                         >
                           <FilePlus size={18} />
+                          <span>Gera OS</span>
+                        </button>
+                        <button 
+                          className="icon-btn success" 
+                          onClick={(e) => { e.stopPropagation(); openModal('view', coleta); }} 
+                          title="Visualizar Detalhes"
+                          style={{ background: '#10b981' }}
+                        >
+                          <Eye size={18} />
                         </button>
                         <button 
                           className={`icon-btn edit ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
@@ -985,7 +995,7 @@ export default function ColetaPneus() {
         <div className="coleta-modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="coleta-modal-content full-screen" onClick={e => e.stopPropagation()}>
             <div className="coleta-modal-header">
-              <h2>{modalMode === 'create' ? 'Nova Coleta de Pneus' : 'Editar Coleta de Pneus'}</h2>
+              <h2>{modalMode === 'create' ? 'Nova Coleta de Pneus' : (modalMode === 'view' ? 'Visualizar Coleta de Pneus' : 'Editar Coleta de Pneus')}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -996,30 +1006,30 @@ export default function ColetaPneus() {
                 <div className="grid-4">
                   <div className="form-group span-2">
                     <label>Cliente</label>
-                    <select className="form-input" id="id_contato" value={formData.id_contato} onChange={handleChange}>
+                    <select className="form-input" id="id_contato" value={formData.id_contato} onChange={handleChange} disabled={modalMode === 'view'}>
                       <option value={0}>Selecione...</option>
                       {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
                     <label>CPF/CNPJ</label>
-                    <input className="form-input" type="text" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} />
+                    <input className="form-input" type="text" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>Fone</label>
-                    <input className="form-input" type="text" id="fone" value={formData.fone} onChange={handleChange} />
+                    <input className="form-input" type="text" id="fone" value={formData.fone} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group span-3">
                     <label>Endereço</label>
-                    <input className="form-input" type="text" id="endereco" value={formData.endereco} onChange={handleChange} />
+                    <input className="form-input" type="text" id="endereco" value={formData.endereco} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>Cidade</label>
-                    <input className="form-input" type="text" id="cidade" value={formData.cidade} onChange={handleChange} />
+                    <input className="form-input" type="text" id="cidade" value={formData.cidade} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>UF</label>
-                    <input className="form-input" type="text" id="uf" value={formData.uf} onChange={handleChange} />
+                    <input className="form-input" type="text" id="uf" value={formData.uf} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                 </div>
 
@@ -1027,36 +1037,36 @@ export default function ColetaPneus() {
                 <div className="grid-4">
                   <div className="form-group">
                     <label>Nº OS</label>
-                    <input className="form-input" type="text" id="numos" value={formData.numos} onChange={handleChange} />
+                    <input className="form-input" type="text" id="numos" value={formData.numos} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>Vendedor</label>
-                    <select className="form-input" id="id_vendedor" value={formData.id_vendedor} onChange={handleChange}>
+                    <select className="form-input" id="id_vendedor" value={formData.id_vendedor} onChange={handleChange} disabled={modalMode === 'view'}>
                       <option value={0}>Selecione...</option>
                       {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
                     <label>Forma Pagto</label>
-                    <input className="form-input" type="text" id="formapagto" value={formData.formapagto} onChange={handleChange} />
+                    <input className="form-input" type="text" id="formapagto" value={formData.formapagto} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>Veículo</label>
-                    <input className="form-input" type="text" id="veiculo" value={formData.veiculo} onChange={handleChange} />
+                    <input className="form-input" type="text" id="veiculo" value={formData.veiculo} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>Tipo Veículo</label>
-                    <input className="form-input" type="text" id="tipoveiculo" value={formData.tipoveiculo} onChange={handleChange} />
+                    <input className="form-input" type="text" id="tipoveiculo" value={formData.tipoveiculo} onChange={handleChange} disabled={modalMode === 'view'} />
                   </div>
                   <div className="form-group">
                     <label>Status</label>
-                    <input className="form-input" type="text" id="status" value={formData.status} onChange={handleChange} disabled={modalMode === 'edit'} />
+                    <input className="form-input" type="text" id="status" value={formData.status} onChange={handleChange} disabled={modalMode === 'edit' || modalMode === 'view'} />
                   </div>
                 </div>
 
                 <div className="section-title"><ClipboardList size={18} /> Observações</div>
                 <div className="form-group">
-                  <textarea className="form-input" id="msgmob" value={formData.msgmob} onChange={handleChange} rows={3} />
+                  <textarea className="form-input" id="msgmob" value={formData.msgmob} onChange={handleChange} rows={3} disabled={modalMode === 'view'} />
                 </div>
 
                 <div className="section-title"><Package size={18} /> Pneus ({formData.pneus?.length || 0})</div>
@@ -1064,18 +1074,20 @@ export default function ColetaPneus() {
                   <table className="pneus-table">
                     <thead>
                       <tr>
-                        <th>Medida</th>
-                        <th>Marca</th>
+                        <th style={{ width: '180px' }}>Medida</th>
+                        <th style={{ width: '150px' }}>Marca</th>
                         <th>Desenho</th>
                         <th>Recap</th>
                         <th>Série</th>
+                        <th>Nº Fogo</th>
+                        <th>DOT</th>
                         <th>Valor</th>
-                        <th>Ações</th>
+                        <th style={{ width: '90px' }}>Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(!formData.pneus || formData.pneus.length === 0) ? (
-                        <tr><td colSpan={7} className="empty-pneus">Nenhum pneu adicionado.</td></tr>
+                        <tr><td colSpan={9} className="empty-pneus">Nenhum pneu adicionado.</td></tr>
                       ) : (
                         formData.pneus.map((p: any, idx: number) => (
                           <tr key={idx}>
@@ -1084,19 +1096,29 @@ export default function ColetaPneus() {
                             <td>{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</td>
                             <td>{tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</td>
                             <td>{p.numserie || '-'}</td>
+                            <td>{p.numfogo || '-'}</td>
+                            <td>{p.dot || '-'}</td>
                             <td>R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
                             <td>
-                              <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)}><Edit2 size={16} /></button>
-                              <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)}><Trash2 size={16} /></button>
+                              {modalMode !== 'view' && (
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                  <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)}><Edit2 size={16} /></button>
+                                  <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)}><Trash2 size={16} /></button>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         ))
                       )}
                     </tbody>
                   </table>
-                  <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
-                    <Plus size={16} /> Adicionar Pneu
-                  </button>
+                  {modalMode !== 'view' && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                      <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
+                        <Plus size={16} /> Adicionar Pneu
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="total-row">
@@ -1106,10 +1128,21 @@ export default function ColetaPneus() {
               </div>
 
               <div className="modal-footer-coleta">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="spinning" size={18} /> : (modalMode === 'create' ? 'Cadastrar' : 'Salvar Alterações')}
+                {modalMode !== 'view' && (
+                  <button type="button" className="btn-accent" onClick={handleValidate} style={{ background: '#10b981', color: 'white', marginRight: 'auto' }}>
+                    <Shield size={18} /> Validar Dados
+                  </button>
+                )}
+                
+                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
+                  {modalMode === 'view' ? 'Fechar' : 'Cancelar'}
                 </button>
+
+                {modalMode !== 'view' && (
+                  <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="spinning" size={18} /> : (modalMode === 'create' ? 'Cadastrar' : 'Salvar Alterações')}
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -1119,7 +1152,7 @@ export default function ColetaPneus() {
       {isPneuModalOpen && (
         <div className="coleta-modal-overlay" onClick={() => setIsPneuModalOpen(false)}>
           <div className="pneu-detail-modal" onClick={e => e.stopPropagation()}>
-            <div className="coleta-modal-header">
+            <div className="pneu-modal-header">
               <h3>{editingPneuIndex !== null ? 'Editar Pneu' : 'Adicionar Pneu'}</h3>
               <button className="close-btn" onClick={() => setIsPneuModalOpen(false)}><X size={20} /></button>
             </div>

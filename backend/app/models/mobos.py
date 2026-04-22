@@ -58,7 +58,7 @@ class MobPneu(Base):
     id_mobos = Column(Integer, ForeignKey("mobos.id"), nullable=False)
     
     id_medida = Column(Integer, ForeignKey("medida.id"), nullable=True)
-    id_produto = Column(Integer, ForeignKey("produto.id"), nullable=True)
+    id_marca = Column("id_produto", Integer, ForeignKey("marca.id"), nullable=True)
     id_desenho = Column(Integer, ForeignKey("desenho.id"), nullable=True)
     id_recap = Column(Integer, ForeignKey("tiporecap.id"), nullable=True)
     
@@ -81,6 +81,6 @@ class MobPneu(Base):
     # Relacionamentos
     coleta = relationship("MobOS", back_populates="pneus")
     medida = relationship("Medida")
-    produto = relationship("Produto")
+    marca = relationship("Marca")
     desenho = relationship("Desenho")
     tiporecap = relationship("TipoRecapagem")

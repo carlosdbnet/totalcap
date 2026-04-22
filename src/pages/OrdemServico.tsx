@@ -859,9 +859,9 @@ export default function OrdemServico() {
                                   <span className="secondary-info">{servicos.find(s => s.id === parseInt(p.id_servico))?.descricao || '---'}</span>
                                 </div>
                               </td>
-                              <td>{tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</td>
+                              <td style={{ color: '#2563eb', fontWeight: '500' }}>{tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</td>
                               <td>
-                                <div className="serie-info">
+                                <div className="serie-info" style={{ color: '#2563eb', fontWeight: '500' }}>
                                   <span>Série: {p.numserie || '-'}</span>
                                   <span>Fogo: {p.numfogo || '-'}</span>
                                   <span>DOT: {p.dot || '-'}</span>
