@@ -91,7 +91,7 @@ export default function Atividades() {
     try {
       if (modalMode === 'create') {
         await api.post('/atividades/', { codigo, descricao, ativo });
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/atividades/${currentId}`, { codigo, descricao, ativo });
       }
       await fetchAtividades();

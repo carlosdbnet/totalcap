@@ -11,12 +11,12 @@ class AreaService:
         # Validação de nome unico
         area_existente = area_repo.get_by_nome(db, nome=area_in.nome)
         if area_existente:
-            raise HTTPException(status_code=400, detail="Uma área com este nome já existe.")
+            raise HTTPException(status_code=400, detail="Registro Já Existe")
         
         # Validação de codigo unico
         codigo_existente = area_repo.get_by_codigo(db, codigo=area_in.codigo)
         if codigo_existente:
-            raise HTTPException(status_code=400, detail="Já existe uma área com este código.")
+            raise HTTPException(status_code=400, detail="Registro Já Existe")
             
         return area_repo.create(db, obj_in=area_in)
 

@@ -8,4 +8,4 @@ from backend.main import app
 
 # Exporta para o Vercel
 # O Vercel Python runtime espera uma variável 'app' no nível superior
-instance = app
+app = app

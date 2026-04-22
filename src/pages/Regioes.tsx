@@ -92,7 +92,7 @@ export default function Regioes() {
     try {
       if (modalMode === 'create') {
         await api.post('/regioes/', { codigo, nome, ativo });
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/regioes/${currentId}`, { codigo, nome, ativo });
       }
       await fetchRegioes();

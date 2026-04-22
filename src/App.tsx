@@ -18,13 +18,28 @@ import Marcas from './pages/Marcas';
 import Empresas from './pages/Empresas';
 import TipoRecapagem from './pages/TipoRecapagem';
 import Servicos from './pages/Servicos';
+import Produtos from './pages/Produtos';
 import Setores from './pages/Setores';
 import Operadores from './pages/Operadores';
 import Login from './pages/Login';
+import Faturamento from './pages/Faturamento';
+import Orcamento from './pages/Orcamento';
+import Producao from './pages/Producao';
+import LactoDespesas from './pages/LactoDespesas';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import { ThemeProvider } from './context/ThemeContext';
 import Configuracoes from './pages/Configuracoes';
+import Integracao from './pages/Integracao';
+import Localizacao from './pages/Localizacao';
+import Apontamento from './pages/Apontamento';
+import RegistroFalhas from './pages/RegistroFalhas';
+import ConsumoMateriaPrima from './pages/ConsumoMateriaPrima';
+import GruposProduto from './pages/GruposProduto';
+import Bancos from './pages/Bancos';
+import TiposDocto from './pages/TiposDocto';
+import RelVendasServico from './pages/Relatorios/RelVendasServico';
+import RelComissoes from './pages/Relatorios/RelComissoes';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -77,6 +92,14 @@ function App() {
               <Route path="/clientes" element={<Clientes />} />
               <Route path="/os" element={<OrdemServico />} />
               <Route path="/coleta" element={<ColetaPneus />} />
+              <Route path="/producao" element={<Producao />} />
+              <Route path="/faturamento" element={<Faturamento />} />
+              <Route path="/orcamento" element={<Orcamento />} />
+              <Route path="/localizacao" element={<Localizacao />} />
+              <Route path="/apontamento" element={<Apontamento />} />
+              <Route path="/falhas" element={<RegistroFalhas />} />
+              <Route path="/consumo-materia" element={<ConsumoMateriaPrima />} />
+              <Route path="/lacto-despesas" element={<LactoDespesas />} />
               <Route path="/areas" element={<Areas />} />
               <Route path="regioes" element={<Regioes />} />
               <Route path="atividades" element={<Atividades />} />
@@ -91,9 +114,16 @@ function App() {
               <Route path="/clientes" element={<Clientes />} />
               <Route path="tipo-recapagem" element={<TipoRecapagem />} />
               <Route path="servicos" element={<Servicos />} />
+              <Route path="/produtos" element={<Produtos />} />
               <Route path="setores" element={<Setores />} />
               <Route path="operadores" element={<Operadores />} />
               <Route path="configuracoes" element={<Configuracoes />} />
+              <Route path="integracao" element={<Integracao />} />
+              <Route path="/grupos-produto" element={<GruposProduto />} />
+              <Route path="/bancos" element={<Bancos />} />
+              <Route path="/tipos-docto" element={<TiposDocto />} />
+              <Route path="/rel-vendas-servico" element={<RelVendasServico />} />
+              <Route path="/rel-comissoes" element={<RelComissoes />} />
             </Route>
           </Routes>
         </BrowserRouter>

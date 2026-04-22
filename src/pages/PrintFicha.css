@@ -1,0 +1,254 @@
+/* Layout para Ficha de Produção - Template PDF Refatorado */
+
+@media screen {
+  .printable-ficha-container {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .printable-ficha-container, .printable-ficha-container * {
+    visibility: visible;
+  }
+
+  .printable-ficha-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 200mm;
+    background: white;
+    color: black;
+    font-family: Arial, sans-serif;
+  }
+}
+
+.ficha-card {
+  width: 100%;
+  border: 1px solid #000;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+/* Header Grid */
+.ficha-header {
+  display: flex;
+  border-bottom: 1px solid #000;
+}
+
+.header-logo {
+  width: 120px;
+  padding: 5px;
+  border-right: 1px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo img {
+  max-width: 100%;
+  max-height: 45px;
+}
+
+.header-center-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16pt;
+  border-right: 1px solid #000;
+}
+
+.header-id-grid {
+  width: 250px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-size: 7pt;
+}
+
+.id-box {
+  border-bottom: 1px solid #000;
+  border-right: 1px solid #000;
+  padding: 2px 4px;
+}
+
+.id-box.no-right { border-right: none; }
+.id-box.no-bottom { border-bottom: none; }
+
+.id-label {
+  display: block;
+  font-size: 6pt;
+  text-transform: uppercase;
+}
+
+.id-value {
+  font-weight: bold;
+  font-size: 9pt;
+}
+
+/* Technical Row (Medida, Marca, Serie, Fogo, DOT) */
+.technical-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 0.8fr 0.8fr;
+  border-bottom: 1px solid #000;
+  font-size: 7.5pt;
+}
+
+/* Core Content Area: Sectors + Side Panel */
+.ficha-main-area {
+  display: flex;
+  border-bottom: 1px solid #000;
+}
+
+.production-table-area {
+  flex: 1;
+  border-right: 1px solid #000;
+}
+
+.prod-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prod-table th, .prod-table td {
+  border: 1px solid #000;
+  padding: 1px 3px;
+  font-size: 8pt;
+}
+
+.prod-table th {
+  text-align: center;
+  font-weight: bold;
+  background: #eee;
+}
+
+.sector-name {
+  width: 120px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 7.5pt;
+}
+
+.sector-desc-cell {
+  position: relative;
+  min-height: 22px;
+}
+
+/* Sub-fields inside cells (Perimetro, Raio, etc.) */
+.sub-field-group {
+  display: flex;
+  gap: 10px;
+  font-size: 6.5pt;
+}
+
+.sub-field-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.mini-box {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #000;
+}
+
+/* Side Panel */
+.side-panel {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-item {
+  border-bottom: 1px solid #000;
+  padding: 3px;
+  font-size: 7.5pt;
+}
+
+.side-item.check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.side-item.large {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-weight: bold;
+  color: #ccc;
+}
+
+.barcode-area {
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.barcode-area svg {
+  max-width: 100%;
+  height: auto;
+}
+  font-weight: bold;
+  font-size: 10pt;
+}
+
+/* Footer / Obs */
+.obs-area {
+  padding: 3px 5px;
+  font-size: 7.5pt;
+  min-height: 40px;
+}
+
+/* CARD DE RECUSA */
+.recusa-card {
+  margin-top: 15px;
+}
+
+.recusa-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+}
+
+.recusa-fields {
+  border-right: 1px solid #000;
+}
+
+.motivos-area {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.motivo-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 7pt;
+}
+
+.motivo-header {
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #000;
+  padding: 2px;
+  background: #eee;
+  font-size: 8pt;
+}

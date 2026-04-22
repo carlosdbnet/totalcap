@@ -20,7 +20,7 @@ class MobPneuBase(BaseModel):
     garantia: Optional[str] = None
     obs: Optional[str] = None
     medidanova: Optional[str] = None
-    marcanova: Optional[str] = None
+    produtonovo: Optional[str] = None
     desenhonovo: Optional[str] = None
 
 class MobPneuCreate(MobPneuBase):
@@ -45,7 +45,7 @@ class MobOSBase(BaseModel):
     id_vendedor: int
     
     # Novos campos do cabeçalho (Normalizados para minúsculo)
-    numeroos: Optional[int] = None
+    numos: Optional[int] = None
     cpfcnpj: Optional[str] = None
     nome: Optional[str] = None
     endereco: Optional[str] = None
@@ -59,6 +59,7 @@ class MobOSBase(BaseModel):
     tipoveiculo: Optional[str] = None
     somentesepar: Optional[str] = None
     podealterardesenho: Optional[str] = None
+    status: Optional[str] = ""
 
 class MobOSCreate(MobOSBase):
     pneus: List[MobPneuCreate] = []
@@ -70,7 +71,7 @@ class MobOS(MobOSBase):
     id: int
     dataos: Optional[datetime] = None
     datalan: Optional[datetime] = None
-    sincronizado: Optional[bool] = False
+    status: Optional[str] = ""
     pneus: List[MobPneu] = []
     contato: Optional[ContatoBase] = None
     vendedor: Optional[VendedorBase] = None

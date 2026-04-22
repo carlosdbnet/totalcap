@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation, Outlet, NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
   FileText,
   BarChart2,
   LogOut,
@@ -13,7 +13,15 @@ import {
   ChevronDown,
   ChevronRight,
   Menu,
-  X
+  X,
+  Plug2,
+  CreditCard,
+  Factory,
+  Clock,
+  AlertTriangle,
+  Layers,
+  Calculator,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './MainLayout.css';
@@ -22,18 +30,46 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: ClipboardList, label: 'Coleta de Pneus', path: '/coleta' },
   { icon: FileText, label: 'Ordem de Serviço', path: '/os' },
-  { icon: Monitor, label: 'Produção', path: '/producao' },
-  { icon: MapPin, label: 'Localização', path: '/localizacao' },
-  { icon: BarChart2, label: 'Relatórios', path: '/relatorios' },
-  { 
-    icon: Users, 
-    label: 'Cadastros', 
+  { icon: CreditCard, label: 'Faturamento', path: '/faturamento' },
+  { icon: Calculator, label: 'Orçamento', path: '/orcamento' },
+  {
+    icon: Factory,
+    label: 'Chão de Fábrica',
+    path: '#',
+    subItems: [
+      { label: 'Localização', path: '/localizacao' },
+      { label: 'Apontamento', path: '/apontamento' },
+      { label: 'Registro de Falhas', path: '/falhas' },
+      { label: 'Consumo de Mat.Prima', path: '/consumo-materia' },
+      { label: 'Produção', path: '/producao' },
+    ]
+  },
+  { icon: DollarSign, label: 'Despesas C/ Vendas', path: '/lacto-despesas' },
+  {
+    icon: BarChart2,
+    label: 'Relatórios',
+    path: '#',
+    subItems: [
+      {
+        label: 'Faturamento',
+        path: '#',
+        isGroup: true,
+        subItems: [
+          { label: 'Rel. Vendas por serviço', path: '/rel-vendas-servico' },
+          { label: 'Rel. Comissões', path: '/rel-comissoes' },
+        ]
+      }
+    ]
+  },
+  {
+    icon: Users,
+    label: 'Cadastros',
     path: '#',
     subItems: [
       { label: 'Clientes', path: '/clientes' },
-      { 
-        label: 'Auxiliares', 
-        path: '#', 
+      {
+        label: 'Auxiliares',
+        path: '#',
         isGroup: true,
         subItems: [
           { label: 'Áreas', path: '/areas' },
@@ -43,17 +79,21 @@ const menuItems = [
           { label: 'Transportadoras', path: '/transportadoras' },
           { label: 'Cidades', path: '/cidades' },
           { label: 'Estados', path: '/estados' },
+          { label: 'Bancos', path: '/bancos' },
+          { label: 'Tipo de Docto', path: '/tipos-docto' },
         ]
       },
-      { 
-        label: 'Produção', 
-        path: '#', 
+      {
+        label: 'Produção',
+        path: '#',
         isGroup: true,
         subItems: [
           { label: 'Medidas', path: '/medidas' },
           { label: 'Desenhos', path: '/desenhos' },
           { label: 'Marcas', path: '/marcas' },
           { label: 'Tipo Recapagem', path: '/tipo-recapagem' },
+          { label: 'Produto', path: '/produtos' },
+          { label: 'Grupos Produto', path: '/grupos-produto' },
           { label: 'Serviços', path: '/servicos' },
           { label: 'Setores', path: '/setores' },
           { label: 'Operadores', path: '/operadores' },
@@ -62,6 +102,7 @@ const menuItems = [
       { label: 'Empresa', path: '/empresas' },
     ]
   },
+  { icon: Plug2, label: 'Integração', path: '/integracao' },
   { icon: Settings, label: 'Configuração', path: '/configuracoes' },
 ];
 
@@ -80,7 +121,7 @@ export default function MainLayout() {
   const toggleSubMenu = (label: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (isCollapsed) setIsCollapsed(false);
-    setOpenSubMenus(prev => 
+    setOpenSubMenus(prev =>
       prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
     );
   };
@@ -94,12 +135,12 @@ export default function MainLayout() {
           <div className="logo-icon"></div>
           {!isCollapsed && <h2>Totalcap</h2>}
           {isMobileOpen && (
-            <button className="icon-btn" onClick={() => setIsMobileOpen(false)} style={{marginLeft: 'auto'}}>
+            <button className="icon-btn" onClick={() => setIsMobileOpen(false)} style={{ marginLeft: 'auto' }}>
               <X size={20} />
             </button>
           )}
         </div>
-        
+
         <nav className="nav-menu">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -109,8 +150,8 @@ export default function MainLayout() {
             if (hasSubItems) {
               return (
                 <div key={item.label} className="menu-group">
-                  <div 
-                    className={`nav-item ${isOpen ? 'group-open' : ''}`} 
+                  <div
+                    className={`nav-item ${isOpen ? 'group-open' : ''}`}
                     onClick={() => toggleSubMenu(item.label)}
                     style={{ cursor: 'pointer' }}
                   >
@@ -120,7 +161,7 @@ export default function MainLayout() {
                       {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </div>
                   </div>
-                  
+
                   {isOpen && (
                     <div className="sub-menu">
                       {item.subItems?.map((sub) => {
@@ -128,7 +169,7 @@ export default function MainLayout() {
                           const isGroupOpen = openSubMenus.includes(sub.label);
                           return (
                             <div key={sub.label} className="menu-group nested">
-                              <div 
+                              <div
                                 className={`sub-nav-item group-header ${isGroupOpen ? 'open' : ''}`}
                                 onClick={(e) => toggleSubMenu(sub.label, e)}
                               >
@@ -140,10 +181,10 @@ export default function MainLayout() {
                               {isGroupOpen && (
                                 <div className="nested-sub-menu">
                                   {sub.subItems?.map((deepSub: any) => (
-                                    <NavLink 
-                                      key={deepSub.path} 
-                                      to={deepSub.path} 
-                                      className={({isActive}) => `sub-nav-item ${isActive ? 'active' : ''}`}
+                                    <NavLink
+                                      key={deepSub.path}
+                                      to={deepSub.path}
+                                      className={({ isActive }) => `sub-nav-item ${isActive ? 'active' : ''}`}
                                     >
                                       {deepSub.label}
                                     </NavLink>
@@ -154,10 +195,10 @@ export default function MainLayout() {
                           );
                         }
                         return (
-                          <NavLink 
-                            key={sub.path} 
-                            to={sub.path} 
-                            className={({isActive}) => `sub-nav-item ${isActive ? 'active' : ''}`}
+                          <NavLink
+                            key={sub.path}
+                            to={sub.path}
+                            className={({ isActive }) => `sub-nav-item ${isActive ? 'active' : ''}`}
                           >
                             {sub.label}
                           </NavLink>
@@ -170,10 +211,10 @@ export default function MainLayout() {
             }
 
             return (
-              <NavLink 
-                key={item.path} 
-                to={item.path} 
-                className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               >
                 <Icon size={20} />
                 <span>{item.label}</span>
@@ -212,7 +253,7 @@ export default function MainLayout() {
             </div>
           </div>
         </header>
-        
+
         <div className="page-content">
           <Outlet />
         </div>

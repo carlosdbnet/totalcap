@@ -186,7 +186,7 @@ export default function Empresas() {
     try {
       if (modalMode === 'create') {
         await api.post('/empresas/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/empresas/${currentId}`, formData);
       }
       await fetchData();

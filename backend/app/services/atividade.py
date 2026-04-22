@@ -10,7 +10,7 @@ class AtividadeService:
     def create_atividade(self, db: Session, atividade_in: AtividadeCreate):
         atividade_existente = atividade_repo.get_by_codigo(db, codigo=atividade_in.codigo)
         if atividade_existente:
-            raise HTTPException(status_code=400, detail="Já existe uma atividade cadastrada com este código.")
+            raise HTTPException(status_code=400, detail="Registro Já Existe")
         return atividade_repo.create(db, obj_in=atividade_in)
 
     def update_atividade(self, db: Session, atividade_id: int, atividade_in: AtividadeUpdate):

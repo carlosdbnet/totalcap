@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Printer, User, Home, Mail, DollarSign, Users, BookOpen } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Eye, Printer, User, Home, Mail, DollarSign, Users, BookOpen } from 'lucide-react';
 import api from '../lib/api';
 import './Clientes.css';
 
@@ -25,81 +25,73 @@ interface ContatoEmail {
 interface Cliente {
   id: number;
   nome: string;
-  documento: string;
+  razaosocial: string;
+  cpfcnpj: string;
+  pessoa: string;
+  rg: string;
+  emitenterg: string;
+  inscestadual: string;
+  inscmunicipio: string;
+  tipodoc: string;
+  cxpostal: string;
+  codigopais: string;
+  nomepais: string;
+  rua: string;
+  numcasa: string;
+  complemento: string;
+  bairro: string;
+  cep: string;
+  cidade: string;
+  uf: string;
+  foneprincipal: string;
   email: string;
-  telefone: string;
+  emailnfe: string;
+  site: string;
+  contato_comercial: string;
+  celular_comercial: string;
+  contato_financeiro: string;
+  celular_financeiro: string;
+  nomepai: string;
+  nomemae: string;
+  nomeconjuge: string;
+  rgconjuge: string;
+  datanascto: string;
+  nasctoconjuge: string;
+  sexo: string;
+  ecivil: string;
+  limicredito: number;
+  prazomax: number;
+  diafat: number;
+  conceito: string;
+  datapricompra: string;
+  dataultcompra: string;
+  numcompra: number;
+  valpricompra: number;
+  valmaicompra: number;
+  valultcompra: number;
+  datacad: string;
+  dataspc: string;
+  obs: string;
+  ref_spc: string;
+  ref_fin: string;
+  ref_com: string;
+  ref_prod: string;
+  id_cidade?: number;
+  id_area?: number;
+  id_regiao?: number;
+  id_vendedor?: number;
+  id_atividade?: number;
+  id_banco?: number;
+  contribuinte: boolean;
+  consumidor: boolean;
+  flagcliente: boolean;
+  flagfornecedor: boolean;
+  flagtranspotador: boolean;
+  flagcolaborador: boolean;
+  flagvendedor: boolean;
   ativo: boolean;
-  id_contato?: number;
-  contato?: {
-    nome: string;
-    razaosocial: string;
-    cpfcnpj: string;
-    pessoa: string;
-    rg: string;
-    emitenterg: string;
-    inscestadual: string;
-    inscmunicipio: string;
-    tipodoc: string;
-    cxpostal: string;
-    codigopais: string;
-    nomepais: string;
-    rua: string;
-    numcasa: string;
-    complemento: string;
-    bairro: string;
-    cep: string;
-    cidade: string;
-    uf: string;
-    foneprincipal: string;
-    email: string;
-    emailnfe: string;
-    site: string;
-    contato_comercial: string;
-    celular_comercial: string;
-    contato_financeiro: string;
-    celular_financeiro: string;
-    nomepai: string;
-    nomemae: string;
-    nomeconjuge: string;
-    rgconjuge: string;
-    datanascto: string;
-    nasctoconjuge: string;
-    sexo: string;
-    ecivil: string;
-    limicredito: number;
-    prazomax: number;
-    diafat: number;
-    conceito: string;
-    datapricompra: string;
-    dataultcompra: string;
-    numcompra: number;
-    valpricompra: number;
-    valmaicompra: number;
-    valultcompra: number;
-    datacad: string;
-    dataspc: string;
-    obs: string;
-    ref_spc: string;
-    ref_fin: string;
-    ref_com: string;
-    ref_prod: string;
-    id_cidade?: number;
-    id_area?: number;
-    id_regiao?: number;
-    id_vendedor?: number;
-    id_atividade?: number;
-    id_banco?: number;
-    contribuinte: boolean;
-    consumidor: boolean;
-    flagcliente: boolean;
-    flagfornecedor: boolean;
-    flagtranspotador: boolean;
-    flagcolaborador: boolean;
-    flagvendedor: boolean;
-    ativo: boolean;
-    enderecos: Endereco[];
-    emails: ContatoEmail[];
-  }
+  enderecos: Endereco[];
+  emails: ContatoEmail[];
 }
 
 interface LookupItem {
@@ -125,12 +117,12 @@ export default function Clientes() {
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [editingEnderecoIdx, setEditingEnderecoIdx] = useState<number | null>(null);
   
   // Default structure for a new contact
-  const defaultContato = {
+  const defaultValues: Partial<Cliente> = {
     nome: '',
     razaosocial: '',
     cpfcnpj: '',
@@ -183,12 +175,12 @@ export default function Clientes() {
     ref_fin: '',
     ref_com: '',
     ref_prod: '',
-    id_cidade: undefined as number | undefined,
-    id_area: undefined as number | undefined,
-    id_regiao: undefined as number | undefined,
-    id_vendedor: undefined as number | undefined,
-    id_atividade: undefined as number | undefined,
-    id_banco: undefined as number | undefined,
+    id_cidade: undefined,
+    id_area: undefined,
+    id_regiao: undefined,
+    id_vendedor: undefined,
+    id_atividade: undefined,
+    id_banco: undefined,
     contribuinte: true,
     consumidor: true,
     flagcliente: true,
@@ -197,18 +189,11 @@ export default function Clientes() {
     flagcolaborador: false,
     flagvendedor: false,
     ativo: true,
-    enderecos: [] as Endereco[],
-    emails: [] as ContatoEmail[]
+    enderecos: [],
+    emails: []
   };
 
-  const [formData, setFormData] = useState({
-    nome: '',
-    documento: '',
-    email: '',
-    telefone: '',
-    ativo: true,
-    contato: defaultContato
-  });
+  const [formData, setFormData] = useState<Partial<Cliente>>(defaultValues);
   
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -246,7 +231,7 @@ export default function Clientes() {
       const lowerSearch = searchTerm.toLowerCase();
       setFilteredClientes(clientes.filter(c => 
         c.nome.toLowerCase().includes(lowerSearch) ||
-        c.documento.includes(lowerSearch)
+        (c.cpfcnpj && c.cpfcnpj.includes(lowerSearch))
       ));
     }
   }, [searchTerm, clientes]);
@@ -264,8 +249,8 @@ export default function Clientes() {
   };
 
   const handleCEPSearch = async () => {
-    const cep = formData.contato.cep.replace(/\D/g, '');
-    if (cep.length !== 8) {
+    const cep = formData.cep?.replace(/\D/g, '');
+    if (!cep || cep.length !== 8) {
       alert("CEP deve ter 8 dígitos.");
       return;
     }
@@ -280,13 +265,10 @@ export default function Clientes() {
       } else {
         setFormData(prev => ({
           ...prev,
-          contato: {
-            ...prev.contato,
-            rua: data.logradouro || prev.contato.rua,
-            bairro: data.bairro || prev.contato.bairro,
-            cidade: data.localidade || prev.contato.cidade,
-            uf: data.uf || prev.contato.uf
-          }
+          rua: data.logradouro || prev.rua,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.localidade || prev.cidade,
+          uf: data.uf || prev.uf
         }));
       }
     } catch (error) {
@@ -297,7 +279,7 @@ export default function Clientes() {
   };
 
   const handleNestedCEPSearch = async (index: number) => {
-    const cep = formData.contato.enderecos[index].cep.replace(/\D/g, '');
+    const cep = formData.enderecos[index].cep.replace(/\D/g, '');
     if (cep.length !== 8) {
       alert("CEP deve ter 8 dígitos.");
       return;
@@ -311,7 +293,7 @@ export default function Clientes() {
       if (data.erro) {
         alert("CEP não encontrado.");
       } else {
-        const newEnderecos = [...formData.contato.enderecos];
+        const newEnderecos = [...(formData.enderecos || [])];
         newEnderecos[index] = {
           ...newEnderecos[index],
           rua: data.logradouro || newEnderecos[index].rua,
@@ -321,7 +303,7 @@ export default function Clientes() {
         };
         setFormData(prev => ({
           ...prev,
-          contato: { ...prev.contato, enderecos: newEnderecos }
+          enderecos: newEnderecos
         }));
       }
     } catch (error) {
@@ -331,87 +313,44 @@ export default function Clientes() {
     }
   };
 
-  const openModal = (mode: 'create' | 'edit', cliente?: Cliente) => {
+  const openModal = (mode: 'create' | 'edit' | 'view', cliente?: Cliente) => {
     setModalMode(mode);
     setFormError('');
     setActiveTab('geral');
-    if (mode === 'edit' && cliente) {
+    if ((mode === 'edit' || mode === 'view') && cliente) {
       setCurrentId(cliente.id);
       setFormData({
-        nome: cliente.nome,
-        documento: cliente.documento,
-        email: cliente.email || '',
-        telefone: cliente.telefone || '',
-        ativo: cliente.ativo,
-        contato: {
-          ...defaultContato,
-          ...(cliente.contato || {}),
-          datanascto: cliente.contato?.datanascto ? cliente.contato.datanascto.split('T')[0] : '',
-          nasctoconjuge: cliente.contato?.nasctoconjuge ? cliente.contato.nasctoconjuge.split('T')[0] : '',
-          datapricompra: cliente.contato?.datapricompra ? cliente.contato.datapricompra.split('T')[0] : '',
-          dataultcompra: cliente.contato?.dataultcompra ? cliente.contato.dataultcompra.split('T')[0] : '',
-          datacad: cliente.contato?.datacad ? cliente.contato.datacad.split('T')[0] : '',
-          dataspc: cliente.contato?.dataspc ? cliente.contato.dataspc.split('T')[0] : '',
-        } as any
+        ...cliente,
+        datanascto: cliente.datanascto ? cliente.datanascto.split('T')[0] : '',
+        nasctoconjuge: cliente.nasctoconjuge ? cliente.nasctoconjuge.split('T')[0] : '',
+        datapricompra: cliente.datapricompra ? cliente.datapricompra.split('T')[0] : '',
+        dataultcompra: cliente.dataultcompra ? cliente.dataultcompra.split('T')[0] : '',
+        datacad: cliente.datacad ? cliente.datacad.split('T')[0] : '',
+        dataspc: cliente.dataspc ? cliente.dataspc.split('T')[0] : '',
       });
     } else {
       setCurrentId(null);
-      setFormData({
-        nome: '',
-        documento: '',
-        email: '',
-        telefone: '',
-        ativo: true,
-        contato: defaultContato
-      });
+      setFormData(defaultValues);
     }
     setIsModalOpen(true);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    if (modalMode === 'view') return;
     const { id, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
-    if (id.startsWith('contato.')) {
-      const field = id.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        contato: {
-          ...prev.contato,
-          [field]: type === 'checkbox' ? checked : value
-        }
-      }));
-      
-      // Mirror some fields to the main Cliente entity
-      if (field === 'nome') setFormData(prev => ({ ...prev, nome: value }));
-      if (field === 'cpfcnpj') setFormData(prev => ({ ...prev, documento: value }));
-      if (field === 'email') setFormData(prev => ({ ...prev, email: value }));
-      if (field === 'foneprincipal') setFormData(prev => ({ ...prev, telefone: value }));
-
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [id]: type === 'checkbox' ? checked : value
-      }));
-      
-      // If updating top-level 'ativo', mirror to 'contato.ativo'
-      if (id === 'ativo') {
-        setFormData(prev => ({
-          ...prev,
-          contato: { ...prev.contato, ativo: checked }
-        }));
-      }
-    }
+    setFormData(prev => ({
+      ...prev,
+      [id]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleAddEndereco = () => {
-    const newIdx = formData.contato.enderecos.length;
+    const newIdx = (formData.enderecos || []).length;
     setFormData(prev => ({
       ...prev,
-      contato: {
-        ...prev.contato,
-        enderecos: [...prev.contato.enderecos, { tipo: 'Entrega', rua: '', numcasa: '', complemento: '', bairro: '', cep: '', cidade: '', uf: '' }]
-      }
+      enderecos: [...(prev.enderecos || []), { tipo: 'Entrega', rua: '', numcasa: '', complemento: '', bairro: '', cep: '', cidade: '', uf: '' }]
     }));
     setEditingEnderecoIdx(newIdx);
   };
@@ -419,42 +358,55 @@ export default function Clientes() {
   const handleRemoveEndereco = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      contato: {
-        ...prev.contato,
-        enderecos: prev.contato.enderecos.filter((_, i) => i !== index)
-      }
+      enderecos: (prev.enderecos || []).filter((_, i) => i !== index)
     }));
   };
 
   const handleEnderecoChange = (index: number, field: string, value: string) => {
-    const newEnderecos = [...formData.contato.enderecos];
+    const newEnderecos = [...(formData.enderecos || [])];
     (newEnderecos[index] as any)[field] = value;
     setFormData(prev => ({
       ...prev,
-      contato: { ...prev.contato, enderecos: newEnderecos }
+      enderecos: newEnderecos
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nome.trim() || !formData.documento.trim()) {
-      setFormError('Nome e Documento são obrigatórios.');
+    if (!formData.nome || !formData.nome.trim()) {
+      setFormError('Nome é obrigatório.');
       return;
     }
 
     setIsSubmitting(true);
     setFormError('');
 
+    // Sanitize: convert empty date strings to null to avoid Pydantic 422
+    const dateFields = ['datanascto', 'nasctoconjuge', 'datapricompra', 'dataultcompra', 'datacad', 'dataspc'];
+    const payload = { ...formData };
+    for (const field of dateFields) {
+      const val = (payload as any)[field];
+      if (val === '' || val === undefined) {
+        (payload as any)[field] = null;
+      }
+    }
+
     try {
       if (modalMode === 'create') {
-        await api.post('/clientes/', formData);
-      } else if (modalMode === 'edit' && currentId) {
-        await api.put(`/clientes/${currentId}`, formData);
+        await api.post('/clientes/', payload);
+      } else if (modalMode === 'edit' && currentId !== null) {
+        await api.put(`/clientes/${currentId}`, payload);
       }
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar cliente.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        // Pydantic validation errors
+        const msgs = detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join(', ');
+        setFormError(msgs);
+      } else {
+        setFormError(detail || 'Erro ao salvar cliente.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -502,7 +454,7 @@ export default function Clientes() {
                 {filteredClientes.length === 0 ? (
                   <tr><td colSpan={6} className="empty-state">Nenhum cliente encontrado.</td></tr>
                 ) : (
-                  filteredClientes.map(c => (
+                    filteredClientes.map(c => (
                     <tr key={c.id}>
                       <td>
                         <div className="servico-info">
@@ -510,16 +462,17 @@ export default function Clientes() {
                           <span className="servico-sub">{c.email}</span>
                         </div>
                       </td>
-                      <td>{c.documento}</td>
-                      <td>{c.contato?.cidade || '-'}/{c.contato?.uf || '-'}</td>
-                      <td>{c.telefone || '-'}</td>
+                      <td>{c.cpfcnpj}</td>
+                      <td>{c.cidade || '-'}/{c.uf || '-'}</td>
+                      <td>{c.foneprincipal || '-'}</td>
                       <td>
                         <span className={`status-badge ${c.ativo ? 'active' : 'inactive'}`}>
                           {c.ativo ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
-                      <td>
-                        <div className="action-buttons">
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
+                          <button className="icon-btn" title="Visualizar" onClick={() => openModal('view', c)}><Eye size={16} /></button>
                           <button className="icon-btn edit" onClick={() => openModal('edit', c)}><Edit2 size={16} /></button>
                           <button className="icon-btn delete" onClick={() => {/* Delete logic */}}><Trash2 size={16} /></button>
                         </div>
@@ -537,7 +490,7 @@ export default function Clientes() {
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content extra-large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{modalMode === 'create' ? 'Novo Cadastro de Cliente' : 'Editar Cliente'}</h2>
+              <h2>{modalMode === 'create' ? 'Novo Cadastro de Cliente' : modalMode === 'view' ? 'Visualizar Cliente' : 'Editar Cliente'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             
@@ -561,42 +514,42 @@ export default function Clientes() {
                     <div className="grid-4">
                         <div className="form-group span-2">
                             <label>Nome / Razão Social *</label>
-                            <input className="form-input" id="contato.nome" value={formData.contato.nome} onChange={handleChange} placeholder="Nome completo ou Razão Social" required />
+                            <input className="form-input" id="nome" value={formData.nome || ''} onChange={handleChange} placeholder="Nome completo ou Razão Social" required />
                         </div>
                         <div className="form-group span-2">
                             <label>Nome Fantasia</label>
-                            <input className="form-input" id="contato.razaosocial" value={formData.contato.razaosocial} onChange={handleChange} placeholder="Apelido ou Fantasia" />
+                            <input className="form-input" id="razaosocial" value={formData.razaosocial || ''} onChange={handleChange} placeholder="Apelido ou Fantasia" />
                         </div>
                         <div className="form-group">
                             <label>Pessoa</label>
-                            <select className="form-select" id="contato.pessoa" value={formData.contato.pessoa} onChange={handleChange}>
+                            <select className="form-select" id="pessoa" value={formData.pessoa || 'F'} onChange={handleChange}>
                                 <option value="F">Física</option>
                                 <option value="J">Jurídica</option>
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Tipo Doc.</label>
-                            <input className="form-input" id="contato.tipodoc" value={formData.contato.tipodoc} onChange={handleChange} placeholder="Ex: CPF, CNPJ" />
+                            <input className="form-input" id="tipodoc" value={formData.tipodoc || ''} onChange={handleChange} placeholder="Ex: CPF, CNPJ" />
                         </div>
                         <div className="form-group">
                             <label>CPF / CNPJ *</label>
-                            <input className="form-input" id="contato.cpfcnpj" value={formData.contato.cpfcnpj} onChange={handleChange} required />
+                            <input className="form-input" id="cpfcnpj" value={formData.cpfcnpj || ''} onChange={handleChange} required />
                         </div>
                         <div className="form-group">
                             <label>RG / Documento</label>
-                            <input className="form-input" id="contato.rg" value={formData.contato.rg} onChange={handleChange} />
+                            <input className="form-input" id="rg" value={formData.rg || ''} onChange={handleChange} />
                         </div>
                         <div className="form-group">
                             <label>Órgão Emissor</label>
-                            <input className="form-input" id="contato.emitenterg" value={formData.contato.emitenterg} onChange={handleChange} />
+                            <input className="form-input" id="emitenterg" value={formData.emitenterg || ''} onChange={handleChange} />
                         </div>
                         <div className="form-group">
                             <label>Inscrição Estadual</label>
-                            <input className="form-input" id="contato.inscestadual" value={formData.contato.inscestadual} onChange={handleChange} />
+                            <input className="form-input" id="inscestadual" value={formData.inscestadual || ''} onChange={handleChange} />
                         </div>
                         <div className="form-group">
                             <label>Inscrição Municipal</label>
-                            <input className="form-input" id="contato.inscmunicipio" value={formData.contato.inscmunicipio} onChange={handleChange} />
+                            <input className="form-input" id="inscmunicipio" value={formData.inscmunicipio || ''} onChange={handleChange} />
                         </div>
                     </div>
 
@@ -608,83 +561,81 @@ export default function Clientes() {
                         <div className="form-group">
                             <label>CEP</label>
                             <div className="input-with-button">
-                                <input className="form-input" id="contato.cep" value={formData.contato.cep} onChange={handleChange} placeholder="00000-000" />
+                                <input className="form-input" id="cep" value={formData.cep || ''} onChange={handleChange} placeholder="00000-000" />
                                 <button type="button" className="btn-search-premium" onClick={handleCEPSearch} disabled={searchingCEP}>
                                     {searchingCEP ? '...' : <Search size={16} />}
                                 </button>
                             </div>
                         </div>
-                        <div className="form-group span-2"><label>Rua</label><input className="form-input" id="contato.rua" value={formData.contato.rua} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Nº</label><input className="form-input" id="contato.numcasa" value={formData.contato.numcasa} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Rua</label><input className="form-input" id="rua" value={formData.rua || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Nº</label><input className="form-input" id="numcasa" value={formData.numcasa || ''} onChange={handleChange} /></div>
                         
-                        <div className="form-group"><label>Bairro</label><input className="form-input" id="contato.bairro" value={formData.contato.bairro} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Complemento</label><input className="form-input" id="contato.complemento" value={formData.contato.complemento} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Cidade</label><input className="form-input" id="contato.cidade" value={formData.contato.cidade} onChange={handleChange} /></div>
-                        <div className="form-group"><label>UF</label><input className="form-input" id="contato.uf" value={formData.contato.uf} onChange={handleChange} maxLength={2} /></div>
+                        <div className="form-group"><label>Bairro</label><input className="form-input" id="bairro" value={formData.bairro || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Complemento</label><input className="form-input" id="complemento" value={formData.complemento || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Cidade</label><input className="form-input" id="cidade" value={formData.cidade || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>UF</label><input className="form-input" id="uf" value={formData.uf || ''} onChange={handleChange} maxLength={2} /></div>
                         
-                        <div className="form-group"><label>CX Postal</label><input className="form-input" id="contato.cxpostal" value={formData.contato.cxpostal} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Cód. Pais</label><input className="form-input" id="contato.codigopais" value={formData.contato.codigopais} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome Pais</label><input className="form-input" id="contato.nomepais" value={formData.contato.nomepais} onChange={handleChange} /></div>
+                        <div className="form-group"><label>CX Postal</label><input className="form-input" id="cxpostal" value={formData.cxpostal || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Cód. Pais</label><input className="form-input" id="codigopais" value={formData.codigopais || ''} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome Pais</label><input className="form-input" id="nomepais" value={formData.nomepais || ''} onChange={handleChange} /></div>
                         
-                        <div className="form-group"><label>Fone Principal</label><input className="form-input" id="contato.foneprincipal" value={formData.contato.foneprincipal} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Contato Comercial</label><input className="form-input" id="contato.contato_comercial" value={formData.contato.contato_comercial} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Celular Comercial</label><input className="form-input" id="contato.celular_comercial" value={formData.contato.celular_comercial} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Contato Finan.</label><input className="form-input" id="contato.contato_financeiro" value={formData.contato.contato_financeiro} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Celular Finan.</label><input className="form-input" id="contato.celular_financeiro" value={formData.contato.celular_financeiro} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Fone Principal</label><input className="form-input" id="foneprincipal" value={formData.foneprincipal || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Contato Comercial</label><input className="form-input" id="contato_comercial" value={formData.contato_comercial || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Celular Comercial</label><input className="form-input" id="celular_comercial" value={formData.celular_comercial || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Contato Finan.</label><input className="form-input" id="contato_financeiro" value={formData.contato_financeiro || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Celular Finan.</label><input className="form-input" id="celular_financeiro" value={formData.celular_financeiro || ''} onChange={handleChange} /></div>
                         <div className="form-group span-2"><label>Emails (Site/Principal)</label>
                           <div className="multi-field">
-                            <input className="form-input" id="contato.email" value={formData.contato.email} onChange={handleChange} placeholder="Email Principal" />
-                            <input className="form-input" id="contato.emailnfe" value={formData.contato.emailnfe} onChange={handleChange} placeholder="Email NFe" />
+                            <input className="form-input" id="email" value={formData.email || ''} onChange={handleChange} placeholder="Email Principal" />
+                            <input className="form-input" id="emailnfe" value={formData.emailnfe || ''} onChange={handleChange} placeholder="Email NFe" />
                           </div>
                         </div>
-                        <div className="form-group span-2"><label>Site</label><input className="form-input" id="contato.site" value={formData.contato.site} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Site</label><input className="form-input" id="site" value={formData.site || ''} onChange={handleChange} /></div>
                     </div>
 
                     <div className="section-divider"></div>
-
-                    {/* SEÇÃO 6: PARÂMETROS E FLAGS */}
 
                     {/* SEÇÃO 6: PARÂMETROS E FLAGS */}
                     <div className="section-title"><Users size={18} /> Parâmetros de Sistema e Flags</div>
                     <div className="grid-4" style={{ marginBottom: '2rem' }}>
                         <div className="form-group">
                             <label>Cidade (Associação)</label>
-                            <select className="form-select" id="contato.id_cidade" value={formData.contato.id_cidade || ''} onChange={handleChange}>
+                            <select className="form-select" id="id_cidade" value={formData.id_cidade || ''} onChange={handleChange}>
                                 <option value="">Selecione...</option>
                                 {listCidades.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Área</label>
-                            <select className="form-select" id="contato.id_area" value={formData.contato.id_area || ''} onChange={handleChange}>
+                            <select className="form-select" id="id_area" value={formData.id_area || ''} onChange={handleChange}>
                                 <option value="">Selecione...</option>
                                 {listAreas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Região</label>
-                            <select className="form-select" id="contato.id_regiao" value={formData.contato.id_regiao || ''} onChange={handleChange}>
+                            <select className="form-select" id="id_regiao" value={formData.id_regiao || ''} onChange={handleChange}>
                                 <option value="">Selecione...</option>
                                 {listRegioes.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Vendedor</label>
-                            <select className="form-select" id="contato.id_vendedor" value={formData.contato.id_vendedor || ''} onChange={handleChange}>
+                            <select className="form-select" id="id_vendedor" value={formData.id_vendedor || ''} onChange={handleChange}>
                                 <option value="">Selecione...</option>
                                 {listVendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Atividade</label>
-                            <select className="form-select" id="contato.id_atividade" value={formData.contato.id_atividade || ''} onChange={handleChange}>
+                            <select className="form-select" id="id_atividade" value={formData.id_atividade || ''} onChange={handleChange}>
                                 <option value="">Selecione...</option>
                                 {listAtividades.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Banco</label>
-                            <select className="form-select" id="contato.id_banco" value={formData.contato.id_banco || ''} onChange={handleChange}>
+                            <select className="form-select" id="id_banco" value={formData.id_banco || ''} onChange={handleChange}>
                                 <option value="">Selecione...</option>
                                 {listBancos.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
                             </select>
@@ -693,36 +644,36 @@ export default function Clientes() {
 
                     <div className="checkbox-grid">
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.contribuinte" checked={formData.contato.contribuinte} onChange={handleChange} />
-                            <label htmlFor="contato.contribuinte">Contribuinte</label>
+                            <input type="checkbox" id="contribuinte" checked={formData.contribuinte || false} onChange={handleChange} />
+                            <label htmlFor="contribuinte">Contribuinte</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.consumidor" checked={formData.contato.consumidor} onChange={handleChange} />
-                            <label htmlFor="contato.consumidor">Consumidor Final</label>
+                            <input type="checkbox" id="consumidor" checked={formData.consumidor || false} onChange={handleChange} />
+                            <label htmlFor="consumidor">Consumidor Final</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.flagcliente" checked={formData.contato.flagcliente} onChange={handleChange} />
-                            <label htmlFor="contato.flagcliente">É Cliente</label>
+                            <input type="checkbox" id="flagcliente" checked={formData.flagcliente || false} onChange={handleChange} />
+                            <label htmlFor="flagcliente">É Cliente</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.flagfornecedor" checked={formData.contato.flagfornecedor} onChange={handleChange} />
-                            <label htmlFor="contato.flagfornecedor">É Fornecedor</label>
+                            <input type="checkbox" id="flagfornecedor" checked={formData.flagfornecedor || false} onChange={handleChange} />
+                            <label htmlFor="flagfornecedor">É Fornecedor</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.flagtranspotador" checked={formData.contato.flagtranspotador} onChange={handleChange} />
-                            <label htmlFor="contato.flagtranspotador">É Transportador</label>
+                            <input type="checkbox" id="flagtranspotador" checked={formData.flagtranspotador || false} onChange={handleChange} />
+                            <label htmlFor="flagtranspotador">É Transportador</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.flagcolaborador" checked={formData.contato.flagcolaborador} onChange={handleChange} />
-                            <label htmlFor="contato.flagcolaborador">É Colaborador</label>
+                            <input type="checkbox" id="flagcolaborador" checked={formData.flagcolaborador || false} onChange={handleChange} />
+                            <label htmlFor="flagcolaborador">É Colaborador</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.flagvendedor" checked={formData.contato.flagvendedor} onChange={handleChange} />
-                            <label htmlFor="contato.flagvendedor">É Vendedor</label>
+                            <input type="checkbox" id="flagvendedor" checked={formData.flagvendedor || false} onChange={handleChange} />
+                            <label htmlFor="flagvendedor">É Vendedor</label>
                         </div>
                         <div className="checkbox-group">
-                            <input type="checkbox" id="contato.ativo" checked={formData.contato.ativo} onChange={handleChange} />
-                            <label htmlFor="contato.ativo">Cadastro Ativo</label>
+                            <input type="checkbox" id="ativo" checked={formData.ativo || false} onChange={handleChange} />
+                            <label htmlFor="ativo">Cadastro Ativo</label>
                         </div>
                     </div>
                   </div>
@@ -745,10 +696,10 @@ export default function Clientes() {
                     </div>
 
                     <div className="address-grid-body">
-                        {formData.contato.enderecos.length === 0 ? (
+                        {formData.enderecos.length === 0 ? (
                             <div className="empty-grid-message">Nenhum endereço adicional cadastrado. Clique em "Novo Endereço" para começar.</div>
                         ) : (
-                            formData.contato.enderecos.map((end, idx) => (
+                            formData.enderecos.map((end, idx) => (
                                 <div key={idx} className={`address-grid-row ${editingEnderecoIdx === idx ? 'editing' : ''}`}>
                                     {editingEnderecoIdx === idx ? (
                                         <div className="address-edit-form animate-in">
@@ -803,84 +754,89 @@ export default function Clientes() {
 
                 {activeTab === 'social' && (
                   <div className="tab-content">
-                    <div className="section-title"><Users size={18} /> Dados Sociais e Cônjuge</div>
+                    {/* SEÇÃO SOCIAL */}
+                    <div className="section-title"><Users size={18} /> Social / Cônjuge</div>
                     <div className="grid-4">
-                        <div className="form-group"><label>Nascimento</label><input type="date" className="form-input" id="contato.datanascto" value={formData.contato.datanascto} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Nascimento</label><input type="date" className="form-input" id="datanascto" value={formData.datanascto || ''} onChange={handleChange} /></div>
                         <div className="form-group">
                             <label>Sexo</label>
-                            <select className="form-select" id="contato.sexo" value={formData.contato.sexo} onChange={handleChange}>
+                            <select className="form-select" id="sexo" value={formData.sexo || 'M'} onChange={handleChange}>
                                 <option value="M">Masculino</option>
                                 <option value="F">Feminino</option>
+                                <option value="O">Outro</option>
                             </select>
                         </div>
                         <div className="form-group">
                             <label>Estado Civil</label>
-                            <select className="form-select" id="contato.ecivil" value={formData.contato.ecivil} onChange={handleChange}>
+                            <select className="form-select" id="ecivil" value={formData.ecivil || 'S'} onChange={handleChange}>
                                 <option value="S">Solteiro(a)</option>
                                 <option value="C">Casado(a)</option>
                                 <option value="D">Divorciado(a)</option>
                                 <option value="V">Viúvo(a)</option>
+                                <option value="U">União Estável</option>
                             </select>
                         </div>
-                        <div className="form-group span-2"><label>Nome do Pai</label><input className="form-input" id="contato.nomepai" value={formData.contato.nomepai} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome da Mãe</label><input className="form-input" id="contato.nomemae" value={formData.contato.nomemae} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome do Cônjuge</label><input className="form-input" id="contato.nomeconjuge" value={formData.contato.nomeconjuge} onChange={handleChange} /></div>
-                        <div className="form-group"><label>RG Cônjuge</label><input className="form-input" id="contato.rgconjuge" value={formData.contato.rgconjuge} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Nasc. Cônjuge</label><input type="date" className="form-input" id="contato.nasctoconjuge" value={formData.contato.nasctoconjuge} onChange={handleChange} /></div>
+                    </div>
+                    <div className="grid-4">
+                        <div className="form-group span-2"><label>Nome do Pai</label><input className="form-input" id="nomepai" value={formData.nomepai || ''} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome da Mãe</label><input className="form-input" id="nomemae" value={formData.nomemae || ''} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome do Cônjuge</label><input className="form-input" id="nomeconjuge" value={formData.nomeconjuge || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>RG Cônjuge</label><input className="form-input" id="rgconjuge" value={formData.rgconjuge || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Nasc. Cônjuge</label><input type="date" className="form-input" id="nasctoconjuge" value={formData.nasctoconjuge || ''} onChange={handleChange} /></div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'financeiro' && (
                   <div className="tab-content">
-                    <div className="section-title"><DollarSign size={18} /> Financeiro e Histórico</div>
+                    <div className="section-title"><DollarSign size={18} /> Dados Financeiros</div>
                     <div className="grid-4">
-                        <div className="form-group"><label>Limite Crédito</label><input type="number" className="form-input" id="contato.limicredito" value={formData.contato.limicredito} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Prazo Máx.</label><input type="number" className="form-input" id="contato.prazomax" value={formData.contato.prazomax} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Dia Fat.</label><input type="number" className="form-input" id="contato.diafat" value={formData.contato.diafat} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Data Cad.</label><input type="date" className="form-input" id="contato.datacad" value={formData.contato.datacad} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Data SPC</label><input type="date" className="form-input" id="contato.dataspc" value={formData.contato.dataspc} onChange={handleChange} /></div>
-                        <div className="form-group"><label>1ª Compra</label><input type="date" className="form-input" id="contato.datapricompra" value={formData.contato.datapricompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Ult. Compra</label><input type="date" className="form-input" id="contato.dataultcompra" value={formData.contato.dataultcompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Qtd. Compras</label><input type="number" className="form-input" id="contato.numcompra" value={formData.contato.numcompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Vlr. 1ª Compra</label><input type="number" className="form-input" id="contato.valpricompra" value={formData.contato.valpricompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Vlr. Maior Compra</label><input type="number" className="form-input" id="contato.valmaicompra" value={formData.contato.valmaicompra} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Vlr. Ult. Compra</label><input type="number" className="form-input" id="contato.valultcompra" value={formData.contato.valultcompra} onChange={handleChange} /></div>
-                        <div className="form-group span-4"><label>Conceito</label><textarea className="form-input" id="contato.conceito" value={formData.contato.conceito} onChange={handleChange} rows={4} /></div>
+                        <div className="form-group"><label>Limite Crédito</label><input type="number" className="form-input" id="limicredito" value={formData.limicredito || 0} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Prazo Máx.</label><input type="number" className="form-input" id="prazomax" value={formData.prazomax || 0} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Dia Fat.</label><input type="number" className="form-input" id="diafat" value={formData.diafat || 0} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Data Cad.</label><input type="date" className="form-input" id="datacad" value={formData.datacad || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Data SPC</label><input type="date" className="form-input" id="dataspc" value={formData.dataspc || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>1ª Compra</label><input type="date" className="form-input" id="datapricompra" value={formData.datapricompra || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Ult. Compra</label><input type="date" className="form-input" id="dataultcompra" value={formData.dataultcompra || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Qtd. Compras</label><input type="number" className="form-input" id="numcompra" value={formData.numcompra || 0} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Vlr. 1ª Compra</label><input type="number" className="form-input" id="valpricompra" value={formData.valpricompra || 0} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Vlr. Maior Compra</label><input type="number" className="form-input" id="valmaicompra" value={formData.valmaicompra || 0} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Vlr. Ult. Compra</label><input type="number" className="form-input" id="valultcompra" value={formData.valultcompra || 0} onChange={handleChange} /></div>
+                        <div className="form-group span-4"><label>Conceito</label><textarea className="form-input" id="conceito" value={formData.conceito || ''} onChange={handleChange} rows={4} /></div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'referencias' && (
                   <div className="tab-content">
-                    <div className="section-title"><BookOpen size={18} /> Referências e Observações Gerais</div>
+                    <div className="section-title"><BookOpen size={18} /> Referências</div>
                     <div className="grid-2">
-                        <div className="form-group"><label>Ref. SPC</label><textarea className="form-input" id="contato.ref_spc" value={formData.contato.ref_spc} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group"><label>Ref. Financeira</label><textarea className="form-input" id="contato.ref_fin" value={formData.contato.ref_fin} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group"><label>Ref. Comercial</label><textarea className="form-input" id="contato.ref_com" value={formData.contato.ref_com} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group"><label>Ref. Produto</label><textarea className="form-input" id="contato.ref_prod" value={formData.contato.ref_prod} onChange={handleChange} rows={2} /></div>
-                        <div className="form-group span-2"><label>Observações Gerais</label><textarea className="form-input" id="contato.obs" value={formData.contato.obs} onChange={handleChange} rows={4} /></div>
+                        <div className="form-group"><label>Ref. SPC</label><textarea className="form-input" id="ref_spc" value={formData.ref_spc || ''} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group"><label>Ref. Financeira</label><textarea className="form-input" id="ref_fin" value={formData.ref_fin || ''} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group"><label>Ref. Comercial</label><textarea className="form-input" id="ref_com" value={formData.ref_com || ''} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group"><label>Ref. Produto</label><textarea className="form-input" id="ref_prod" value={formData.ref_prod || ''} onChange={handleChange} rows={2} /></div>
+                        <div className="form-group span-2"><label>Observações Gerais</label><textarea className="form-input" id="obs" value={formData.obs || ''} onChange={handleChange} rows={4} /></div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'contatos' && (
                   <div className="tab-content">
+                    <div className="section-title"><Mail size={18} /> Comunicação Adicional</div>
                     <div className="grid-2">
-                        <div className="form-group"><label>Telefone Principal</label><input className="form-input" id="contato.foneprincipal" value={formData.contato.foneprincipal} onChange={handleChange} /></div>
-                        <div className="form-group"><label>E-mail Principal</label><input className="form-input" id="contato.email" value={formData.contato.email} onChange={handleChange} /></div>
-                        <div className="form-group"><label>E-mail NFe</label><input className="form-input" id="contato.emailnfe" value={formData.contato.emailnfe} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Site</label><input className="form-input" id="contato.site" value={formData.contato.site} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Telefone Principal</label><input className="form-input" id="foneprincipal" value={formData.foneprincipal || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>E-mail Principal</label><input className="form-input" id="email" value={formData.email || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>E-mail NFe</label><input className="form-input" id="emailnfe" value={formData.emailnfe || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>Site</label><input className="form-input" id="site" value={formData.site || ''} onChange={handleChange} /></div>
                     </div>
-
                   </div>
                 )}
 
               </div>
               
               <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : 'Salvar Cadastro'}</button>
+                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>{modalMode === 'view' ? 'Fechar' : 'Cancelar'}</button>
+                {modalMode !== 'view' && <button type="submit" className="btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : 'Salvar Cadastro'}</button>}
               </div>
             </form>
           </div>

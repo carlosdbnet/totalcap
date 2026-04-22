@@ -68,28 +68,43 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(15, 23, 42, 0.75); /* Azul marinho escuro translúcido em vez de preto sólido */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px); /* Reduzido de 8px para melhor performance e menos saturação */
   animation: fadeIn 0.3s ease-in;
+  padding: 1.5rem;
 }
 
 .scanning-card {
   background: rgba(255, 255, 255, 0.1);
-  padding: 3rem;
-  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  padding: 2rem; /* Reduzido de 3rem */
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   color: white;
-  max-width: 400px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 320px; /* Reduzido para encaixar melhor em celulares pequenos */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.scanning-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.scanning-card p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.95rem;
 }
 
 .spinning {
@@ -141,6 +156,7 @@
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 /* Responsive Table Wrapper */
@@ -195,6 +211,13 @@
   font-weight: 700;
 }
 
+.icon-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
 .pneu-modal-scroll {
   max-height: calc(85vh - 140px);
   overflow-y: auto;
@@ -203,6 +226,99 @@
 
 .mt-2 {
   margin-top: 1rem;
+}
+
+/* Modal Styles */
+.coleta-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.coleta-modal-content {
+  background: #FFFFFF; /* Fundo base escuro */
+  background-image: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #0f172a; /* Fonte escura para contrastar com fundo claro */
+}
+
+.coleta-modal-content.full-screen {
+  max-width: 1400px;
+  width: 95%;
+  height: 90vh;
+}
+
+.coleta-modal-content form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.coleta-modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.coleta-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.coleta-modal-body.scrollable {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.close-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: rotate(90deg);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 1024px) {
@@ -230,18 +346,18 @@
     margin-bottom: 1.5rem;
   }
 
-  .modal-content.full-screen {
+  .coleta-modal-content.full-screen {
     width: 100% !important;
     height: 100% !important;
     max-height: 100dvh !important;
     border-radius: 0 !important;
   }
   
-  .modal-header {
+  .coleta-modal-header {
     padding: 1rem !important;
   }
 
-  .modal-body.scrollable {
+  .coleta-modal-body.scrollable {
     padding: 1rem !important;
   }
   
@@ -474,6 +590,7 @@
 .ocr-modal-box, .pneu-detail-modal {
   max-width: 600px !important;
   width: 90% !important;
+  max-height: 90vh !important;
   border-radius: 24px !important;
   background: rgba(30, 41, 59, 0.95) !important;
   backdrop-filter: blur(20px) !important;
@@ -481,6 +598,7 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .ocr-header {
@@ -494,6 +612,8 @@
   flex-direction: column;
   gap: 1.5rem;
   align-items: center;
+  overflow-y: auto !important;
+  flex: 1;
 }
 
 .ocr-instruction {
@@ -682,5 +802,119 @@
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+
+/* Adi��es para o Filtro de Data na Toolbar */
+.data-toolbar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  margin: 0 2rem 1.5rem 2rem;
+  gap: 2rem;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
+}
+
+.search-box input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 0.875rem 0;
+  margin-left: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.search-box input:focus {
+  outline: none;
+}
+
+.date-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.6rem 0.875rem;
+  transition: all 0.2s;
+}
+
+.date-input-group:focus-within {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.date-icon {
+  color: var(--primary);
+  margin-right: 0.75rem;
+  opacity: 0.8;
+}
+
+.date-input-group input[type="date"] {
+ background: transparent;
+ border: none;
+ color: white;
+ font-family: inherit;
+ font-size: 0.9rem;
+ outline: none;
+ cursor: pointer;
+}
+
+.date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+ filter: invert(1);
+ opacity: 0.5;
+ cursor: pointer;
+}
+
+.date-separator {
+ color: var(--text-muted);
+ font-size: 0.85rem;
+ text-transform: uppercase;
+ font-weight: 600;
+ letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+ .data-toolbar {
+ flex-direction: column;
+ align-items: stretch;
+ padding: 1.5rem;
+ gap: 1.25rem;
+ }
+ 
+ .date-filters {
+ flex-direction: column;
+ align-items: stretch;
+ gap: 0.75rem;
+ }
+ 
+ .date-separator {
+ text-align: center;
+ }
 }
 

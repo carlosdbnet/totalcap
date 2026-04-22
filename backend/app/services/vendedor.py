@@ -11,7 +11,7 @@ class VendedorService:
         if vendedor_in.codigo:
             existing = vendedor_repo.get_by_codigo(db, codigo=vendedor_in.codigo)
             if existing:
-                raise HTTPException(status_code=400, detail="Código de vendedor já cadastrado.")
+                raise HTTPException(status_code=400, detail="Registro Já Existe")
         return vendedor_repo.create(db, obj_in=vendedor_in)
 
     def update_vendedor(self, db: Session, vendedor_id: int, vendedor_in: VendedorUpdate):

@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session, joinedload
 
 from backend.app.api import deps
 from backend.app.models.mobos import MobOS, MobPneu
+from backend.app.models.ordem_servico import OrdemServico, OSPneu
+from backend.app.models.cliente import Cliente
 from backend.app.schemas.mobos import MobOSCreate, MobOSUpdate, MobOS as MobOSSchema
+from backend.app.schemas.ordem_servico import OrdemServicoResponse
 from backend.database import get_db
 
 router = APIRouter()
@@ -39,12 +42,12 @@ def create_mobos(
     qtd_pneu = len(obj_in.pneus)
 
     # Verifica duplicidade do Número da OS
-    if obj_in.numeroos:
-        existing = db.query(MobOS).filter(MobOS.numeroos == obj_in.numeroos).first()
+    if obj_in.numos:
+        existing = db.query(MobOS).filter(MobOS.numos == obj_in.numos).first()
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=f"Já existe uma coleta com o número da OS {obj_in.numeroos}."
+                detail="Registro Já Existe"
             )
 
     # Create main OS
@@ -56,7 +59,7 @@ def create_mobos(
         id_vendedor=obj_in.id_vendedor,
         
         # Novos campos salvos no banco
-        numeroos=obj_in.numeroos,
+        numos=obj_in.numos,
         cpfcnpj=obj_in.cpfcnpj,
         nome=obj_in.nome,
         endereco=obj_in.endereco,
@@ -69,7 +72,8 @@ def create_mobos(
         servicocomgarantia=obj_in.servicocomgarantia,
         tipoveiculo=obj_in.tipoveiculo,
         somentesepar=obj_in.somentesepar,
-        podealterardesenho=obj_in.podealterardesenho
+        podealterardesenho=obj_in.podealterardesenho,
+        status=obj_in.status
     )
     db.add(db_obj)
     db.flush() # Get ID
@@ -93,7 +97,7 @@ def create_mobos(
             garantia=pneu_in.garantia,
             obs=pneu_in.obs,
             medidanova=pneu_in.medidanova,
-            marcanova=pneu_in.marcanova
+            produtonovo=pneu_in.produtonovo
         )
         db.add(db_pneu)
         
@@ -150,7 +154,7 @@ def update_mobos(
     db_obj.qpneu = qtd_pneu
     db_obj.vtotal = total_valor
     
-    # Novos campos atualizados (numeroos REMOVIDO para garantir imutabilidade)
+    # Novos campos atualizados (numos REMOVIDO para garantir imutabilidade)
     db_obj.cpfcnpj = obj_in.cpfcnpj
     db_obj.nome = obj_in.nome
     db_obj.endereco = obj_in.endereco
@@ -164,6 +168,7 @@ def update_mobos(
     db_obj.tipoveiculo = obj_in.tipoveiculo
     db_obj.somentesepar = obj_in.somentesepar
     db_obj.podealterardesenho = obj_in.podealterardesenho
+    db_obj.status = obj_in.status
         
     # 2. Sync Pneus (Details)
     existing_pneus = {p.id: p for p in db_obj.pneus}
@@ -196,7 +201,7 @@ def update_mobos(
                 garantia=pneu_in.garantia,
                 obs=pneu_in.obs,
                 medidanova=pneu_in.medidanova,
-                marcanova=pneu_in.marcanova
+                produtonovo=pneu_in.produtonovo
             )
             db.add(new_pneu)
 
@@ -230,3 +235,80 @@ def delete_mobos(
     db.delete(obj)
     db.commit()
     return obj
+
+@router.post("/{id}/gerar-os", response_model=OrdemServicoResponse)
+def gerar_os_from_coleta(
+    id: int,
+    db: Session = Depends(get_db),
+) -> Any:
+    """
+    Transforma uma Coleta (MobOS) em uma Ordem de Serviço (OrdemServico).
+    """
+    # 1. Busca a Coleta
+    coleta = db.query(MobOS).options(joinedload(MobOS.pneus)).filter(MobOS.id == id).first()
+    if not coleta:
+        raise HTTPException(status_code=404, detail="Coleta não encontrada")
+        
+    # 2. Validações
+    if not coleta.numos:
+        raise HTTPException(
+            status_code=400, 
+            detail="Esta coleta não possui um Número de OS preenchido. Edite a coleta e informe o número antes de gerar."
+        )
+    
+    # Validação do status 'Ok' (solicitado pelo usuário)
+    if coleta.status == 'GOS':
+        raise HTTPException(status_code=400, detail="Esta coleta já foi exportada para uma OS anteriormente.")
+    
+    if coleta.status != 'Ok':
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Esta coleta está com status '{coleta.status or 'Pendente'}'. É necessário validar todos os campos e deixar o status como 'Ok' antes de gerar a OS."
+        )
+        
+    # 3. Verifica se o numos já existe no sistema principal (Tabela Física Legada)
+    existing_os = db.query(OrdemServico).filter(OrdemServico.numos == str(coleta.numos)).first()
+    if existing_os:
+        raise HTTPException(status_code=400, detail="Registro Já Existe")
+
+    try:
+        # 4. Cria a OS Master na tabela fisica 'ordemservico'
+        new_os = OrdemServico(
+            numos=str(coleta.numos),
+            id_contato=coleta.id_contato, # Usa id_contato diretamente (tabela fisica contato)
+            id_vendedor=coleta.id_vendedor,
+            id_empresa=1,
+            status="ABERTA"
+        )
+        db.add(new_os)
+        db.flush() # Pega o ID da nova OS
+        
+        # 5. Cria os itens na tabela fisica 'pneu'
+        for pneu in coleta.pneus:
+            new_pneu = OSPneu(
+                id_ordem=new_os.id,
+                id_medida=pneu.id_medida,
+                id_marca=pneu.id_marca,
+                id_desenho=pneu.id_desenho,
+                id_recap=pneu.id_recap,
+                id_empresa=1,
+                numserie=pneu.numserie,
+                dot=pneu.dot,
+                valor=pneu.valor,
+                statuspro="AGUARDANDO",
+                obs=pneu.obs
+            )
+            db.add(new_pneu)
+            
+        # 6. Atualiza status da Coleta original
+        coleta.status = 'GOS'
+        
+        db.commit()
+        db.refresh(new_os)
+        
+        # Recarrega para retorno (mesmo que o schema mude, o retorno Any aceita o objeto)
+        return db.query(OrdemServico).options(joinedload(OrdemServico.pneus)).filter(OrdemServico.id == new_os.id).first()
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar OS: {str(e)}")

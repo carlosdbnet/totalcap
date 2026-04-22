@@ -102,7 +102,7 @@ export default function TipoRecapagem() {
     try {
       if (modalMode === 'create') {
         await api.post('/tipo-recapagem/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/tipo-recapagem/${currentId}`, formData);
       }
       await fetchData();

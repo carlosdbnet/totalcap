@@ -107,7 +107,7 @@ export default function Cidades() {
     try {
       if (modalMode === 'create') {
         await api.post('/cidades/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/cidades/${currentId}`, formData);
       }
       await fetchData();

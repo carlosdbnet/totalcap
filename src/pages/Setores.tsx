@@ -150,7 +150,7 @@ export default function Setores() {
     try {
       if (modalMode === 'create') {
         await api.post('/setores/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/setores/${currentId}`, formData);
       }
       await fetchData();

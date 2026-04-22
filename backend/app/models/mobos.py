@@ -28,7 +28,7 @@ class MobOS(Base):
     id_vendedor = Column(Integer, ForeignKey("vendedor.id"), nullable=False)
     
     # Novos Campos solicitados pelo usuário (Normalizados para minúsculo)
-    numeroos = Column(Integer, nullable=True)
+    numos = Column(Integer, nullable=True)
     cpfcnpj = Column(String, nullable=True)
     nome = Column(String, nullable=True)
     endereco = Column(String, nullable=True)
@@ -44,7 +44,7 @@ class MobOS(Base):
     podealterardesenho = Column(String, nullable=True)
 
     datalan = Column(DateTime(timezone=True), server_default=func.now())
-    sincronizado = Column(Boolean, default=False)
+    status = Column(String, default="")
 
     # Relacionamentos
     contato = relationship("Contato")
@@ -58,7 +58,7 @@ class MobPneu(Base):
     id_mobos = Column(Integer, ForeignKey("mobos.id"), nullable=False)
     
     id_medida = Column(Integer, ForeignKey("medida.id"), nullable=True)
-    id_marca = Column(Integer, ForeignKey("marca.id"), nullable=True)
+    id_produto = Column(Integer, ForeignKey("produto.id"), nullable=True)
     id_desenho = Column(Integer, ForeignKey("desenho.id"), nullable=True)
     id_recap = Column(Integer, ForeignKey("tiporecap.id"), nullable=True)
     
@@ -81,6 +81,6 @@ class MobPneu(Base):
     # Relacionamentos
     coleta = relationship("MobOS", back_populates="pneus")
     medida = relationship("Medida")
-    marca = relationship("Marca")
+    produto = relationship("Produto")
     desenho = relationship("Desenho")
     tiporecap = relationship("TipoRecapagem")

@@ -21,14 +21,14 @@ def create_estado(
     db: Session = Depends(get_db),
     estado_in: EstadoCreate
 ) -> Any:
-    # Check if sigla already exists
-    sigla_upper = estado_in.sigla.upper()
-    db_obj = db.query(EstadoModel).filter(EstadoModel.sigla == sigla_upper).first()
+    # Check if uf already exists
+    uf_upper = estado_in.uf.upper()
+    db_obj = db.query(EstadoModel).filter(EstadoModel.uf == uf_upper).first()
     if db_obj:
-        raise HTTPException(status_code=400, detail="Estado com esta sigla já existe")
+        raise HTTPException(status_code=400, detail="Registro Já Existe")
     
     estado_data = estado_in.dict()
-    estado_data["sigla"] = sigla_upper
+    estado_data["uf"] = uf_upper
     
     db_obj = EstadoModel(**estado_data)
     db.add(db_obj)
@@ -48,8 +48,8 @@ def update_estado(
         raise HTTPException(status_code=404, detail="Estado não encontrado")
     
     update_data = estado_in.dict(exclude_unset=True)
-    if "sigla" in update_data:
-        update_data["sigla"] = update_data["sigla"].upper()
+    if "uf" in update_data:
+        update_data["uf"] = update_data["uf"].upper()
         
     for field in update_data:
         setattr(db_obj, field, update_data[field])

@@ -102,7 +102,7 @@ export default function Marcas() {
     try {
       if (modalMode === 'create') {
         await api.post('/marcas/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/marcas/${currentId}`, formData);
       }
       await fetchData();

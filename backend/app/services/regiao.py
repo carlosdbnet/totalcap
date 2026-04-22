@@ -10,7 +10,7 @@ class RegiaoService:
     def create_regiao(self, db: Session, regiao_in: RegiaoCreate):
         regiao_existente = regiao_repo.get_by_codigo(db, codigo=regiao_in.codigo)
         if regiao_existente:
-            raise HTTPException(status_code=400, detail="Já existe uma região cadastrada com este código.")
+            raise HTTPException(status_code=400, detail="Registro Já Existe")
         return regiao_repo.create(db, obj_in=regiao_in)
 
     def update_regiao(self, db: Session, regiao_id: int, regiao_in: RegiaoUpdate):

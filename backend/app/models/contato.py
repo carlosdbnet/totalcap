@@ -80,6 +80,7 @@ class Contato(Base):
     id_vendedor = Column(Integer, ForeignKey("vendedor.id"), nullable=True)
     id_atividade = Column(Integer, ForeignKey("atividade.id"), nullable=True)
     id_banco = Column(Integer, ForeignKey("banco.id"), nullable=True)
+    
     contribuinte = Column(Boolean, default=True)
     consumidor = Column(Boolean, default=True)
     flagcliente = Column(Boolean, default=True)
@@ -88,13 +89,6 @@ class Contato(Base):
     flagcolaborador = Column(Boolean, default=False)
     flagvendedor = Column(Boolean, default=False)
     ativo = Column(Boolean, default=True)
-    
-    # FKs Auxiliares
-    id_cidade = Column(Integer, ForeignKey("cidade.id"), nullable=True)
-    id_area = Column(Integer, ForeignKey("area.id"), nullable=True)
-    id_regiao = Column(Integer, ForeignKey("regiao.id"), nullable=True)
-    id_vendedor = Column(Integer, ForeignKey("vendedor.id"), nullable=True)
-    id_atividade = Column(Integer, ForeignKey("atividade.id"), nullable=True)
     
     # Relationships
     cidade_rel = relationship("Cidade")

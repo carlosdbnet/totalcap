@@ -1,43 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
 import api from '../lib/api';
 import './Servicos.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
-interface Medida {
-  id: number;
-  descricao: string;
-}
-
-interface Desenho {
-  id: number;
-  descricao: string;
-}
-
-interface Marca {
-  id: number;
-  descricao: string;
-}
-
-interface TipoRecapagem {
-  id: number;
-  descricao: string;
-}
+interface Medida { id: number; descricao: string; }
+interface Desenho { id: number; descricao: string; }
+interface Produto { id: number; descricao: string; codprod: string; }
+interface TipoRecapagem { id: number; descricao: string; codigo: string; }
 
 interface Servico {
   id: number;
-  codservico: string;
+  codigo: string;
   descricao: string;
-  piso: string;
   id_medida: number | null;
   id_desenho: number | null;
-  id_marca: number | null;
+  id_produto: number | null;
   id_recap: number | null;
   ativo: boolean;
+  grupo: string | null;
   medida?: { id: number; descricao: string };
   desenho?: { id: number; descricao: string };
-  marca?: { id: number; descricao: string };
+  produto?: { id: number; descricao: string };
   recap?: { id: number; descricao: string };
+  valor: number;
 }
 
 export default function Servicos() {
@@ -45,30 +31,36 @@ export default function Servicos() {
   const [filteredServicos, setFilteredServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Auxiliary data
   const [medidas, setMedidas] = useState<Medida[]>([]);
   const [desenhos, setDesenhos] = useState<Desenho[]>([]);
-  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [tiposRecap, setTiposRecap] = useState<TipoRecapagem[]>([]);
-  
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [currentId, setCurrentId] = useState<number | null>(null);
-  
+
+  // Produto autocomplete state
+  const [produtoSearchQuery, setProdutoSearchQuery] = useState('');
+  const [showProdutoSuggestions, setShowProdutoSuggestions] = useState(false);
+  const produtoRef = useRef<HTMLDivElement>(null);
+
   // Form state
   const [formData, setFormData] = useState({
-    codservico: '',
+    codigo: '',
     descricao: '',
-    piso: '',
     id_medida: '' as string | number,
     id_desenho: '' as string | number,
-    id_marca: '' as string | number,
+    id_produto: '' as string | number,
     id_recap: '' as string | number,
-    ativo: true
+    valor: '' as string | number,
+    ativo: true,
+    grupo: ''
   });
-  
+
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -77,19 +69,61 @@ export default function Servicos() {
     fetchAuxiliaryData();
   }, []);
 
+  // Fechar sugestões ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (produtoRef.current && !produtoRef.current.contains(e.target as Node)) {
+        setShowProdutoSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredServicos(servicos);
     } else {
       const lowerSearch = searchTerm.toLowerCase();
-      setFilteredServicos(servicos.filter(s => 
+      setFilteredServicos(servicos.filter(s =>
         s.descricao.toLowerCase().includes(lowerSearch) ||
-        s.codservico?.toLowerCase().includes(lowerSearch) ||
+        s.codigo?.toLowerCase().includes(lowerSearch) ||
         s.medida?.descricao.toLowerCase().includes(lowerSearch) ||
-        s.marca?.descricao.toLowerCase().includes(lowerSearch)
+        s.produto?.descricao.toLowerCase().includes(lowerSearch)
       ));
     }
   }, [searchTerm, servicos]);
+
+  // Auto-generate código e descrição
+  useEffect(() => {
+    // Se selecionou um produto, usa o código e descrição do produto
+    if (formData.id_produto) {
+      const prod = produtos.find(p => p.id === Number(formData.id_produto));
+      if (prod) {
+        const novoCodigo = prod.codprod || '';
+        const novaDescricao = prod.descricao || '';
+        if (formData.codigo !== novoCodigo || formData.descricao !== novaDescricao) {
+          setFormData(prev => ({ ...prev, codigo: novoCodigo, descricao: novaDescricao }));
+        }
+        return;
+      }
+    }
+
+    // Caso contrário, usa a regra de Medida + Desenho + Tipo Recapagem
+    if (Number(formData.id_medida) > 0 && Number(formData.id_desenho) > 0 && Number(formData.id_recap) > 0) {
+      const med = medidas.find(m => m.id === Number(formData.id_medida));
+      const des = desenhos.find(d => d.id === Number(formData.id_desenho));
+      const rec = tiposRecap.find(r => r.id === Number(formData.id_recap));
+
+      if (med && des && rec) {
+        const novoCodigo = `${Number(formData.id_medida)}.${Number(formData.id_desenho)}.${Number(formData.id_recap)}`;
+        const novaDescricao = `${med.descricao.trim()} ${des.descricao.trim()} ${rec.codigo.trim()}`;
+        if (formData.codigo !== novoCodigo || formData.descricao !== novaDescricao) {
+          setFormData(prev => ({ ...prev, codigo: novoCodigo, descricao: novaDescricao }));
+        }
+      }
+    }
+  }, [formData.id_medida, formData.id_desenho, formData.id_recap, formData.id_produto, produtos, medidas, desenhos, tiposRecap]);
 
   const fetchData = async () => {
     try {
@@ -108,12 +142,12 @@ export default function Servicos() {
       const [mRes, dRes, maRes, rRes] = await Promise.all([
         api.get('/medidas/'),
         api.get('/desenhos/'),
-        api.get('/marcas/'),
+        api.get('/produtos/'),
         api.get('/tipo-recapagem/')
       ]);
       setMedidas(mRes.data);
       setDesenhos(dRes.data);
-      setMarcas(maRes.data);
+      setProdutos(maRes.data);
       setTiposRecap(rRes.data);
     } catch (error) {
       console.error("Erro ao buscar dados auxiliares:", error);
@@ -126,40 +160,52 @@ export default function Servicos() {
     if (mode === 'edit' && servico) {
       setCurrentId(servico.id);
       setFormData({
-        codservico: servico.codservico || '',
+        codigo: servico.codigo || '',
         descricao: servico.descricao,
-        piso: servico.piso || '',
         id_medida: servico.id_medida || '',
         id_desenho: servico.id_desenho || '',
-        id_marca: servico.id_marca || '',
+        id_produto: servico.id_produto || '',
         id_recap: servico.id_recap || '',
-        ativo: servico.ativo
+        valor: servico.valor || 0,
+        ativo: servico.ativo !== false,
+        grupo: servico.grupo || ''
       });
+      // Init autocomplete query with current product name
+      setProdutoSearchQuery(servico.produto?.descricao || '');
     } else {
       setCurrentId(null);
-      setFormData({
-        codservico: '',
-        descricao: '',
-        piso: '',
-        id_medida: '',
-        id_desenho: '',
-        id_marca: '',
-        id_recap: '',
-        ativo: true
-      });
+      setFormData({ codigo: '', descricao: '', id_medida: '', id_desenho: '', id_produto: '', id_recap: '', valor: 0, ativo: true, grupo: '' });
+      setProdutoSearchQuery('');
     }
+    setShowProdutoSuggestions(false);
     setIsModalOpen(true);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({
-      ...prev,
-      [id]: type === 'checkbox' ? checked : value
-    }));
+    setFormData(prev => ({ ...prev, [id]: type === 'checkbox' ? checked : value }));
   };
+
+  const handleMasterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectProduto = (p: Produto) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      id_produto: p.id,
+      codigo: p.codprod || prev.codigo,
+      descricao: p.descricao || prev.descricao
+    }));
+    setProdutoSearchQuery(p.descricao);
+    setShowProdutoSuggestions(false);
+  };
+
+  const filteredProdutos = produtos.filter(p =>
+    p.descricao.toLowerCase().includes(produtoSearchQuery.toLowerCase())
+  ).slice(0, 10);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,23 +213,21 @@ export default function Servicos() {
       setFormError('A descrição do serviço é obrigatória.');
       return;
     }
-
     setIsSubmitting(true);
     setFormError('');
-
-    // Prepare data (convert empty strings to null for technical fields)
     const payload = {
       ...formData,
       id_medida: formData.id_medida === '' ? null : Number(formData.id_medida),
       id_desenho: formData.id_desenho === '' ? null : Number(formData.id_desenho),
-      id_marca: formData.id_marca === '' ? null : Number(formData.id_marca),
-      id_recap: formData.id_recap === '' ? null : Number(formData.id_recap)
+      id_produto: formData.id_produto === '' ? null : Number(formData.id_produto),
+      id_recap: formData.id_recap === '' ? null : Number(formData.id_recap),
+      valor: formData.valor === '' ? 0 : Number(formData.valor)
     };
 
     try {
       if (modalMode === 'create') {
         await api.post('/servicos/', payload);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/servicos/${currentId}`, payload);
       }
       await fetchData();
@@ -195,17 +239,12 @@ export default function Servicos() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleDelete = async (id: number, descricao: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o serviço "${descricao}"?`)) {
       try {
         await api.delete(`/servicos/${id}`);
         await fetchData();
       } catch (error) {
-        console.error("Erro ao excluir serviço:", error);
         alert('Erro ao excluir o serviço.');
       }
     }
@@ -221,13 +260,11 @@ export default function Servicos() {
       <div className="page-header">
         <h1 className="title">Serviços</h1>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handlePrint}>
-            <Printer size={20} />
-            Imprimir
+          <button className="btn-secondary" onClick={() => window.print()}>
+            <Printer size={20} /> Imprimir
           </button>
           <button className="btn-primary" onClick={() => openModal('create')}>
-            <Plus size={20} />
-            Novo Serviço
+            <Plus size={20} /> Novo Serviço
           </button>
         </div>
       </div>
@@ -236,9 +273,9 @@ export default function Servicos() {
         <div className="table-toolbar">
           <div className="search-box">
             <Search size={18} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Buscar por descrição, código ou medida..." 
+            <input
+              type="text"
+              placeholder="Buscar por descrição, código, medida ou produto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -255,9 +292,9 @@ export default function Servicos() {
                   <th style={{ width: '60px' }}>ID</th>
                   <th style={{ width: '100px' }}>Código</th>
                   <th>Serviço / Medida</th>
-                  <th>Marca / Desenho</th>
+                  <th>Produto / Desenho</th>
                   <th>T. Recap</th>
-                  <th style={{ width: '80px' }}>Piso</th>
+                  <th style={{ width: '100px' }}>Valor</th>
                   <th style={{ width: '100px' }}>Status</th>
                   <th style={{ width: '100px' }}>Ações</th>
                 </tr>
@@ -269,7 +306,7 @@ export default function Servicos() {
                   filteredServicos.map(s => (
                     <tr key={s.id}>
                       <td>#{s.id}</td>
-                      <td><strong>{s.codservico || '-'}</strong></td>
+                      <td><strong>{s.codigo || '-'}</strong></td>
                       <td>
                         <div className="servico-info">
                           <span className="servico-desc">{s.descricao}</span>
@@ -278,12 +315,12 @@ export default function Servicos() {
                       </td>
                       <td>
                         <div className="servico-info">
-                          <span>{s.marca?.descricao || '-'}</span>
+                          <span>{s.produto?.descricao || '-'}</span>
                           {s.desenho && <span className="servico-sub">{s.desenho.descricao}</span>}
                         </div>
                       </td>
                       <td>{s.recap?.descricao || '-'}</td>
-                      <td>{s.piso || '-'}</td>
+                      <td><strong>R$ {(s.valor || 0).toFixed(2)}</strong></td>
                       <td>
                         <span className={`status-badge ${s.ativo ? 'active' : 'inactive'}`}>
                           {s.ativo ? 'Ativo' : 'Inativo'}
@@ -311,66 +348,113 @@ export default function Servicos() {
               <h2>{modalMode === 'create' ? 'Novo Serviço' : 'Editar Serviço'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
-              <div className="modal-body grid-2">
+              <div className="modal-body">
                 {formError && <div className="form-error full-width">{formError}</div>}
-                
-                <div className="form-group">
-                  <label htmlFor="codservico">Código do Serviço</label>
-                  <input className="form-input" id="codservico" value={formData.codservico} onChange={handleChange} placeholder="Ex: SERV001" />
+
+                <div className="grid-code-desc" style={{ marginBottom: '1rem' }}>
+                  <div className="form-group">
+                    <label htmlFor="codigo">Código</label>
+                    <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} placeholder="---" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="descricao">Descrição *</label>
+                    <input className="form-input" id="descricao" value={formData.descricao} onChange={handleChange} placeholder="Gerada automaticamente..." required />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="descricao">Descrição *</label>
-                  <input className="form-input" id="descricao" value={formData.descricao} onChange={handleChange} placeholder="Ex: Recapagem Fria" required />
-                </div>
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label htmlFor="id_medida">Medida</label>
+                    <select className="form-select" id="id_medida" value={formData.id_medida} onChange={handleChange}>
+                      <option value="">Selecione a Medida</option>
+                      {medidas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
+                    </select>
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="id_medida">Medida</label>
-                  <select className="form-select" id="id_medida" value={formData.id_medida} onChange={handleChange}>
-                    <option value="">Selecione a Medida</option>
-                    {medidas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
-                  </select>
-                </div>
+                  <div className="form-group">
+                    <label htmlFor="id_desenho">Desenho</label>
+                    <select className="form-select" id="id_desenho" value={formData.id_desenho} onChange={handleChange}>
+                      <option value="">Selecione o Desenho</option>
+                      {desenhos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
+                    </select>
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="id_desenho">Desenho</label>
-                  <select className="form-select" id="id_desenho" value={formData.id_desenho} onChange={handleChange}>
-                    <option value="">Selecione o Desenho</option>
-                    {desenhos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
-                  </select>
-                </div>
+                  <div className="form-group">
+                    <label htmlFor="id_recap">Tipo de Recapagem</label>
+                    <select className="form-select" id="id_recap" value={formData.id_recap} onChange={handleChange}>
+                      <option value="">Selecione o Tipo</option>
+                      {tiposRecap.map(r => <option key={r.id} value={r.id}>{r.descricao}</option>)}
+                    </select>
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="id_marca">Marca</label>
-                  <select className="form-select" id="id_marca" value={formData.id_marca} onChange={handleChange}>
-                    <option value="">Selecione a Marca</option>
-                    {marcas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
-                  </select>
-                </div>
+                  {/* Produto com busca autocomplete */}
+                  <div className="form-group" ref={produtoRef} style={{ position: 'relative' }}>
+                    <label>Produto</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Buscar produto..."
+                      value={produtoSearchQuery}
+                      onChange={(e) => {
+                        setProdutoSearchQuery(e.target.value);
+                        setShowProdutoSuggestions(true);
+                        if (formData.id_produto) setFormData(prev => ({ ...prev, id_produto: '' }));
+                      }}
+                      onFocus={() => setShowProdutoSuggestions(true)}
+                    />
+                    {showProdutoSuggestions && produtoSearchQuery.length > 0 && (
+                      <div className="autocomplete-dropdown glass-panel" style={{ zIndex: 4000 }}>
+                        {filteredProdutos.length === 0 ? (
+                          <div className="autocomplete-item empty">Nenhum produto encontrado</div>
+                        ) : (
+                          filteredProdutos.map(p => (
+                            <div
+                              key={p.id}
+                              className="autocomplete-item"
+                              onClick={() => handleSelectProduto(p)}
+                            >
+                              <span className="name">{p.descricao}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="id_recap">Tipo de Recapagem</label>
-                  <select className="form-select" id="id_recap" value={formData.id_recap} onChange={handleChange}>
-                    <option value="">Selecione o Tipo</option>
-                    {tiposRecap.map(r => <option key={r.id} value={r.id}>{r.descricao}</option>)}
-                  </select>
-                </div>
+                    <div className="form-group span-2">
+                      <label>Grupo de Serviço</label>
+                      <select 
+                        className="form-input" 
+                        id="grupo" 
+                        value={formData.grupo} 
+                        onChange={(e) => setFormData({...formData, grupo: e.target.value})}
+                      >
+                        <option value="">Selecione um grupo...</option>
+                        <option value="RECAPAGEM">RECAPAGEM</option>
+                        <option value="MANCHOES">MANCHOES</option>
+                        <option value="PROTETORES">PROTETORES</option>
+                        <option value="LONAS">LONAS</option>
+                        <option value="CONSERTO">CONSERTO</option>
+                        <option value="PATIO">PATIO</option>
+                      </select>
+                    </div>
 
-                <div className="form-group">
-                  <label htmlFor="piso">Piso</label>
-                  <input className="form-input" id="piso" value={formData.piso} onChange={handleChange} placeholder="Ex: C1, Urbano, etc." />
-                </div>
+                    <div className="form-group">
+                      <label>Valor (R$)</label>
+                      <input type="number" step="0.01" className="form-input" id="valor" value={formData.valor} onChange={handleMasterChange} placeholder="0.00" />
+                    </div>
 
-                <div className="form-group full-width">
-                  <div className="checkbox-group">
-                    <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                    <label htmlFor="ativo">Serviço ativo para novas ordens</label>
+                  <div className="form-group full-width">
+                    <div className="checkbox-group">
+                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
+                      <label htmlFor="ativo">Serviço ativo para novas ordens</label>
+                    </div>
                   </div>
                 </div>
               </div>
-              
+
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>

@@ -1,7 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Package, Search, Plus, Trash2, Edit2, X, DollarSign, Shield, Info, ClipboardList, Printer, Camera, Loader2, AlertCircle, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, Search, Plus, Trash2, Edit2, X, DollarSign, Shield, Info, ClipboardList, Printer, Camera, Loader2, AlertCircle, User, FilePlus, Calendar, Save } from 'lucide-react';
 import api from '../lib/api';
 import './ColetaPneus.css';
+
+const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+  });
+};
 
 interface MobPneu {
   id?: number;
@@ -34,11 +63,11 @@ interface MobOS {
   msgmob: string;
   id_vendedor: number;
   datalan: string;
-  sincronizado: boolean;
+  status: string;
   pneus: MobPneu[];
   contato?: { nome: string };
   vendedor?: { nome: string };
-  numeroos: string;
+  numos: string;
   cpfcnpj: string;
   nome: string;
   endereco: string;
@@ -60,6 +89,9 @@ export default function ColetaPneus() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const navigate = useNavigate();
   
   // Lookups
   const [clientes, setClientes] = useState<any[]>([]);
@@ -69,16 +101,35 @@ export default function ColetaPneus() {
   const [desenhos, setDesenhos] = useState<any[]>([]);
   const [tiposRecap, setTiposRecap] = useState<any[]>([]);
 
-  // Modal State
+  // Modal State com Recuperação Instantânea
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isOCRModalOpen, setIsOCRModalOpen] = useState(false);
+  const [isOCRModalOpen, setIsOCRModalOpen] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('totalcap_ocr_session') || localStorage.getItem('totalcap_ocr_session');
+      if (!saved) return localStorage.getItem('totalcap_ocr_active') === 'true';
+      const parsed = JSON.parse(saved);
+      return parsed.isOpen || false;
+    } catch { return false; }
+  });
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [ocrPreview, setOcrPreview] = useState<string | null>(null);
+  const [ocrPreview, setOcrPreview] = useState<string | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('totalcap_ocr_session') || localStorage.getItem('totalcap_ocr_session');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      return parsed.preview || null;
+    } catch { return null; }
+  });
   const [ocrResultText, setOcrResultText] = useState('');
-  const [ocrInstructions, setOcrInstructions] = useState('');
+  const [ocrInstructions, setOcrInstructions] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('totalcap_ocr_session') || localStorage.getItem('totalcap_ocr_session');
+      return saved ? JSON.parse(saved).instructions : '';
+    } catch { return ''; }
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,7 +139,7 @@ export default function ColetaPneus() {
     msgmob: '',
     id_vendedor: 0,
     pneus: [],
-    numeroos: '',
+    numos: '',
     cpfcnpj: '',
     nome: '',
     endereco: '',
@@ -101,7 +152,8 @@ export default function ColetaPneus() {
     servicocomgarantia: '',
     tipoveiculo: '',
     somentesepar: '',
-    podealterardesenho: ''
+    podealterardesenho: '',
+    status: ''
   });
 
   // Pneu Sub-Modal State
@@ -131,23 +183,121 @@ export default function ColetaPneus() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchData();
-    fetchLookups();
+    // RECUPERAÇÃO DE SESSÃO OCR (Prioridade Máxima para Mobile)
+    let hasRecovered = false;
+    try {
+      const savedSession = sessionStorage.getItem('totalcap_ocr_session') || localStorage.getItem('totalcap_ocr_session');
+      if (savedSession) {
+        const { preview, instructions, isOpen } = JSON.parse(savedSession);
+        if (preview && isOpen) {
+          setOcrPreview(preview);
+          setOcrInstructions(instructions || '');
+          setIsOCRModalOpen(true);
+          hasRecovered = true;
+        }
+      }
+    } catch (e) {
+      // Ignora erro silenciosamente em produção
+    }
+
+    // Só buscamos os dados do grid se não houver um OCR sendo recuperado
+    // ou se o sistema estiver rodando normalmente. No mobile, isso evita que o 
+    // carregamento do banco de dados (Neon) feche o modal que acabou de abrir.
+    if (!hasRecovered) {
+      fetchData();
+      fetchLookups();
+    } else {
+      // Se recuperamos algo, carregamos os dados em paralelo mas sem pressa
+      fetchData();
+      fetchLookups();
+    }
   }, []);
 
+  // SALVAMENTO DE SESSÃO OCR (SessionStorage é mais rápido e seguro para imagens grandes)
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredColetas(coletas);
-    } else {
+    if (isOCRModalOpen && ocrPreview) {
+      try {
+        const sessionData = JSON.stringify({
+          preview: ocrPreview,
+          instructions: ocrInstructions,
+          isOpen: isOCRModalOpen,
+          timestamp: new Date().getTime()
+        });
+        sessionStorage.setItem('totalcap_ocr_session', sessionData);
+        // Mantemos um flag pequeno no localStorage caso a aba feche
+        localStorage.setItem('totalcap_ocr_active', 'true');
+      } catch (e) {
+        console.warn("Imagem muito grande para persistência.");
+      }
+    }
+  }, [isOCRModalOpen, ocrPreview, ocrInstructions]);
+
+  const clearOCRSession = () => {
+    sessionStorage.removeItem('totalcap_ocr_session');
+    localStorage.removeItem('totalcap_ocr_active');
+    localStorage.removeItem('totalcap_ocr_session');
+    setOcrPreview(null);
+    setOcrResultText('');
+    setOcrInstructions('');
+    setIsOCRModalOpen(false);
+  };
+
+  // Função para comprimir imagem e economizar memória no mobile
+  const compressImage = (base64Str: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        // Qualidade 0.7 é ideal para OCR sem perder detalhes essenciais
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    });
+  };
+  useEffect(() => {
+    let filtered = [...coletas];
+
+    // Filtro por termo de busca (ID, Cliente, Vendedor, OS)
+    if (searchTerm.trim() !== '') {
       const lowerSearch = searchTerm.toLowerCase();
-      setFilteredColetas(coletas.filter(c => 
+      filtered = filtered.filter(c => 
         String(c.id).includes(lowerSearch) || 
         (c.contato?.nome || '').toLowerCase().includes(lowerSearch) ||
         (c.vendedor?.nome || '').toLowerCase().includes(lowerSearch) ||
-        (c.numeroos ? String(c.numeroos) : '').includes(lowerSearch)
-      ));
+        (c.numos ? String(c.numos) : '').includes(lowerSearch)
+      );
     }
-  }, [searchTerm, coletas, clientes]);
+
+    // Filtro por Data (Intervalo)
+    if (startDate) {
+      filtered = filtered.filter(c => c.dataos && c.dataos >= startDate);
+    }
+    if (endDate) {
+      filtered = filtered.filter(c => c.dataos && c.dataos <= endDate);
+    }
+
+    setFilteredColetas(filtered);
+  }, [searchTerm, startDate, endDate, coletas]);
 
   const fetchData = async () => {
     try {
@@ -181,7 +331,7 @@ export default function ColetaPneus() {
       }, 'Clientes'),
       loadResource('/vendedores/', setVendedores, 'Vendedores'),
       loadResource('/medidas/', setMedidas, 'Medidas'),
-      loadResource('/marcas/', setMarcas, 'Marcas'),
+      loadResource('/produtos/', setMarcas, 'Marcas'),
       loadResource('/desenhos/', setDesenhos, 'Desenhos'),
       loadResource('/tipo-recapagem/', setTiposRecap, 'Tipos de Recapagem'),
     ]);
@@ -190,6 +340,7 @@ export default function ColetaPneus() {
   const openModal = (mode: 'create' | 'edit', coleta?: MobOS) => {
     setFormError('');
     setModalMode(mode);
+    setIsModalOpen(true);
     if (mode === 'edit' && coleta) {
       setCurrentId(coleta.id);
       setFormData({
@@ -197,7 +348,7 @@ export default function ColetaPneus() {
         msgmob: coleta.msgmob || '',
         id_vendedor: coleta.id_vendedor || 0,
         pneus: coleta.pneus ? [...coleta.pneus] : [],
-        numeroos: coleta.numeroos || '',
+        numos: coleta.numos || '',
         cpfcnpj: coleta.cpfcnpj || '',
         nome: coleta.nome || '',
         endereco: coleta.endereco || '',
@@ -210,7 +361,8 @@ export default function ColetaPneus() {
         servicocomgarantia: coleta.servicocomgarantia || '',
         tipoveiculo: coleta.tipoveiculo || '',
         somentesepar: coleta.somentesepar || '',
-        podealterardesenho: coleta.podealterardesenho || ''
+        podealterardesenho: coleta.podealterardesenho || '',
+        status: coleta.status || ''
       });
     } else {
       setCurrentId(null);
@@ -219,7 +371,7 @@ export default function ColetaPneus() {
         msgmob: '',
         id_vendedor: 0,
         pneus: [],
-        numeroos: '',
+        numos: '',
         cpfcnpj: '',
         nome: '',
         endereco: '',
@@ -232,7 +384,8 @@ export default function ColetaPneus() {
         servicocomgarantia: '',
         tipoveiculo: '',
         somentesepar: '',
-        podealterardesenho: ''
+        podealterardesenho: '',
+        status: ''
       });
     }
     setIsModalOpen(true);
@@ -266,7 +419,7 @@ export default function ColetaPneus() {
         garantia: '',
         obs: '',
         medidanova: '',
-        marcanova: '',
+        produtonovo: '',
         desenhonovo: ''
       });
     }
@@ -337,10 +490,70 @@ export default function ColetaPneus() {
     }
   };
 
+  const handleGenerateOS = (id: number) => {
+    const coleta = coletas.find(c => c.id === id);
+    if (!coleta) return;
+
+    if (coleta.status !== 'Ok') {
+      alert("Atenção: Esta coleta precisa estar com status 'Ok' (validada) antes de gerar a OS.");
+      return;
+    }
+
+    if (!window.confirm(`Deseja converter a Coleta #${id} em uma Ordem de Serviço?\n\nVocê será levado para a tela de OS para completar os dados e salvar.`)) return;
+    
+    // Navega para a tela de OS passando os dados da coleta no state
+    navigate('/os', { state: { fromColeta: true, coletaData: coleta } });
+  };
+
+  const handleValidate = () => {
+    // Se já estiver como GOS, não faz nada
+    if (formData.status === 'GOS') {
+      alert("Esta coleta já possui status 'GOS' e não pode ser revalidada.");
+      return;
+    }
+
+    const errors: string[] = [];
+    
+    if (!formData.id_contato || formData.id_contato === 0 || formData.id_contato === "0") {
+      errors.push("Selecione um Cliente.");
+    }
+    
+    if (!formData.id_vendedor || formData.id_vendedor === 0 || formData.id_vendedor === "0") {
+      errors.push("Selecione um Vendedor.");
+    }
+    
+    if (!formData.pneus || formData.pneus.length === 0) {
+      errors.push("Adicione pelo menos um pneu à coleta.");
+    } else {
+      formData.pneus.forEach((p: any, idx: number) => {
+        const itemNum = idx + 1;
+        const hasMedida = (p.id_medida && p.id_medida > 0 && p.id_medida !== "0") || (p.medidanova && p.medidanova.trim() !== "");
+        const hasMarca = (p.id_marca && p.id_marca > 0 && p.id_marca !== "0") || (p.marcanova && p.marcanova.trim() !== "");
+        const hasDesenho = (p.id_desenho && p.id_desenho > 0 && p.id_desenho !== "0") || (p.desenhonovo && p.desenhonovo.trim() !== "");
+        
+        if (!hasMedida) errors.push(`Pneu #${itemNum}: Medida não informada.`);
+        if (!hasMarca) errors.push(`Pneu #${itemNum}: Marca não informada.`);
+        if (!hasDesenho) errors.push(`Pneu #${itemNum}: Desenho não informado.`);
+      });
+    }
+
+    if (errors.length > 0) {
+      setFormError(`PENDÊNCIAS:\n${errors.join('\n')}`);
+      setFormData((prev: any) => ({ ...prev, status: "" })); // Deixa nulo/em branco se der erro
+      const body = document.querySelector('.modal-body.scrollable');
+      if (body) body.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setFormError('');
+      setFormData((prev: any) => ({ ...prev, status: "Ok" })); // Muda para Ok se tudo estiver certo
+      alert("✅ Todos os dados obrigatórios foram preenchidos corretamente!\nStatus atualizado para 'Ok'. Não esqueça de Gravar a coleta.");
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (window.confirm("Deseja realmente excluir esta Coleta? Os pneus vinculados também serão removidos.")) {
       try {
         await api.delete(`/coletas/${id}`);
+        setSelectedId(null);
         fetchData();
       } catch (error) {
         console.error("Erro ao excluir coleta:", error);
@@ -362,61 +575,7 @@ export default function ColetaPneus() {
     }
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setIsScanning(true);
-      setFormError('');
-
-      // Simulação de processamento de IA (OCR)
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      // Mock de resposta da IA (JSON)
-      const mockResult = {
-        id_contato: formData.id_contato || clientes[0]?.id_contato,
-        pneus: [
-          {
-            id_medida: medidas[0]?.id || 0,
-            id_marca: marcas[0]?.id || 0,
-            id_desenho: desenhos[0]?.id || 0,
-            id_recap: tiposRecap[0]?.id || 0,
-            valor: 450.00,
-            piso: '7MM',
-            numserie: 'DOT1234',
-            numfogo: 'OS789',
-            obs: 'Detectado via OCR MobVenda'
-          }
-        ]
-      };
-
-      // Se o modal estiver aberto, mescla os dados; senão, abre uma nova coleta com os dados
-      if (isModalOpen) {
-        setFormData((prev: any) => ({
-          ...prev,
-          pneus: [...prev.pneus, ...mockResult.pneus]
-        }));
-      } else {
-        setFormData({
-          id_contato: mockResult.id_contato,
-          id_vendedor: formData.id_vendedor,
-          msgmob: 'Coleta gerada via Scanner Inteligente',
-          pneus: mockResult.pneus
-        });
-        setModalMode('create');
-        setIsModalOpen(true);
-      }
-
-      alert("Leitura OCR concluída com sucesso! Verifique os dados no formulário.");
-    } catch (error) {
-      console.error("Erro no processamento OCR:", error);
-      setFormError("Erro ao processar imagem via IA.");
-    } finally {
-      setIsScanning(false);
-      if (event.target) event.target.value = ''; // Limpa o input
-    }
-  };
+  // Removido handleFileChange antigo (Mock) para evitar conflitos de processamento.
 
   const handleOCRFileClick = () => {
     if (ocrFileInputRef.current) {
@@ -428,8 +587,21 @@ export default function ColetaPneus() {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setOcrPreview(reader.result as string);
+      reader.onloadend = async () => {
+        const rawResult = reader.result as string;
+        const result = await compressImage(rawResult);
+        
+        try {
+          sessionStorage.setItem('totalcap_ocr_session', JSON.stringify({
+            preview: result,
+            instructions: ocrInstructions,
+            isOpen: true,
+            timestamp: new Date().getTime()
+          }));
+        } catch (e) { console.warn("Erro ao salvar no storage"); }
+
+        setOcrPreview(result);
+        event.target.value = '';
       };
       reader.readAsDataURL(file);
     }
@@ -518,7 +690,7 @@ export default function ColetaPneus() {
           id_vendedor: formData.id_vendedor || (vendedores.length > 0 ? vendedores[0].id : 0),
           msgmob: 'Coleta gerada via Leitura OCR',
           pneus: novosPneus,
-          numeroos: cabecalho.numeroos || '',
+          numos: cabecalho.numos || '',
           cpfcnpj: cabecalho.cpfcnpj || '',
           nome: cabecalho.nome || '',
           endereco: cabecalho.endereco || '',
@@ -534,13 +706,13 @@ export default function ColetaPneus() {
           podealterardesenho: cabecalho.podealterardesenho || ''
         });
         setModalMode('create');
-        setIsModalOpen(true);
+        // Mantemos o modal OCR aberto para o usuário ver o resultado no Memo
       }
       
       let formattedResult = `IA (${provedorNome}) - ${new Date().toLocaleString()}\n` +
         `-----------------------------------\n` +
         `[CABEÇALHO]\n` +
-        `OS: ${cabecalho.numeroos || '???'}\n` +
+        `OS: ${cabecalho.numos || '???'}\n` +
         `Cliente: ${cabecalho.nome || '???'}\n` +
         `CPF/CNPJ: ${cabecalho.cpfcnpj || '???'}\n` +
         `Cidade/UF: ${cabecalho.cidade || '???'}/${cabecalho.uf || '???'}\n` +
@@ -576,6 +748,8 @@ export default function ColetaPneus() {
         `Status: ${novosPneus.length} pneu(s) adicionado(s) ao formulário.`;
       
       setOcrResultText(formattedResult);
+      // Limpamos a sessão persistente após sucesso
+      localStorage.removeItem('totalcap_ocr_session');
     } catch (error: any) {
       console.error("Erro no processamento OCR real:", error);
       const detail = error.response?.data?.detail || error.message;
@@ -590,9 +764,23 @@ export default function ColetaPneus() {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setOcrPreview(reader.result as string);
-         if (!isOCRModalOpen) setIsOCRModalOpen(true);
+      reader.onloadend = async () => {
+        const rawResult = reader.result as string;
+        const result = await compressImage(rawResult);
+        
+        // Salvamento instantâneo
+        try {
+          sessionStorage.setItem('totalcap_ocr_session', JSON.stringify({
+            preview: result,
+            instructions: ocrInstructions,
+            isOpen: true,
+            timestamp: new Date().getTime()
+          }));
+        } catch (e) { console.warn("Erro ao salvar no storage"); }
+
+        setOcrPreview(result);
+        if (!isOCRModalOpen) setIsOCRModalOpen(true);
+        event.target.value = '';
       };
       reader.readAsDataURL(file);
     }
@@ -617,7 +805,7 @@ export default function ColetaPneus() {
             <ClipboardList size={32} className="text-primary" />
             <h1>Coleta de Pneus</h1>
           </div>
-          <p className="page-subtitle">Gerencie as coletas externas integradas com o sistema MobVenda</p>
+          <p className="page-subtitle">Gestao de coleta externa de pneus</p>
         </div>
         <div className="header-actions">
           <input 
@@ -650,9 +838,28 @@ export default function ColetaPneus() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="btn-secondary" onClick={fetchData} title="Recarregar dados">
-          <Loader2 className={loading ? "spinning" : ""} size={18} /> Atualizar Lista
-        </button>
+        
+        <div className="date-filters">
+          <div className="date-input-group">
+            <Calendar size={16} className="date-icon" />
+            <input 
+              type="date" 
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              title="Data Inicial"
+            />
+          </div>
+          <span className="date-separator">até</span>
+          <div className="date-input-group">
+            <Calendar size={16} className="date-icon" />
+            <input 
+              type="date" 
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              title="Data Final"
+            />
+          </div>
+        </div>
       </div>
 
       {fetchError && (
@@ -662,29 +869,61 @@ export default function ColetaPneus() {
         </div>
       )}
 
-      <div className="data-grid-container glass-panel">
-        {loading ? (
-          <div className="loading-state">Carregando coletas...</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Data</th>
-                  <th>Cliente</th>
-                  <th>Vendedor</th>
-                  <th>Qtd. Pneus</th>
-                  <th>Valor Total</th>
-                  <th>Sincronizado</th>
-                  <th className="th-actions">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredColetas.length === 0 ? (
-                  <tr><td colSpan={8} className="empty-state">Nenhuma coleta encontrada.</td></tr>
-                ) : (
-                  filteredColetas.map(coleta => (
+      {/* BANNER DE RECUPERAÇÃO OCR (Caso o modal feche sozinho no mobile) */}
+      {!isOCRModalOpen && ocrPreview && (
+        <div className="ocr-recovery-banner" style={{ 
+          margin: '0 2rem 1rem 2rem', 
+          background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', 
+          color: 'white', 
+          padding: '1rem', 
+          borderRadius: '12px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          animation: 'slideDown 0.4s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.3)' }}>
+              <img src={ocrPreview} alt="Recuperar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div>
+              <strong style={{ display: 'block' }}>Captura de OCR Detectada</strong>
+              <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Você tem uma leitura pendente que não foi concluída.</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn-secondary" style={{ background: 'white', color: '#059669', border: 'none' }} onClick={() => setIsOCRModalOpen(true)}>Continuar Leitura</button>
+            <button className="btn-icon" style={{ color: 'white', opacity: 0.8 }} onClick={clearOCRSession} title="Descartar"><X size={18} /></button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="loading-container p-12 text-center text-slate-400">
+          <Loader2 className="spinning mb-2" size={32} />
+          <p>Carregando coletas...</p>
+        </div>
+      ) : (
+        <div className="glass-panel overflow-hidden p-0" style={{ margin: '0 2rem 2rem 2rem' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>OS Gerada</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Volume</th>
+                <th>Vrt. Total</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'center' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredColetas.length === 0 ? (
+                <tr><td colSpan={9} className="empty-state text-center p-8 text-slate-400">Nenhum registro encontrado.</td></tr>
+              ) : (
+                filteredColetas.map(coleta => (
                     <tr 
                       key={coleta.id} 
                       className={selectedId === coleta.id ? 'row-selected' : ''} 
@@ -692,19 +931,47 @@ export default function ColetaPneus() {
                       style={{ cursor: 'pointer' }}
                     >
                       <td><span className="os-number">#{coleta.id}</span></td>
+                      <td>{coleta.numos ? <span className="os-number" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>#{coleta.numos}</span> : '---'}</td>
                       <td>{coleta.dataos ? new Date(coleta.dataos).toLocaleDateString('pt-BR') : '---'}</td>
                       <td>{coleta.contato?.nome || 'Cliente não encontrado'}</td>
                       <td>{coleta.vendedor?.nome || '---'}</td>
                       <td><span className="badge-info highlight">{(coleta.pneus?.length || 0)} pneu(s)</span></td>
                       <td className="valor-cell-readonly">R$ {parseFloat((coleta.vtotal || 0).toString()).toFixed(2)}</td>
                       <td>
-                        <span className={`status-badge-item status-${coleta.sincronizado ? 'pronto' : 'aguardando'}`}>
-                          {coleta.sincronizado ? 'Sim' : 'Não'}
+                        <span className={`status-badge-item status-${
+                          coleta.status === 'Ok' ? 'pronto' : 
+                          coleta.status === 'GOS' ? 'accent' : 'aguardando'
+                        }`}>
+                          {coleta.status || 'Pendente'}
                         </span>
                       </td>
-                      <td className="td-actions">
-                        <button className="icon-btn edit" onClick={(e) => { e.stopPropagation(); openModal('edit', coleta); }} title="Editar"><Edit2 size={18} /></button>
-                        <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(coleta.id); }} title="Excluir"><Trash2 size={18} /></button>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
+                        <button 
+                          className={`icon-btn success ${coleta.status !== 'Ok' ? 'disabled' : ''}`} 
+                          onClick={(e) => { e.stopPropagation(); if (coleta.status === 'Ok') handleGenerateOS(coleta.id); }} 
+                          title={coleta.status === 'Ok' ? "Gerar Ordem de Serviço" : "É necessário validar (status Ok) antes de gerar OS"} 
+                          disabled={coleta.status !== 'Ok'}
+                        >
+                          <FilePlus size={18} />
+                        </button>
+                        <button 
+                          className={`icon-btn edit ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
+                          onClick={(e) => { e.stopPropagation(); if (coleta.status !== 'GOS') openModal('edit', coleta); }} 
+                          title={coleta.status === 'GOS' ? "Coleta exportada não pode ser editada" : "Editar"}
+                          disabled={coleta.status === 'GOS'}
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button 
+                          className={`icon-btn delete ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
+                          onClick={(e) => { e.stopPropagation(); if (coleta.status !== 'GOS') handleDelete(coleta.id); }} 
+                          title={coleta.status === 'GOS' ? "Coleta exportada não pode ser excluída" : "Excluir"}
+                          disabled={coleta.status === 'GOS'}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -713,591 +980,300 @@ export default function ColetaPneus() {
             </table>
           </div>
         )}
-      </div>
-
+      
       {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content full-screen" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="header-title-group">
-                <ClipboardList className="header-icon" />
-                <h2>{modalMode === 'create' ? 'Nova Coleta' : `Detalhes da Coleta #${currentId}`}</h2>
-              </div>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+        <div className="coleta-modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="coleta-modal-content full-screen" onClick={e => e.stopPropagation()}>
+            <div className="coleta-modal-header">
+              <h2>{modalMode === 'create' ? 'Nova Coleta de Pneus' : 'Editar Coleta de Pneus'}</h2>
+              <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
-            
-            <form onSubmit={handleSubmit} className="coleta-form">
-              <div className="modal-body scrollable" style={{ position: 'relative' }}>
-                {formError && (
-                  <div className="error-banner" style={{ 
-                    backgroundColor: '#fef2f2', 
-                    color: '#ef4444', 
-                    padding: '1rem', 
-                    borderRadius: '8px', 
-                    marginBottom: '1rem',
-                    border: '1px solid #fee2e2',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.8rem',
-                    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.1)',
-                    animation: 'slideDown 0.3s ease-out'
-                  }}>
-                    <AlertCircle size={20} />
-                    <span>{formError}</span>
-                  </div>
-                )}
+            <form onSubmit={handleSubmit}>
+              <div className="coleta-modal-body scrollable">
+                {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="coleta-master-section">
-                  <div className="form-grid-coleta">
-                    <div className="form-group span-2">
-                      <label htmlFor="id_contato">Cliente da Coleta *</label>
-                      <select id="id_contato" className="form-input" value={formData.id_contato} onChange={handleChange} required>
-                        <option value="0">Selecione o Cliente...</option>
-                        {clientes.map(c => <option key={c.id} value={c.id_contato}>{c.nome}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="form-group span-2">
-                      <label htmlFor="id_vendedor">Vendedor Responsável</label>
-                      <select id="id_vendedor" className="form-input" value={formData.id_vendedor} onChange={handleChange}>
-                        <option value="0">Selecione o Vendedor...</option>
-                        {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="form-group span-4">
-                      <label htmlFor="msgmob">Observações Gerais (Mobile)</label>
-                      <textarea id="msgmob" className="form-input" rows={2} value={formData.msgmob} onChange={handleChange} placeholder="Anotações para a coleta..." />
-                    </div>
-
-                    <div className="form-group span-4 section-divider mt-2">
-                      <span className="divider-label">Dados Detalhados da OS (Capturados via OCR)</span>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Número OS</label>
-                      <input id="numeroos" className="form-input" type="number" value={formData.numeroos} onChange={handleChange} disabled={modalMode === 'edit'} />
-                    </div>
-                    <div className="form-group">
-                      <label>CPF / CNPJ</label>
-                      <input id="cpfcnpj" className="form-input" value={formData.cpfcnpj} onChange={handleChange} />
-                    </div>
-                    <div className="form-group span-2">
-                      <label>Nome / Razão Social</label>
-                      <input id="nome" className="form-input" value={formData.nome} onChange={handleChange} />
-                    </div>
-
-                    <div className="form-group span-2">
-                      <label>Endereço</label>
-                      <input id="endereco" className="form-input" value={formData.endereco} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Cidade</label>
-                      <input id="cidade" className="form-input" value={formData.cidade} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>UF</label>
-                      <input id="uf" className="form-input" maxLength={2} value={formData.uf} onChange={handleChange} />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Telefone</label>
-                      <input id="fone" className="form-input" value={formData.fone} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Veículo (Placa)</label>
-                      <input id="veiculo" className="form-input" value={formData.veiculo} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Forma Pgto</label>
-                      <input id="formapagto" className="form-input" value={formData.formapagto} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Vendedor (OCR)</label>
-                      <input id="vendedor_ocr" className="form-input" value={formData.vendedor_ocr} onChange={handleChange} />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Tipo Veículo</label>
-                      <input id="tipoveiculo" className="form-input" value={formData.tipoveiculo} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Garantia?</label>
-                      <input id="servicocomgarantia" className="form-input" value={formData.servicocomgarantia} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Somente Par?</label>
-                      <input id="somentesepar" className="form-input" value={formData.somentesepar} onChange={handleChange} />
-                    </div>
-                    <div className="form-group">
-                      <label>Altera Des.?</label>
-                      <input id="podealterardesenho" className="form-input" value={formData.podealterardesenho} onChange={handleChange} />
-                    </div>
+                <div className="section-title"><User size={18} /> Dados do Cliente</div>
+                <div className="grid-4">
+                  <div className="form-group span-2">
+                    <label>Cliente</label>
+                    <select className="form-input" id="id_contato" value={formData.id_contato} onChange={handleChange}>
+                      <option value={0}>Selecione...</option>
+                      {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>CPF/CNPJ</label>
+                    <input className="form-input" type="text" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>Fone</label>
+                    <input className="form-input" type="text" id="fone" value={formData.fone} onChange={handleChange} />
+                  </div>
+                  <div className="form-group span-3">
+                    <label>Endereço</label>
+                    <input className="form-input" type="text" id="endereco" value={formData.endereco} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>Cidade</label>
+                    <input className="form-input" type="text" id="cidade" value={formData.cidade} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>UF</label>
+                    <input className="form-input" type="text" id="uf" value={formData.uf} onChange={handleChange} />
                   </div>
                 </div>
 
-                <div className="coleta-detail-section">
-                  <div className="section-title-bar">
-                    <div className="title-left">
-                      <Package size={18} />
-                      <h3>Pneus Coletados</h3>
-                      <span className="item-count">{formData.pneus.length} itens</span>
-                    </div>
-                    <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
-                      <Plus size={16} /> Adicionar Pneu
-                    </button>
+                <div className="section-title"><DollarSign size={18} /> Dados da OS</div>
+                <div className="grid-4">
+                  <div className="form-group">
+                    <label>Nº OS</label>
+                    <input className="form-input" type="text" id="numos" value={formData.numos} onChange={handleChange} />
                   </div>
-
-                  <div className="pneus-grid-container">
-                    <table className="pneus-table readonly">
-                      <thead>
-                        <tr>
-                          <th>Medida / Marca</th>
-                          <th>Desenho / Resumo</th>
-                          <th>Série / Fogo / DOT</th>
-                          <th>Valor Previsto</th>
-                          <th>Medida Nova</th>
-                          <th>Desenho Novo</th>
-                          <th style={{ width: '100px' }}>Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.pneus.length === 0 ? (
-                          <tr><td colSpan={7} className="empty-pneus">Nenhum pneu incluído nesta coleta.</td></tr>
-                        ) : (
-                          formData.pneus.map((p: any, idx: number) => (
-                            <tr key={idx}>
-                              <td>
-                                <div className="pneu-info-cell">
-                                  <span className="primary-info" style={{ color: '#2563eb', fontWeight: 'bold' }}>
-                                    {p.id_medida > 0 
-                                      ? (medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || 'Sem Medida') 
-                                      : '---'}
-                                  </span>
-                                  <span className="secondary-info" style={{ color: '#3b82f6' }}>
-                                    {p.id_marca > 0 
-                                      ? (marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || 'Sem Marca') 
-                                      : '---'}
-                                  </span>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="pneu-info-cell">
-                                  <span className="primary-info" style={{ color: '#2563eb', fontWeight: 'bold' }}>
-                                    {p.id_desenho > 0 
-                                      ? (desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || 'Sem Desenho') 
-                                      : '---'}
-                                  </span>
-                                  <span className="secondary-info" style={{ marginTop: '4px' }}>Recap: {tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</span>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="pneu-info-cell">
-                                  <span className="badge-info">SÉRIE: {p.numserie || '---'}</span>
-                                  <span className="badge-info highlight">FOGO: {p.numfogo || '---'}</span>
-                                  <span className="badge-info">DOT: {p.dot || '---'}</span>
-                                </div>
-                              </td>
-                              <td className="valor-cell-readonly">R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
-                              <td>
-                                {p.medidanova ? (
-                                  <span className="badge-new-field" style={{ color: '#10b981', fontWeight: 'bold' }}>
-                                    {p.medidanova}
-                                  </span>
-                                ) : <span style={{ color: '#64748b' }}>---</span>}
-                              </td>
-                              <td>
-                                {p.desenhonovo ? (
-                                  <span className="badge-new-field" style={{ color: '#10b981' }}>
-                                    {p.desenhonovo}
-                                  </span>
-                                ) : <span style={{ color: '#64748b' }}>---</span>}
-                              </td>
-                              <td>
-                                <div className="action-buttons-inline">
-                                  <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)} title="Editar"><Edit2 size={16} /></button>
-                                  <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)} title="Excluir"><Trash2 size={16} /></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                  <div className="form-group">
+                    <label>Vendedor</label>
+                    <select className="form-input" id="id_vendedor" value={formData.id_vendedor} onChange={handleChange}>
+                      <option value={0}>Selecione...</option>
+                      {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
+                    </select>
                   </div>
-
-                  <div className="grid-summary-bar">
-                    <div className="coleta-summary">
-                      <div className="summary-item">
-                        <span className="label">Total de Pneus</span>
-                        <span className="value">{formData.pneus.length} unid.</span>
-                      </div>
-                      <div className="summary-item total">
-                        <span className="label">Valor Previsto Total</span>
-                        <span className="value">R$ {calculateTotal().toFixed(2)}</span>
-                      </div>
-                    </div>
-                    
-                    <button type="button" className="btn-secondary-compact" onClick={() => setIsModalOpen(false)}>
-                      Sair sem Salvar
-                    </button>
+                  <div className="form-group">
+                    <label>Forma Pagto</label>
+                    <input className="form-input" type="text" id="formapagto" value={formData.formapagto} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>Veículo</label>
+                    <input className="form-input" type="text" id="veiculo" value={formData.veiculo} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>Tipo Veículo</label>
+                    <input className="form-input" type="text" id="tipoveiculo" value={formData.tipoveiculo} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>Status</label>
+                    <input className="form-input" type="text" id="status" value={formData.status} onChange={handleChange} disabled={modalMode === 'edit'} />
                   </div>
                 </div>
-              </div>
-              
-              <div className="modal-footer-coleta">
-                <div style={{ flex: 1 }}></div>
-                <div className="footer-btns">
-                  <button type="submit" className="btn-primary-coleta" disabled={isSubmitting}>
-                    {isSubmitting ? 'Salvando...' : (modalMode === 'create' ? 'Gravar Coleta' : 'Salvar Alterações')}
+
+                <div className="section-title"><ClipboardList size={18} /> Observações</div>
+                <div className="form-group">
+                  <textarea className="form-input" id="msgmob" value={formData.msgmob} onChange={handleChange} rows={3} />
+                </div>
+
+                <div className="section-title"><Package size={18} /> Pneus ({formData.pneus?.length || 0})</div>
+                <div className="pneus-grid-container">
+                  <table className="pneus-table">
+                    <thead>
+                      <tr>
+                        <th>Medida</th>
+                        <th>Marca</th>
+                        <th>Desenho</th>
+                        <th>Recap</th>
+                        <th>Série</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(!formData.pneus || formData.pneus.length === 0) ? (
+                        <tr><td colSpan={7} className="empty-pneus">Nenhum pneu adicionado.</td></tr>
+                      ) : (
+                        formData.pneus.map((p: any, idx: number) => (
+                          <tr key={idx}>
+                            <td>{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</td>
+                            <td>{marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || '---'}</td>
+                            <td>{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</td>
+                            <td>{tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</td>
+                            <td>{p.numserie || '-'}</td>
+                            <td>R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
+                            <td>
+                              <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)}><Edit2 size={16} /></button>
+                              <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)}><Trash2 size={16} /></button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                  <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
+                    <Plus size={16} /> Adicionar Pneu
                   </button>
                 </div>
+
+                <div className="total-row">
+                  <span>Total:</span>
+                  <span className="total-value">R$ {calculateTotal().toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="modal-footer-coleta">
+                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="spinning" size={18} /> : (modalMode === 'create' ? 'Cadastrar' : 'Salvar Alterações')}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* SUB-MODAL DE EDIÇÃO DE PNEU MOBPNEU */}
       {isPneuModalOpen && (
-        <div className="modal-overlay sub-modal" onClick={() => setIsPneuModalOpen(false)}>
-          <div className="modal-content pneu-detail-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="header-title-group">
-                <Shield className="header-icon" />
-                <h2>{editingPneuIndex !== null ? 'Inspeção do Pneu (Edição)' : 'Inspeção do Pneu (Novo)'}</h2>
-              </div>
-              <button className="close-btn" onClick={() => setIsPneuModalOpen(false)}><X size={24} /></button>
+        <div className="coleta-modal-overlay" onClick={() => setIsPneuModalOpen(false)}>
+          <div className="pneu-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="coleta-modal-header">
+              <h3>{editingPneuIndex !== null ? 'Editar Pneu' : 'Adicionar Pneu'}</h3>
+              <button className="close-btn" onClick={() => setIsPneuModalOpen(false)}><X size={20} /></button>
             </div>
-
-            <div className="modal-body pneu-modal-scroll">
-              <div className="pneu-form-grid">
-                
-                {/* Identificação Básica */}
-                <div className="form-group span-4 section-divider">
-                  <span className="divider-label">Identificação Principal</span>
-                </div>
-
-                <div className="form-group span-2">
-                  <label>Medida Atual *</label>
-                  <select className="form-input" value={tempPneu.id_medida} onChange={(e) => handleTempPneuChange('id_medida', e.target.value)}>
-                    <option value="0">Selecione...</option>
-                    {medidas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
-                  </select>
-                </div>
-
-                <div className="form-group span-2">
-                  <label>Marca Original *</label>
-                  <select className="form-input" value={tempPneu.id_marca} onChange={(e) => handleTempPneuChange('id_marca', e.target.value)}>
-                    <option value="0">Selecione...</option>
-                    {marcas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Número de Série</label>
-                  <input className="form-input uppercase" value={tempPneu.numserie} onChange={(e) => handleTempPneuChange('numserie', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group">
-                  <label>Número de Fogo</label>
-                  <input className="form-input highlight-field" value={tempPneu.numfogo} onChange={(e) => handleTempPneuChange('numfogo', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group">
-                  <label>DOT</label>
-                  <input className="form-input uppercase" value={tempPneu.dot} onChange={(e) => handleTempPneuChange('dot', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group">
-                  <label>Desenho Original</label>
-                  <input className="form-input" value={tempPneu.doriginal} onChange={(e) => handleTempPneuChange('doriginal', e.target.value.toUpperCase())} />
-                </div>
-
-                {/* Campos para Novos Cadastros */}
-                {((!tempPneu.id_medida || tempPneu.id_medida === "0" || tempPneu.id_medida === 0) || tempPneu.medidanova) && (
-                  <div className="form-group span-2">
-                    <label style={{ color: '#10b981' }}>Medida (Sugestão IA / Nova)</label>
-                    <input className="form-input" style={{ borderColor: '#10b981' }} value={tempPneu.medidanova} onChange={(e) => handleTempPneuChange('medidanova', e.target.value.toUpperCase())} />
-                  </div>
-                )}
-
-                {((!tempPneu.id_marca || tempPneu.id_marca === "0" || tempPneu.id_marca === 0) || tempPneu.marcanova) && (
-                  <div className="form-group span-2">
-                    <label style={{ color: '#10b981' }}>Marca (Sugestão IA / Nova)</label>
-                    <input className="form-input" style={{ borderColor: '#10b981' }} value={tempPneu.marcanova} onChange={(e) => handleTempPneuChange('marcanova', e.target.value.toUpperCase())} />
-                  </div>
-                )}
-
-                {((!tempPneu.id_desenho || tempPneu.id_desenho === "0" || tempPneu.id_desenho === 0) || tempPneu.desenhonovo) && (
-                  <div className="form-group span-2">
-                    <label style={{ color: '#10b981' }}>Desenho (Sugestão IA / Novo)</label>
-                    <input className="form-input" style={{ borderColor: '#10b981' }} value={tempPneu.desenhonovo} onChange={(e) => handleTempPneuChange('desenhonovo', e.target.value.toUpperCase())} />
-                  </div>
-                )}
-
-                {/* Serviços Solicitados */}
-                <div className="form-group span-4 section-divider mt-2">
-                  <span className="divider-label">Serviço Desejado</span>
-                </div>
-
-                <div className="form-group span-2">
-                  <label>Desenho Indicado</label>
-                  <select className="form-input" value={tempPneu.id_desenho} onChange={(e) => handleTempPneuChange('id_desenho', e.target.value)}>
-                    <option value="0">Selecione...</option>
-                    {desenhos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
-                  </select>
-                </div>
-
-                <div className="form-group span-2">
-                  <label>Tipo de Recapagem</label>
-                  <select className="form-input" value={tempPneu.id_recap} onChange={(e) => handleTempPneuChange('id_recap', e.target.value)}>
-                    <option value="0">Selecione...</option>
-                    {tiposRecap.map(tr => <option key={tr.id} value={tr.id}>{tr.descricao}</option>)}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Valor Previsto (R$)</label>
-                  <div className="input-with-icon">
-                    <DollarSign size={16} className="field-icon" />
-                    <input className="form-input" type="number" step="0.01" value={tempPneu.valor} onChange={(e) => handleTempPneuChange('valor', e.target.value)} />
-                  </div>
-                </div>
-
-                {/* Dados de Inspeção MobPneu */}
-                <div className="form-group span-4 section-divider mt-2">
-                  <span className="divider-label">Dados de Inspeção / Técnico</span>
-                </div>
-
-                <div className="form-group">
-                  <label>Piso</label>
-                  <input className="form-input" value={tempPneu.piso} onChange={(e) => handleTempPneuChange('piso', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group">
-                  <label>Uso</label>
-                  <input className="form-input" value={tempPneu.uso} onChange={(e) => handleTempPneuChange('uso', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group">
-                  <label>Qtd. Reformas Anteriores</label>
-                  <input className="form-input" type="number" value={tempPneu.qreforma} onChange={(e) => handleTempPneuChange('qreforma', e.target.value)} />
-                </div>
-
-                <div className="form-group">
-                  <label>Tipo Garantia</label>
-                  <input className="form-input" value={tempPneu.garantia} onChange={(e) => handleTempPneuChange('garantia', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group span-2">
-                  <label>Medida Nova (Trocada)</label>
-                  <input className="form-input" value={tempPneu.medidanova} onChange={(e) => handleTempPneuChange('medidanova', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group span-2">
-                  <label>Marca Nova (Trocada)</label>
-                  <input className="form-input" value={tempPneu.marcanova} onChange={(e) => handleTempPneuChange('marcanova', e.target.value.toUpperCase())} />
-                </div>
-
-                <div className="form-group span-4">
-                  <label>Observação / Laudo Visual</label>
-                  <div className="input-with-icon">
-                    <Info size={16} className="field-icon" style={{ top: '0.8rem' }} />
-                    <textarea className="form-input" rows={2} style={{ paddingLeft: '2.5rem' }} value={tempPneu.obs} onChange={(e) => handleTempPneuChange('obs', e.target.value)} />
-                  </div>
-                </div>
-
+            <div className="pneu-modal-scroll">
+              <div className="form-group">
+                <label>Medida</label>
+                <select className="form-input" value={tempPneu.id_medida} onChange={e => handleTempPneuChange('id_medida', e.target.value)}>
+                  <option value={0}>Selecione...</option>
+                  {medidas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Marca</label>
+                <select className="form-input" value={tempPneu.id_marca} onChange={e => handleTempPneuChange('id_marca', e.target.value)}>
+                  <option value={0}>Selecione...</option>
+                  {marcas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Desenho</label>
+                <select className="form-input" value={tempPneu.id_desenho} onChange={e => handleTempPneuChange('id_desenho', e.target.value)}>
+                  <option value={0}>Selecione...</option>
+                  {desenhos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Recapagem</label>
+                <select className="form-input" value={tempPneu.id_recap} onChange={e => handleTempPneuChange('id_recap', e.target.value)}>
+                  <option value={0}>Selecione...</option>
+                  {tiposRecap.map(t => <option key={t.id} value={t.id}>{t.descricao}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Valor (R$)</label>
+                <input className="form-input" type="number" step="0.01" value={tempPneu.valor} onChange={e => handleTempPneuChange('valor', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Nº Série</label>
+                <input className="form-input" type="text" value={tempPneu.numserie} onChange={e => handleTempPneuChange('numserie', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Nº Fogo</label>
+                <input className="form-input" type="text" value={tempPneu.numfogo} onChange={e => handleTempPneuChange('numfogo', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>DOT</label>
+                <input className="form-input" type="text" value={tempPneu.dot} onChange={e => handleTempPneuChange('dot', e.target.value)} />
               </div>
             </div>
-
-            <div className="modal-footer">
+            <div className="modal-footer-coleta">
               <button type="button" className="btn-secondary" onClick={() => setIsPneuModalOpen(false)}>Cancelar</button>
-              <button type="button" className="btn-primary" onClick={savePneu}>
-                {editingPneuIndex !== null ? 'Confirmar Edição' : 'Adicionar ao Lote'}
-              </button>
+              <button type="button" className="btn-primary" onClick={savePneu}>Salvar Pneu</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL DE LEITURA OCR */}
+      {/* MODAL OCR */}
       {isOCRModalOpen && (
-        <div className="modal-overlay" onClick={() => { setIsOCRModalOpen(false); setOcrPreview(null); }}>
-          <div className="modal-content ocr-modal-box" onClick={e => e.stopPropagation()}>
-            <div className="modal-header ocr-header">
-              <div className="header-title-group">
-                <Camera className="header-icon" />
-                <h2>Leitura OCR Inteligente</h2>
+        <div className="coleta-modal-overlay" onClick={() => setIsOCRModalOpen(false)}>
+          <div className="ocr-modal-box" onClick={e => e.stopPropagation()}>
+            <div className="ocr-header">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Camera size={20} /> Leitura Inteligente (OCR)
+                </h3>
+                <button className="close-btn" style={{ color: 'white' }} onClick={() => setIsOCRModalOpen(false)}><X size={20} /></button>
               </div>
-              <button className="close-btn" onClick={() => { setIsOCRModalOpen(false); setOcrPreview(null); }}><X size={24} /></button>
             </div>
-
-            <div className="modal-body ocr-body">
-              <p className="ocr-instruction">Capture ou selecione uma imagem do pneu para processamento.</p>
+            <div className="ocr-body">
+              <p className="ocr-instruction">Analise as laterais do pneu para identificar medida, marca e série via IA.</p>
               
-              <div className="ocr-top-actions">
-                <button className="btn-camera-action primary" onClick={handleCameraClick}>
-                  <Camera size={20} /> Usar Câmera / Scan
-                </button>
-              </div>
-
               <div className="ocr-upload-zone" onClick={handleOCRFileClick}>
                 {ocrPreview ? (
-                  <img src={ocrPreview} alt="Preview OCR" className="ocr-image-preview" />
+                  <img src={ocrPreview} alt="Preview" className="ocr-image-preview" />
                 ) : (
                   <div className="ocr-placeholder">
                     <div className="upload-icon-container">
-                      <Plus size={40} className="text-primary" />
+                      <Plus size={32} className="text-primary" />
                     </div>
-                    <span>Clique para buscar arquivo de imagem</span>
+                    <span>Toque para tirar foto ou carregar</span>
                   </div>
                 )}
+              </div>
+
+              <div className="ocr-top-actions" style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn-camera-action" onClick={() => fileInputRef.current?.click()} style={{ flex: 1 }}>
+                    <Camera size={20} /> Câmera
+                  </button>
+                  <button className="btn-secondary" onClick={handleOCRFileClick} style={{ flex: 1 }}>
+                    <Plus size={20} /> Selecionar Foto
+                  </button>
+              </div>
+
+              <div className="ocr-middle-actions">
                 <input 
-                  type="file" 
-                  ref={ocrFileInputRef} 
-                  style={{ display: 'none' }} 
-                  accept="image/*" 
-                  onChange={handleOCRFileChange} 
+                  type="text" 
+                  placeholder="Instruções extras p/ IA (ex: focar apenas na marca)"
+                  className="ocr-instruction-input"
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                  value={ocrInstructions}
+                  onChange={(e) => setOcrInstructions(e.target.value)}
                 />
               </div>
 
-              {ocrPreview && (
-                <>
-                  <div className="ocr-instruction-section" style={{ marginTop: '1rem', width: '100%' }}>
-                    <label className="memo-label" style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Instruções Adicionais (Opcional)</label>
-                    <textarea 
-                      className="form-input" 
-                      rows={2} 
-                      value={ocrInstructions} 
-                      onChange={(e) => setOcrInstructions(e.target.value)}
-                      placeholder="Ex: Pegue só o número à esquerda..."
-                      style={{ width: '100%', resize: 'vertical', marginTop: '0.5rem', background: 'rgba(255,255,255,0.05)', color: 'white' }}
-                    />
-                  </div>
-                  <div className="ocr-middle-actions">
-                    <button className="btn-change-image" onClick={handleOCRFileClick}>
-                      Trocar Arquivo
-                    </button>
-                    <button 
-                      className="btn-send-ia" 
-                      onClick={handleProcessOCR}
-                      disabled={isScanning}
-                    >
-                      {isScanning ? <Loader2 className="spinning" size={18} /> : null}
-                      Enviar Para IA
-                    </button>
-                  </div>
-                </>
+              <button 
+                className="btn-send-ia" 
+                onClick={handleProcessOCR} 
+                disabled={!ocrPreview || isScanning}
+                style={{ width: '100%', marginTop: '0.5rem' }}
+              >
+                {isScanning ? <Loader2 className="spinning" size={20} /> : <Save size={20} />} 
+                {isScanning ? 'Enviando p/ IA...' : 'Enviar Para IA'}
+              </button>
+
+              {ocrResultText && (
+                <div className="ocr-result-section">
+                  <label className="memo-label">RESULTADO DETALHADO (MEMO)</label>
+                  <textarea 
+                    className="ocr-memo-field" 
+                    readOnly 
+                    value={ocrResultText}
+                    style={{ minHeight: '120px' }}
+                  />
+                </div>
               )}
-
-              <div className="ocr-result-section">
-                <label className="memo-label">Retorno da IA (Processamento)</label>
-                <textarea 
-                  className="ocr-memo-field" 
-                  rows={6} 
-                  value={ocrResultText} 
-                  readOnly 
-                  placeholder="O resultado do processamento aparecerá aqui..."
-                />
-              </div>
             </div>
-
-            <div className="modal-footer ocr-footer">
-              <button className="btn-secondary" onClick={() => { setIsOCRModalOpen(false); setOcrPreview(null); setOcrResultText(''); setOcrInstructions(''); }}>Fechar</button>
+            
+            <div className="ocr-footer">
+              <div className="ocr-action-buttons">
+                <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setIsOCRModalOpen(false)}>Fechar</button>
+                {ocrPreview && <button className="btn-accent" style={{ flex: 1, backgroundColor: '#ef4444' }} onClick={clearOCRSession}>Descartar</button>}
+                {ocrResultText && (
+                  <button className="btn-primary" style={{ flex: 1 }} onClick={() => {
+                    setIsOCRModalOpen(false);
+                    setIsModalOpen(true);
+                  }}>
+                    Gerar MobOS
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* TEMPLATE DE IMPRESSÃO - OCULTO NA TELA */}
-      {selectedColeta && (
-        <div className="print-template">
-          <div className="print-header">
-            <div className="print-logo-section">
-              <ClipboardList size={40} className="text-primary" />
-              <div>
-                <h2>TOTALCAP - GESTÃO DE RECAPAGENS</h2>
-                <p>Comprovante de Coleta de Pneus (MobVenda)</p>
-              </div>
-            </div>
-            <div className="print-id-section">
-              <span className="print-id-label">COLETA</span>
-              <span className="print-id-value">#{selectedColeta.id}</span>
-            </div>
-          </div>
-
-          <div className="print-info-grid">
-            <div className="info-block">
-              <span className="info-label">CLIENTE</span>
-              <span className="info-value">{selectedColeta.contato?.nome || 'Não informado'}</span>
-            </div>
-            <div className="info-block">
-              <span className="info-label">DATA DA COLETA</span>
-              <span className="info-value">{new Date(selectedColeta.dataos).toLocaleString('pt-BR')}</span>
-            </div>
-            <div className="info-block">
-              <span className="info-label">VENDEDOR</span>
-              <span className="info-value">{selectedColeta.vendedor?.nome || '---'}</span>
-            </div>
-            <div className="info-block">
-              <span className="info-label" style={{ gridColumn: 'span 3' }}>OBSERVAÇÕES</span>
-              <span className="info-value">{selectedColeta.msgmob || 'Sem observações adicionais.'}</span>
-            </div>
-          </div>
-
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th>MEDIDA / MARCA</th>
-                <th>SÉRIE / FOGO</th>
-                <th>DESENHO INDICADO</th>
-                <th>RECAPAGEM</th>
-                <th>VALOR PREVISTO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedColeta.pneus.map((p, idx) => (
-                <tr key={idx}>
-                  <td>
-                    {medidas.find(m => m.id === Number(p.id_medida))?.descricao || '---'}<br/>
-                    <small>{marcas.find(m => m.id === Number(p.id_marca))?.descricao || '---'}</small>
-                  </td>
-                  <td>
-                    {p.numserie || '---'}<br/>
-                    <small>FOGO: {p.numfogo || '---'}</small>
-                  </td>
-                  <td>{desenhos.find(d => d.id === Number(p.id_desenho))?.descricao || '---'}</td>
-                  <td>{tiposRecap.find(tr => tr.id === Number(p.id_recap))?.descricao || '---'}</td>
-                  <td align="right">R$ {Number(p.valor).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={4} align="right"><strong>RESUMO TOTAL ({selectedColeta.pneus.length} Pneus):</strong></td>
-                <td align="right"><strong>R$ {Number(selectedColeta.vtotal).toFixed(2)}</strong></td>
-              </tr>
-            </tfoot>
-          </table>
-
-          <div className="print-signatures">
-            <div className="signature-box">
-              <div className="signature-line"></div>
-              <span>Assinatura do Cliente</span>
-            </div>
-            <div className="signature-box">
-              <div className="signature-line"></div>
-              <span>Responsável Totalcap</span>
-            </div>
-          </div>
-          
-          <div className="print-footer">
-            <p>Impresso em {new Date().toLocaleString('pt-BR')} - Sistema Totalcap Cloud</p>
-          </div>
-        </div>
-      )}
+      {/* Input oculto para carregar arquivo (não câmera direta) */}
+      <input 
+        type="file" 
+        ref={ocrFileInputRef} 
+        style={{ display: 'none' }} 
+        accept="image/*" 
+        onChange={handleOCRFileChange} 
+      />
     </div>
   );
 }

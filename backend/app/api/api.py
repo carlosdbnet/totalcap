@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from backend.database import get_db
 
 from backend.app.api.endpoints import (
+    apontamentos,
     clientes, 
     areas, 
     regioes, 
@@ -25,7 +26,19 @@ from backend.app.api.endpoints import (
     usuarios,
     ordens_servico,
     mobos,
-    ocr
+    ocr,
+    localizacao,
+    localizacao,
+    contatos,
+    planos_pagamento,
+    pneu_servico,
+    produtos,
+    grupos_produto,
+    faturas,
+    tipos_docto,
+    dashboard,
+    orcamento,
+    notadesp
 )
 
 api_router = APIRouter()
@@ -52,6 +65,18 @@ api_router.include_router(usuarios.router, prefix="/usuarios", tags=["usuários"
 api_router.include_router(ordens_servico.router, prefix="/ordens-servico", tags=["os"])
 api_router.include_router(mobos.router, prefix="/coletas", tags=["coletas"])
 api_router.include_router(ocr.router, prefix="/ocr", tags=["ocr"])
+api_router.include_router(localizacao.router, prefix="/localizacao", tags=["localizacao"])
+api_router.include_router(contatos.router, prefix="/contatos", tags=["contatos"])
+api_router.include_router(planos_pagamento.router, prefix="/planos-pagamento", tags=["planos-pagamento"])
+api_router.include_router(pneu_servico.router, prefix="/pneu-servicos", tags=["pneu-servicos"])
+api_router.include_router(produtos.router, prefix="/produtos", tags=["produtos"])
+api_router.include_router(grupos_produto.router, prefix="/grupos-produto", tags=["grupos-produto"])
+api_router.include_router(faturas.router, prefix="/faturas", tags=["faturas"])
+api_router.include_router(tipos_docto.router, prefix="/tipos-docto", tags=["tipos-docto"])
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+api_router.include_router(apontamentos.router, prefix="/apontamentos", tags=["apontamentos"])
+api_router.include_router(orcamento.router, prefix="/orcamentos", tags=["orçamentos"])
+api_router.include_router(notadesp.router, prefix="/notadesp", tags=["despesas"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
     from backend.app.models.usuario import Usuario

@@ -102,7 +102,7 @@ export default function Medidas() {
     try {
       if (modalMode === 'create') {
         await api.post('/medidas/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/medidas/${currentId}`, formData);
       }
       await fetchData();

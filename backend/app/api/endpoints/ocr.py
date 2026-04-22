@@ -9,6 +9,7 @@ from typing import Optional
 class OCRRequest(BaseModel):
     image: str # Base64 string
     instrucoes: Optional[str] = None # Instruções extras para a IA
+    tipo_documento: Optional[str] = 'pneu' # 'pneu' ou 'despesa'
 
 @router.post("/analyze")
 async def analyze_ocr(request: OCRRequest):
@@ -17,7 +18,7 @@ async def analyze_ocr(request: OCRRequest):
     
     try:
         # Chama o serviço que integra com a OpenAI
-        result = analyze_tire_image(request.image, request.instrucoes)
+        result = analyze_tire_image(request.image, request.instrucoes, request.tipo_documento)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -29,3 +29,9 @@ Thumbs.db
 desktop.ini
 
 .vercel
+
+# Scratch files
+scratch/
+scratch_*.py
+verify_servico_fix.py
+update_faturas_parcela_logic.py

@@ -16,7 +16,7 @@ def read_servicos(
     return db.query(ServicoModel).options(
         joinedload(ServicoModel.medida),
         joinedload(ServicoModel.desenho),
-        joinedload(ServicoModel.marca),
+        joinedload(ServicoModel.produto),
         joinedload(ServicoModel.recap)
     ).offset(skip).limit(limit).all()
 
@@ -35,7 +35,7 @@ def create_servico(
     return db.query(ServicoModel).options(
         joinedload(ServicoModel.medida),
         joinedload(ServicoModel.desenho),
-        joinedload(ServicoModel.marca),
+        joinedload(ServicoModel.produto),
         joinedload(ServicoModel.recap)
     ).filter(ServicoModel.id == db_obj.id).first()
 
@@ -62,7 +62,7 @@ def update_servico(
     return db.query(ServicoModel).options(
         joinedload(ServicoModel.medida),
         joinedload(ServicoModel.desenho),
-        joinedload(ServicoModel.marca),
+        joinedload(ServicoModel.produto),
         joinedload(ServicoModel.recap)
     ).filter(ServicoModel.id == db_obj.id).first()
 

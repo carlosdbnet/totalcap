@@ -1,0 +1,194 @@
+/* PrintProposta.css */
+
+@media screen {
+  .proposal-print-container {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Ocultar elementos da UI */
+  .p-6, .os-container, .modal-overlay, nav, aside, button, .header-actions {
+    display: none !important;
+  }
+
+  .proposal-print-container {
+    display: block !important;
+    width: 100%;
+    color: #1a202c;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+
+  .proposal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #2d3748;
+    padding-bottom: 5mm;
+    margin-bottom: 8mm;
+  }
+
+  .company-info h1 {
+    font-size: 24pt;
+    font-weight: 800;
+    margin: 0;
+    color: #2b6cb0;
+  }
+
+  .company-info p {
+    font-size: 9pt;
+    margin: 1px 0;
+    color: #718096;
+  }
+
+  .proposal-meta {
+    text-align: right;
+  }
+
+  .proposal-meta h2 {
+    font-size: 18pt;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+    color: #2d3748;
+  }
+
+  .proposal-meta p {
+    font-size: 11pt;
+    margin: 2px 0;
+    font-weight: 600;
+  }
+
+  .section-grid {
+    display: grid;
+    grid-template-cols: 1fr 1fr;
+    gap: 10mm;
+    margin-bottom: 8mm;
+  }
+
+  .info-box {
+    border: 1px solid #e2e8f0;
+    padding: 4mm;
+    border-radius: 2mm;
+    background: #f8fafc;
+  }
+
+  .info-box h3 {
+    font-size: 10pt;
+    text-transform: uppercase;
+    color: #4a5568;
+    border-bottom: 1px solid #cbd5e0;
+    margin-top: 0;
+    margin-bottom: 3mm;
+    padding-bottom: 1mm;
+  }
+
+  .info-item {
+    font-size: 9pt;
+    margin-bottom: 1mm;
+  }
+
+  .info-item b {
+    color: #2d3748;
+    min-width: 80px;
+    display: inline-block;
+  }
+
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8mm;
+  }
+
+  .items-table th {
+    background: #2d3748;
+    color: white;
+    text-align: left;
+    padding: 3mm;
+    font-size: 10pt;
+    text-transform: uppercase;
+  }
+
+  .items-table td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 3mm;
+    font-size: 9pt;
+    vertical-align: top;
+  }
+
+  .items-table tr:nth-child(even) {
+    background: #f7fafc;
+  }
+
+  .summary-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10mm;
+  }
+
+  .summary-box {
+    width: 80mm;
+    border: 2px solid #2d3748;
+    padding: 4mm;
+    border-radius: 1mm;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10pt;
+    margin-bottom: 1mm;
+  }
+
+  .summary-row.total {
+    border-top: 1px solid #2d3748;
+    margin-top: 2mm;
+    padding-top: 2mm;
+    font-size: 14pt;
+    font-weight: 800;
+    color: #2b6cb0;
+  }
+
+  .terms-section {
+    margin-bottom: 15mm;
+  }
+
+  .terms-section h3 {
+    font-size: 11pt;
+    color: #2d3748;
+    border-left: 4px solid #2b6cb0;
+    padding-left: 3mm;
+    margin-bottom: 3mm;
+  }
+
+  .terms-text {
+    font-size: 9pt;
+    color: #4a5568;
+    white-space: pre-wrap;
+  }
+
+  .signature-section {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20mm;
+  }
+
+  .sig-box {
+    width: 70mm;
+    text-align: center;
+    border-top: 1px solid #2d3748;
+    padding-top: 2mm;
+    font-size: 9pt;
+  }
+}

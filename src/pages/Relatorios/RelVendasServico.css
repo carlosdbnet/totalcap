@@ -1,0 +1,130 @@
+.relatorio-container {
+  padding: 2rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.relatorio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.relatorio-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.relatorio-title h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.filter-bar {
+  background: var(--panel-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-border);
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: flex-end;
+}
+
+.results-section {
+  background: var(--panel-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.relatorio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.relatorio-table th {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.relatorio-table td {
+  padding: 1rem;
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.95rem;
+}
+
+.relatorio-footer {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  justify-content: flex-end;
+  gap: 3rem;
+}
+
+.total-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.total-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.total-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.btn-print {
+  background: white;
+  color: #1e293b;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.btn-print:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px);
+}
+
+@media print {
+  .sidebar, .topbar, .filter-bar, .btn-print {
+    display: none !important;
+  }
+  
+  .relatorio-container {
+    padding: 0;
+  }
+  
+  .results-section {
+    border: none;
+    background: white;
+    color: black;
+  }
+  
+  .relatorio-table th {
+    background: #eee;
+    color: black;
+  }
+}

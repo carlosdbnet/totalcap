@@ -164,10 +164,11 @@ export default function Transportadoras() {
     setFormError('');
 
     try {
+      const payload = formData;
       if (modalMode === 'create') {
-        await api.post('/transportadoras/', formData);
-      } else if (modalMode === 'edit' && currentId) {
-        await api.put(`/transportadoras/${currentId}`, formData);
+        await api.post('/transportadoras/', payload);
+      } else if (modalMode === 'edit' && currentId !== null) {
+        await api.put(`/transportadoras/${currentId}`, payload);
       }
       await fetchData();
       setIsModalOpen(false);

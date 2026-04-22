@@ -96,7 +96,7 @@ export default function Areas() {
     try {
       if (modalMode === 'create') {
         await api.post('/areas/', { codigo, nome, ativo });
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/areas/${currentId}`, { codigo, nome, ativo });
       }
       await fetchAreas();
@@ -134,10 +134,6 @@ export default function Areas() {
       <div className="page-header">
         <h1 className="title">Cadastros de Áreas</h1>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={fetchAreas} title="Recarregar dados">
-            <Search size={20} />
-            Atualizar Lista
-          </button>
           <button className="btn-secondary" onClick={handlePrint}>
             <Printer size={20} />
             Imprimir

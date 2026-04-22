@@ -76,6 +76,12 @@ class ContatoBase(BaseModel):
     uf: Optional[str] = None
     
     foneprincipal: Optional[str] = None
+    foneauxiliar: Optional[str] = None
+    fonecomercial: Optional[str] = None
+    celular: Optional[str] = None
+    fax: Optional[str] = None
+    contato: Optional[str] = None
+    
     email: Optional[str] = None
     emailnfe: Optional[str] = None
     site: Optional[str] = None
@@ -147,29 +153,6 @@ class Contato(ContatoBase):
     enderecos: List[ContatoEndereco] = []
     emails: List[ContatoEmail] = []
     infos: List[ContatoInfo] = []
-
-    class Config:
-        from_attributes = True
-
-# --- Cliente Wrap ---
-class ClienteBase(BaseModel):
-    nome: str
-    documento: str
-    email: Optional[str] = None
-    telefone: Optional[str] = None
-    ativo: Optional[bool] = True
-
-class ClienteCreate(ClienteBase):
-    contato: Optional[ContatoCreate] = None
-
-class ClienteUpdate(ClienteBase):
-    contato: Optional[ContatoUpdate] = None
-
-class Cliente(ClienteBase):
-    id: int
-    id_contato: Optional[int] = None
-    contato: Optional[Contato] = None
-    criado_em: datetime
 
     class Config:
         from_attributes = True

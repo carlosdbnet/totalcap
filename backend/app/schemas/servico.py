@@ -2,27 +2,29 @@ from typing import Optional
 from pydantic import BaseModel
 
 class ServicoBase(BaseModel):
-    codservico: Optional[str] = None
+    codigo: Optional[str] = None
     descricao: str
-    piso: Optional[str] = None
     id_medida: Optional[int] = None
     id_desenho: Optional[int] = None
-    id_marca: Optional[int] = None
+    id_produto: Optional[int] = None
     id_recap: Optional[int] = None
+    valor: Optional[float] = 0.0
     ativo: Optional[bool] = True
+    grupo: Optional[str] = None
 
 class ServicoCreate(ServicoBase):
     pass
 
 class ServicoUpdate(BaseModel):
-    codservico: Optional[str] = None
+    codigo: Optional[str] = None
     descricao: Optional[str] = None
-    piso: Optional[str] = None
     id_medida: Optional[int] = None
     id_desenho: Optional[int] = None
-    id_marca: Optional[int] = None
+    id_produto: Optional[int] = None
     id_recap: Optional[int] = None
+    valor: Optional[float] = None
     ativo: Optional[bool] = None
+    grupo: Optional[str] = None
 
 # Nested objects for the response
 class MedidaSimple(BaseModel):
@@ -37,7 +39,7 @@ class DesenhoSimple(BaseModel):
     class Config:
         from_attributes = True
 
-class MarcaSimple(BaseModel):
+class ProdutoSimple(BaseModel):
     id: int
     descricao: str
     class Config:
@@ -55,7 +57,7 @@ class Servico(ServicoBase):
     # Relationships for display
     medida: Optional[MedidaSimple] = None
     desenho: Optional[DesenhoSimple] = None
-    marca: Optional[MarcaSimple] = None
+    produto: Optional[ProdutoSimple] = None
     recap: Optional[RecapSimple] = None
 
     class Config:

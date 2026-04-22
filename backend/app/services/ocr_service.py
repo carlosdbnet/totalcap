@@ -5,42 +5,75 @@ from openai import OpenAI
 import google.generativeai as genai
 from backend.config import settings
 
-def analyze_tire_image(base64_image: str, custom_instructions: str = None):
+def analyze_tire_image(base64_image: str, custom_instructions: str = None, tipo_documento: str = 'pneu'):
     """
-    Analisa uma imagem de Ordem de Serviço (OS) e extrai dados estruturados (Cabeçalho, Itens e Rodapé).
+    Analisa uma imagem de Ordem de Serviço (OS) ou Cupom Fiscal e extrai dados estruturados.
     """
     # Se a imagem vier com o prefixo 'data:image/jpeg;base64,', removemos
     if "," in base64_image:
         base64_image = base64_image.split(",")[1]
 
-    prompt = (
-        "Aja como um assistente super atento especializado em leitura de Ordens de Serviço (OS) de pneus. "
-        "Analise a imagem e transcreva os dados ESTRITAMENTE para o formato JSON abaixo.\n\n"
-        
-        "O que você precisa encontrar (fique muito atento a números e códigos):\n"
-        "1. CABEÇALHO: 'numeroos', 'cpfcnpj', 'nome' (do cliente), 'endereco', 'cidade', 'uf', 'fone', 'veiculo' (Placa), 'formapagto', 'vendedor_ocr', 'servicocomgarantia' (Sim/Não), 'tipoveiculo' (Caminhão, Carro, etc).\n"
-        "   - Fique atento a etiquetas como 'somentesepar' ou 'podealterardesenho' and marque se presentes.\n"
-        "2. ITENS (Pneus): Para cada linha de pneu, extraia: 'medida', 'marca', 'numserie', 'numfogo', 'desenho'.\n"
-        "   - IMPORTANTE: Se o conteúdo de uma célula for um sinal de aspas duplas (\"), repita o valor da linha superior!!\n"
-        "   - FORMATO DE MEDIDA: Remova todos os espaços (ex: 295/80R22.5).\n"
-        "3. RODAPÉ: O 'vendedor_ocr' (se não estiver no topo) e observações extras.\n\n"
-        
-        "REGRAS:\n"
-        "- Se não encontrar ou não tiver certeza absoluta, deixe a string vazia: \"\".\n"
-        "- Você DEVE retornar EXATAMENTE esta estrutura JSON:\n"
-        "{\n"
-        "  \"cabecalho\": {\n"
-        "    \"numeroos\": \"\", \"cpfcnpj\": \"\", \"nome\": \"\", \"endereco\": \"\", \"cidade\": \"\", \"uf\": \"\", \"fone\": \"\",\n"
-        "    \"veiculo\": \"\", \"formapagto\": \"\", \"vendedor_ocr\": \"\", \"servicocomgarantia\": \"\", \"tipoveiculo\": \"\",\n"
-        "    \"somentesepar\": \"\", \"podealterardesenho\": \"\"\n"
-        "  },\n"
-        "  \"itens\": [\n"
-        "    {\"medida\": \"\", \"marca\": \"\", \"numserie\": \"\", \"numfogo\": \"\", \"desenho\": \"\", \"dot\": \"\"}\n"
-        "  ],\n"
-        "  \"rodape\": {\"vendedor_assinatura\": \"\", \"obs_final\": \"\"},\n"
-        "  \"raw_text\": \"Explique rapidamente se teve dificuldade com algum campo\"\n"
-        "}\n"
-    )
+    if tipo_documento == 'despesa':
+        prompt = (
+            "Aja como um assistente de departamento financeiro especializado em ler cupons fiscais e recibos, "
+            "especialmente Cupons Fiscais de Posto de Gasolina e despesas de viagem.\n"
+            "Analise a imagem do comprovante e extraia os dados ESTRITAMENTE para o formato JSON abaixo.\n\n"
+            "O que você precisa encontrar:\n"
+            "1. CABEÇALHO: 'nome' (Razão Social ou Fantasia do posto/restaurante), 'cpfcnpj' (CNPJ do emissor), 'data' (Data de emissão), 'veiculo' ou 'placa', 'km' (Quilometragem se houver).\n"
+            "   - No campo 'tipo', identifique se a despesa primária é: Combustível, Pedágio, Refeição, Manutenção ou Outros.\n"
+            "2. ITENS: Para cada produto/serviço, extraia os valores buscando também por abreviações:\n"
+            "   - 'descricao': nome do produto/serviço\n"
+            "   - 'quantidade': busque por campos como 'qtde', 'quant', 'quantidade', 'lts' ou 'litros'\n"
+            "   - 'valor_unitario': busque por 'valor unitário', 'valor unit', 'vl unit' ou preço por litro\n"
+            "   - 'valor_total': busque por 'valor', 'valor total', 'total' ou 'vtotal'\n"
+            "   - 'tipo': classifique (Combustível, Pedágio, etc)\n"
+            "   - IMPORTANTE: Para postos de gasolina, procure e diferencie itens como: Gasolina, Álcool, Etanol, Diesel, S10.\n"
+            "3. RODAPÉ: O 'valor_total' informando o Total/Valor Final pago na nota fiscal.\n\n"
+            "REGRAS:\n"
+            "- Se não encontrar ou não tiver certeza, deixe a string vazia: \"\".\n"
+            "- Converta os valores monetários e quantidades mas pode retornar em string (ex: '150.50').\n"
+            "- Você DEVE retornar EXATAMENTE esta estrutura JSON:\n"
+            "{\n"
+            "  \"cabecalho\": {\n"
+            "    \"nome\": \"\", \"cpfcnpj\": \"\", \"data\": \"\", \"veiculo\": \"\", \"km\": \"\", \"tipo\": \"\"\n"
+            "  },\n"
+            "  \"itens\": [\n"
+            "    {\"descricao\": \"\", \"quantidade\": \"\", \"valor_unitario\": \"\", \"valor_total\": \"\", \"tipo\": \"\"}\n"
+            "  ],\n"
+            "  \"rodape\": {\"valor_total\": \"\"},\n"
+            "  \"raw_text\": \"Explique rapidamente se teve dificuldade\"\n"
+            "}\n"
+        )
+    else:
+        # Prompt padrão para pneus
+        prompt = (
+            "Aja como um assistente super atento especializado em leitura de Ordens de Serviço (OS) de pneus. "
+            "Analise a imagem e transcreva os dados ESTRITAMENTE para o formato JSON abaixo.\n\n"
+            
+            "O que você precisa encontrar (fique muito atento a números e códigos):\n"
+            "1. CABEÇALHO: 'numos', 'cpfcnpj', 'nome' (do cliente), 'endereco', 'cidade', 'uf', 'fone', 'veiculo' (Placa), 'formapagto', 'vendedor_ocr', 'servicocomgarantia' (Sim/Não), 'tipoveiculo' (Caminhão, Carro, etc).\n"
+            "   - Fique atento a etiquetas como 'somentesepar' ou 'podealterardesenho' and marque se presentes.\n"
+            "2. ITENS (Pneus): Para cada linha de pneu, extraia: 'medida', 'marca', 'numserie', 'numfogo', 'desenho'.\n"
+            "   - IMPORTANTE: Se o conteúdo de uma célula for um sinal de aspas duplas (\"), repita o valor da linha superior!!\n"
+            "   - FORMATO DE MEDIDA: Remova todos os espaços (ex: 295/80R22.5).\n"
+            "3. RODAPÉ: O 'vendedor_ocr' (se não estiver no topo) e observações extras.\n\n"
+            
+            "REGRAS:\n"
+            "- Se não encontrar ou não tiver certeza absoluta, deixe a string vazia: \"\".\n"
+            "- Você DEVE retornar EXATAMENTE esta estrutura JSON:\n"
+            "{\n"
+            "  \"cabecalho\": {\n"
+            "    \"numos\": \"\", \"cpfcnpj\": \"\", \"nome\": \"\", \"endereco\": \"\", \"cidade\": \"\", \"uf\": \"\", \"fone\": \"\",\n"
+            "    \"veiculo\": \"\", \"formapagto\": \"\", \"vendedor_ocr\": \"\", \"servicocomgarantia\": \"\", \"tipoveiculo\": \"\",\n"
+            "    \"somentesepar\": \"\", \"podealterardesenho\": \"\"\n"
+            "  },\n"
+            "  \"itens\": [\n"
+            "    {\"medida\": \"\", \"marca\": \"\", \"numserie\": \"\", \"numfogo\": \"\", \"desenho\": \"\", \"dot\": \"\"}\n"
+            "  ],\n"
+            "  \"rodape\": {\"vendedor_assinatura\": \"\", \"obs_final\": \"\"},\n"
+            "  \"raw_text\": \"Explique rapidamente se teve dificuldade com algum campo\"\n"
+            "}\n"
+        )
 
     if custom_instructions:
         prompt += f"\n\nInstruções Adicionais do Usuário: {custom_instructions}"

@@ -199,7 +199,7 @@ export default function Vendedores() {
     try {
       if (modalMode === 'create') {
         await api.post('/vendedores/', payload);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/vendedores/${currentId}`, payload);
       }
       await fetchData();

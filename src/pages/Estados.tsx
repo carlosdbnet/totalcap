@@ -107,7 +107,7 @@ export default function Estados() {
     try {
       if (modalMode === 'create') {
         await api.post('/estados/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/estados/${currentId}`, formData);
       }
       await fetchData();

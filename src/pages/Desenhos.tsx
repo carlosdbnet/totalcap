@@ -102,7 +102,7 @@ export default function Desenhos() {
     try {
       if (modalMode === 'create') {
         await api.post('/desenhos/', formData);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/desenhos/${currentId}`, formData);
       }
       await fetchData();

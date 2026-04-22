@@ -17,7 +17,7 @@ class EmpresaService:
         if empresa_in.cnpj:
             empresa_existente = empresa_repo.get_by_cnpj(db, cnpj=empresa_in.cnpj)
             if empresa_existente:
-                raise HTTPException(status_code=400, detail="Uma empresa com este CNPJ já existe.")
+                raise HTTPException(status_code=400, detail="Registro Já Existe")
             
         return empresa_repo.create(db, obj_in=empresa_in)
 

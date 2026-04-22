@@ -1,0 +1,89 @@
+/* Reusing some styles from RelVendasServico via common classes if possible, 
+   but defining specific ones for commissions here */
+
+.comissoes-container {
+  padding: 2rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.comissoes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.comissoes-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-card {
+  background: var(--panel-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-border);
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: flex-end;
+}
+
+.results-card {
+  background: var(--panel-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.comissoes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comissoes-table th {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.comissoes-table td {
+  padding: 1rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+.vendedor-row {
+  background: rgba(59, 130, 246, 0.1);
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.summary-footer {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  justify-content: flex-end;
+  gap: 3rem;
+}
+
+.commission-badge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+@media print {
+  .sidebar, .topbar, .filter-card, .btn-print {
+    display: none !important;
+  }
+}

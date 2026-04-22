@@ -10,7 +10,7 @@ class ClienteService:
     def create_cliente(self, db: Session, cliente_in: ClienteCreate):
         cliente_existente = cliente_repo.get_by_documento(db, documento=cliente_in.documento)
         if cliente_existente:
-            raise HTTPException(status_code=400, detail="Documento já registrado.")
+            raise HTTPException(status_code=400, detail="Registro Já Existe")
         return cliente_repo.create(db, obj_in=cliente_in)
 
     def update_cliente(self, db: Session, cliente_id: int, cliente_in: ClienteUpdate):

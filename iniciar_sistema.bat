@@ -39,9 +39,42 @@ exit
 
 :all
 cls
-echo Iniciando os servicos em janelas separadas...
+echo ==========================================================
+echo        Iniciando Servicos com Verificacao de Saude
+echo ==========================================================
+echo.
+echo [1/2] Iniciando o Backend em nova janela...
 start "Totalcap - Backend" cmd /c ".venv\Scripts\uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+
+echo.
+echo Aguardando o Backend carregar (http://localhost:8000/api/v1/status)...
+set counter=0
+
+:wait_backend
+timeout /t 2 >nul
+curl.exe -s http://localhost:8000/api/v1/status | findstr "online" >nul
+if errorlevel 1 (
+    set /a counter+=1
+    echo [tentativa %%counter%%] Ainda aguardando backend...
+    if %%counter%% gtr 30 (
+        echo.
+        echo ERROR: O Backend demorou demais para responder. 
+        echo Verifique a janela do Backend por erros.
+        pause
+        goto menu
+    )
+    goto wait_backend
+)
+
+echo.
+echo [OK] Backend Online!
+echo.
+echo [2/2] Iniciando o Frontend em nova janela...
 start "Totalcap - Frontend" cmd /c "npm run dev -- --host"
-echo Servicos iniciados! Pressione qualquer tecla para fechar este menu.
+
+echo.
+echo ==========================================================
+echo    Tudo pronto! Voce pode fechar esta janela agora.
+echo ==========================================================
 pause >nul
 exit

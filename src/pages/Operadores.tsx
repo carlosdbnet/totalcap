@@ -155,7 +155,7 @@ export default function Operadores() {
     try {
       if (modalMode === 'create') {
         await api.post('/operadores/', payload);
-      } else if (modalMode === 'edit' && currentId) {
+      } else if (modalMode === 'edit' && currentId !== null) {
         await api.put(`/operadores/${currentId}`, payload);
       }
       await fetchData();
