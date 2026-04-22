@@ -660,21 +660,21 @@ export default function OrdemServico() {
                 </tr>
               </thead>
               <tbody>
-                {oss.length === 0 ? (
+                {(oss || []).length === 0 ? (
                   <tr><td colSpan={8} className="empty-state">Nenhuma Ordem de Serviço encontrada.</td></tr>
                 ) : (
-                  oss.map(os => (
+                  (oss || []).map(os => (
                     <tr key={os.id}>
                       <td><span className="os-id">{os.id}</span></td>
                       <td><span className="os-number">#{os.numos}</span></td>
                       <td>{os.dataentrada ? new Date(os.dataentrada).toLocaleDateString() : '-'}</td>
-                      <td>{clientes.find(c => c.id === os.id_contato)?.nome || 'Não encontrado'}</td>
+                      <td>{(clientes || []).find(c => c.id === os.id_contato)?.nome || 'Cliente não identificado'}</td>
                       <td>
-                        <span className={`status-badge status-${os.status.toLowerCase()}`}>
-                          {os.status}
+                        <span className={`status-badge status-${(os.status || 'ABERTA').toLowerCase()}`}>
+                          {os.status || 'ABERTA'}
                         </span>
                       </td>
-                      <td>{os.pneus?.length || 0} pneus</td>
+                      <td>{(os.pneus || []).length} pneus</td>
                       <td>R$ {(os.pneus || []).reduce((s,p) => s + (Number(p.valor) || 0), 0).toFixed(2)}</td>
                       <td>
                         <div className="action-buttons">
