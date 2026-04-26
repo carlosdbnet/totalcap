@@ -1,0 +1,160 @@
+/* Estilos para Impressão da Ordem de Serviço */
+@media screen {
+  .print-os-wrapper {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 5mm;
+  }
+
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Se estivermos imprimindo a OS, escondemos o resto */
+  .printing-os-active .no-print-os {
+    display: none !important;
+  }
+  
+  .print-os-wrapper {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .os-print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
+
+  .os-print-logo img {
+    height: 70px;
+    width: auto;
+  }
+
+  .os-print-company-info {
+    text-align: right;
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+
+  .os-print-title-area {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  .os-print-title-area h2 {
+    margin: 0;
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .os-print-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .info-box {
+    font-size: 11pt;
+  }
+
+  .info-box strong {
+    display: inline-block;
+    width: 100px;
+    color: #444;
+  }
+
+  .os-print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+
+  .os-print-table th {
+    background: #f4f4f4;
+    border: 1px solid #ccc;
+    padding: 10px 8px;
+    font-size: 10pt;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .os-print-table td {
+    border: 1px solid #eee;
+    padding: 8px;
+    font-size: 10pt;
+  }
+
+  .os-print-totals {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 40px;
+  }
+
+  .totals-grid {
+    width: 250px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .total-row:last-child {
+    border-bottom: none;
+    background: #f9f9f9;
+    font-weight: 800;
+    font-size: 12pt;
+  }
+
+  .os-print-obs {
+    margin-bottom: 60px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 80px;
+  }
+
+  .os-print-signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    margin-top: 80px;
+  }
+
+  .sig-box {
+    border-top: 1px solid #000;
+    text-align: center;
+    padding-top: 8px;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+}

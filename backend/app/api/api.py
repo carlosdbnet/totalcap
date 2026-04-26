@@ -4,6 +4,8 @@ from backend.database import get_db
 
 from backend.app.api.endpoints import (
     apontamentos,
+    falhas,
+    consumo_materia,
     clientes, 
     areas, 
     regioes, 
@@ -38,11 +40,17 @@ from backend.app.api.endpoints import (
     tipos_docto,
     dashboard,
     orcamento,
-    notadesp
+    notadesp,
+    laudos,
+    fatura_laudos,
+    dispositivos,
+    exportacao,
+    logs
 )
 
 api_router = APIRouter()
 api_router.include_router(auth.router, tags=["login"])
+api_router.include_router(exportacao.router, prefix="/exportacao", tags=["exportação"])
 api_router.include_router(clientes.router, prefix="/clientes", tags=["clientes"])
 api_router.include_router(areas.router, prefix="/areas", tags=["áreas"])
 api_router.include_router(regioes.router, prefix="/regioes", tags=["regiões"])
@@ -75,8 +83,14 @@ api_router.include_router(faturas.router, prefix="/faturas", tags=["faturas"])
 api_router.include_router(tipos_docto.router, prefix="/tipos-docto", tags=["tipos-docto"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(apontamentos.router, prefix="/apontamentos", tags=["apontamentos"])
+api_router.include_router(falhas.router, prefix="/falhas", tags=["falhas"])
+api_router.include_router(consumo_materia.router, prefix="/consumo-materia", tags=["consumo"])
 api_router.include_router(orcamento.router, prefix="/orcamentos", tags=["orçamentos"])
 api_router.include_router(notadesp.router, prefix="/notadesp", tags=["despesas"])
+api_router.include_router(laudos.router, prefix="/laudos", tags=["laudos"])
+api_router.include_router(fatura_laudos.router, prefix="/fatura-laudos", tags=["fatura-laudos"])
+api_router.include_router(dispositivos.router, prefix="/dispositivos", tags=["dispositivos"])
+api_router.include_router(logs.router, prefix="/logs", tags=["logs"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
     from backend.app.models.usuario import Usuario

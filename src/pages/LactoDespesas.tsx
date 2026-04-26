@@ -4,7 +4,7 @@ import {
   User, Calendar, Truck, FileText, Printer, 
   Loader2, AlertCircle, Save, ChevronRight, Camera
 } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './LactoDespesas.css';
 
 const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
@@ -266,7 +266,7 @@ export default function LactoDespesas() {
       setIsModalOpen(false);
       fetchData();
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || "Erro ao salvar nota.");
+      setFormError(getErrorMessage(err, "Erro ao salvar nota."));
     } finally {
       setIsSubmitting(false);
     }
@@ -298,7 +298,11 @@ export default function LactoDespesas() {
       alert("Selecione uma despesa na tabela para imprimir.");
       return;
     }
+    document.body.classList.add('printing-notadesp-active');
     window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-notadesp-active');
+    }, 500);
   };
 
   const cleanString = (str: string) => String(str || "").toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
@@ -763,86 +767,88 @@ export default function LactoDespesas() {
       )}
 
       {/* TEMPLATE DE IMPRESSÃO (Oculto na tela, visível apenas no @media print) */}
-      {selectedId && (
-        <div className="print-template">
-          <div className="print-header">
-            <div className="print-logo-section">
-              <DollarSign size={40} className="text-primary" />
-              <div>
-                <h2>TOTALCAP</h2>
-                <p>Nota de Despesa / Reembolso</p>
+      <div id="print-notadesp-section">
+        {selectedId && (
+          <div className="print-template">
+            <div className="print-header">
+              <div className="print-logo-section">
+                <DollarSign size={40} className="text-primary" />
+                <div>
+                  <h2>TOTALCAP</h2>
+                  <p>Nota de Despesa / Reembolso</p>
+                </div>
+              </div>
+              <div className="print-id-section">
+                <span className="print-id-label">NÚMERO</span>
+                <span className="print-id-value">#{selectedId}</span>
               </div>
             </div>
-            <div className="print-id-section">
-              <span className="print-id-label">NÚMERO</span>
-              <span className="print-id-value">#{selectedId}</span>
-            </div>
-          </div>
 
-          <div className="print-info-grid">
-            <div className="info-block">
-              <span className="info-label">Cliente / Contato</span>
-              <span className="info-value">{notas.find(n => n.id === selectedId)?.nome || 'N/A'}</span>
+            <div className="print-info-grid">
+              <div className="info-block">
+                <span className="info-label">Cliente / Contato</span>
+                <span className="info-value">{notas.find(n => n.id === selectedId)?.nome || 'N/A'}</span>
+              </div>
+              <div className="info-block">
+                <span className="info-label">Data Emissão</span>
+                <span className="info-value">{new Date(notas.find(n => n.id === selectedId)?.dataemi || '').toLocaleDateString('pt-BR')}</span>
+              </div>
+              <div className="info-block">
+                <span className="info-label">Vendedor</span>
+                <span className="info-value">{notas.find(n => n.id === selectedId)?.vendedor_nome || 'N/A'}</span>
+              </div>
             </div>
-            <div className="info-block">
-              <span className="info-label">Data Emissão</span>
-              <span className="info-value">{new Date(notas.find(n => n.id === selectedId)?.dataemi || '').toLocaleDateString('pt-BR')}</span>
-            </div>
-            <div className="info-block">
-              <span className="info-label">Vendedor</span>
-              <span className="info-value">{notas.find(n => n.id === selectedId)?.vendedor_nome || 'N/A'}</span>
-            </div>
-          </div>
 
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Veículo</th>
-                <th>Descrição / Tipo</th>
-                <th>Qtde</th>
-                <th style={{ textAlign: 'right' }}>Vl. Unit.</th>
-                <th style={{ textAlign: 'right' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {notas.find(n => n.id === selectedId)?.itens.map((item, idx) => (
-                <tr key={idx}>
-                  <td>{new Date(item.datamov || '').toLocaleDateString('pt-BR')}</td>
-                  <td>{veiculos.find(v => v.id === item.id_veiculo)?.placa || '-'}</td>
-                  <td>{item.descricao} ({item.tipo})</td>
-                  <td>{item.qlitro}</td>
-                  <td style={{ textAlign: 'right' }}>R$ {Number(item.vlitro).toFixed(2)}</td>
-                  <td style={{ textAlign: 'right' }}>R$ {Number(item.vtotal).toFixed(2)}</td>
+            <table className="print-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Veículo</th>
+                  <th>Descrição / Tipo</th>
+                  <th>Qtde</th>
+                  <th style={{ textAlign: 'right' }}>Vl. Unit.</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={5} style={{ textAlign: 'right', fontWeight: 'bold' }}>VALOR TOTAL FINAL:</td>
-                <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                  R$ {Number(notas.find(n => n.id === selectedId)?.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                {notas.find(n => n.id === selectedId)?.itens.map((item, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(item.datamov || '').toLocaleDateString('pt-BR')}</td>
+                    <td>{veiculos.find(v => v.id === item.id_veiculo)?.placa || '-'}</td>
+                    <td>{item.descricao} ({item.tipo})</td>
+                    <td>{item.qlitro}</td>
+                    <td style={{ textAlign: 'right' }}>R$ {Number(item.vlitro).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>R$ {Number(item.vtotal).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'right', fontWeight: 'bold' }}>VALOR TOTAL FINAL:</td>
+                  <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
+                    R$ {Number(notas.find(n => n.id === selectedId)?.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
 
-          <div className="print-signatures">
-            <div className="signature-box">
-              <div className="signature-line"></div>
-              <span>ASSINATURA DO VENDEDOR</span>
+            <div className="print-signatures">
+              <div className="signature-box">
+                <div className="signature-line"></div>
+                <span>ASSINATURA DO VENDEDOR</span>
+              </div>
+              <div className="signature-box">
+                <div className="signature-line"></div>
+                <span>ASSINATURA DO CLIENTE</span>
+              </div>
             </div>
-            <div className="signature-box">
-              <div className="signature-line"></div>
-              <span>ASSINATURA DO CLIENTE</span>
+            
+            <div className="print-footer">
+              Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString()}
             </div>
           </div>
-          
-          <div className="print-footer">
-            Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString()}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

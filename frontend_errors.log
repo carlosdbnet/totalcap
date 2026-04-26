@@ -1,0 +1,356 @@
+[2026-04-25 16:20:07] [ERROR] Global Error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:16670:15
+--------------------------------------------------
+[2026-04-25 16:20:07] [ERROR] Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at button
+    at div
+    at div
+    at div
+    at form
+    at div
+    at div
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777144363756:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-25 16:20:19] [ERROR] Global Error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:16670:15
+--------------------------------------------------
+[2026-04-25 16:20:19] [ERROR] Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at button
+    at div
+    at div
+    at div
+    at form
+    at div
+    at div
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777144768168:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-25 16:24:48] [ERROR] Global Error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:16670:15
+--------------------------------------------------
+[2026-04-25 16:24:48] [ERROR] Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at button
+    at div
+    at div
+    at div
+    at form
+    at div
+    at div
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777144973714:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-25 16:26:22] [ERROR] Global Error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:16670:15
+--------------------------------------------------
+[2026-04-25 16:26:22] [ERROR] Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at button
+    at div
+    at div
+    at div
+    at form
+    at div
+    at div
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777144973714:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-25 16:29:12] [ERROR] Global Error: Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:16670:15
+--------------------------------------------------
+[2026-04-25 16:29:12] [ERROR] Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+URL: http://localhost:5173/os
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at button
+    at div
+    at div
+    at div
+    at form
+    at div
+    at div
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777145249881:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at captureCommitPhaseError (http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:19577:33)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-25 17:03:43] [ERROR] Global Error: Uncaught ReferenceError: currentItems is not defined
+URL: http://localhost:5173/desenhos
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/Desenhos.tsx?t=1777147422761:259:53
+--------------------------------------------------
+[2026-04-25 17:03:43] [ERROR] Global Error: Uncaught ReferenceError: currentItems is not defined
+URL: http://localhost:5173/desenhos
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/Desenhos.tsx?t=1777147422761:259:53
+--------------------------------------------------
+[2026-04-25 17:03:43] [ERROR] currentItems is not defined
+URL: http://localhost:5173/desenhos
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at Desenhos (http://localhost:5173/src/pages/Desenhos.tsx?t=1777147422761:25:35)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777146862292:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at App (http://localhost:5173/src/App.tsx?t=1777146862292:122:3)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-25 17:18:59] [ERROR] Unhandled Rejection: AxiosError: Request failed with status code 500
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+--------------------------------------------------
+[2026-04-25 17:19:19] [ERROR] Unhandled Rejection: AxiosError: Request failed with status code 500
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+--------------------------------------------------
+[2026-04-25 17:27:54] [ERROR] Unhandled Rejection: AxiosError: Request failed with status code 500
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+--------------------------------------------------
+[2026-04-26 00:13:13] [ERROR] Unhandled Rejection: AxiosError: Request failed with status code 500
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+--------------------------------------------------
+[2026-04-26 00:13:21] [ERROR] Global Error: Uncaught Error: Objects are not valid as a React child (found: object with keys {type, loc, msg, input}). If you meant to render a collection of children, use an array instead.
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:9934:11
+--------------------------------------------------
+[2026-04-26 00:13:21] [ERROR] Global Error: Uncaught Error: Objects are not valid as a React child (found: object with keys {type, loc, msg, input}). If you meant to render a collection of children, use an array instead.
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=b2e73d03:9934:11
+--------------------------------------------------
+[2026-04-26 00:13:21] [ERROR] Objects are not valid as a React child (found: object with keys {type, loc, msg, input}). If you meant to render a collection of children, use an array instead.
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at div
+    at div
+    at form
+    at div
+    at div
+    at div
+    at Apontamento (http://localhost:5173/src/pages/Apontamento.tsx?t=1777148508748:24:43)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777171964933:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at App (http://localhost:5173/src/App.tsx?t=1777171964933:122:3)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-26 00:25:12] [ERROR] Unhandled Rejection: AxiosError: Request failed with status code 500
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+--------------------------------------------------
+[2026-04-26 00:26:29] [ERROR] Unhandled Rejection: AxiosError: Request failed with status code 500
+URL: http://localhost:5173/apontamento
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+--------------------------------------------------
+[2026-04-26 00:33:00] [ERROR] Global Error: Uncaught ReferenceError: useState is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777174379927:22:33
+--------------------------------------------------
+[2026-04-26 00:33:00] [ERROR] Global Error: Uncaught ReferenceError: useState is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777174379927:22:33
+--------------------------------------------------
+[2026-04-26 00:33:00] [ERROR] useState is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at RegistroFalhas (http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777174379927:22:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777173411303:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at App (http://localhost:5173/src/App.tsx?t=1777173411303:122:3)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx?t=1777173411303:7:1)
+--------------------------------------------------
+[2026-04-26 01:13:30] [ERROR] Global Error: Uncaught ReferenceError: formError is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777176733150:309:11
+--------------------------------------------------
+[2026-04-26 01:13:30] [ERROR] Global Error: Uncaught ReferenceError: formError is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777176733150:309:11
+--------------------------------------------------
+[2026-04-26 01:13:30] [ERROR] formError is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at RegistroFalhas (http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777176733150:23:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777176680170:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at App (http://localhost:5173/src/App.tsx?t=1777176680170:122:3)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx?t=1777173411303:7:1)
+--------------------------------------------------
+[2026-04-26 01:13:50] [ERROR] Global Error: Uncaught ReferenceError: formError is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777176733150:309:11
+--------------------------------------------------
+[2026-04-26 01:13:50] [ERROR] Global Error: Uncaught ReferenceError: formError is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777176733150:309:11
+--------------------------------------------------
+[2026-04-26 01:13:50] [ERROR] formError is not defined
+URL: http://localhost:5173/falhas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at RegistroFalhas (http://localhost:5173/src/pages/RegistroFalhas.tsx?t=1777176733150:23:33)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:140:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777176733150:66:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at App (http://localhost:5173/src/App.tsx?t=1777176733150:122:3)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx?t=1777173411303:7:1)
+--------------------------------------------------

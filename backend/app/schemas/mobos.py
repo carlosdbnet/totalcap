@@ -20,7 +20,7 @@ class MobPneuBase(BaseModel):
     garantia: Optional[str] = None
     obs: Optional[str] = None
     medidanova: Optional[str] = None
-    produtonovo: Optional[str] = None
+    marcanova: Optional[str] = None
     desenhonovo: Optional[str] = None
 
 class MobPneuCreate(MobPneuBase):

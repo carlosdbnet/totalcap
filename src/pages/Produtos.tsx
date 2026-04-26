@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Marcas.css'; // reuse same CSS
 
 interface Produto {
@@ -109,7 +109,7 @@ export default function Produtos() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar produto.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar produto.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -208,55 +208,62 @@ export default function Produtos() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Novo Produto' : 'Editar Produto'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
-                <div className="form-group">
-                  <label htmlFor="codprod">Código *</label>
-                  <input className="form-input" id="codprod" value={formData.codprod} onChange={handleChange} placeholder="Ex: 001" required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="id_grupo">Grupo do Produto</label>
-                  <select 
-                    className="form-input" 
-                    id="id_grupo" 
-                    value={formData.id_grupo || ''} 
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Selecione um grupo...</option>
-                    {grupos.map(g => (
-                      <option key={g.id} value={g.id}>
-                        {g.descricao} {g.codigo ? `(${g.codigo})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="descricao">Descrição *</label>
-                  <input className="form-input" id="descricao" value={formData.descricao} onChange={handleChange} placeholder="Ex: Banda 275" required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="unidade">Unidade</label>
-                  <input className="form-input" id="unidade" value={formData.unidade} onChange={handleChange} placeholder="Ex: UN, KG, MT" />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="precoven">Preço de Venda (R$)</label>
-                  <input type="number" step="0.01" className="form-input" id="precoven" value={formData.precoven} onChange={handleChange} placeholder="0,00" />
-                </div>
-                <div className="form-group">
-                  <div className="checkbox-group" style={{ marginTop: '1rem' }}>
-                    <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                    <label htmlFor="ativo">Produto ativo no sistema</label>
+                
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="codprod" style={{ fontWeight: '600', color: '#475569' }}>Código *</label>
+                      <input className="form-input" id="codprod" value={formData.codprod} onChange={handleChange} placeholder="Ex: 001" required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="id_grupo" style={{ fontWeight: '600', color: '#475569' }}>Grupo do Produto</label>
+                      <select 
+                        className="form-input" 
+                        id="id_grupo" 
+                        value={formData.id_grupo || ''} 
+                        onChange={handleChange}
+                        required
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff' }}
+                      >
+                        <option value="">Selecione um grupo...</option>
+                        {grupos.map(g => (
+                          <option key={g.id} value={g.id}>
+                            {g.descricao} {g.codigo ? `(${g.codigo})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label htmlFor="descricao" style={{ fontWeight: '600', color: '#475569' }}>Descrição *</label>
+                      <input className="form-input" id="descricao" value={formData.descricao} onChange={handleChange} placeholder="Ex: Banda 275" required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="unidade" style={{ fontWeight: '600', color: '#475569' }}>Unidade</label>
+                      <input className="form-input" id="unidade" value={formData.unidade} onChange={handleChange} placeholder="Ex: UN, KG, MT" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="precoven" style={{ fontWeight: '600', color: '#475569' }}>Preço de Venda (R$)</label>
+                      <input type="number" step="0.01" className="form-input" id="precoven" value={formData.precoven} onChange={handleChange} placeholder="0,00" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                  </div>
+                  
+                  <div className="form-group" style={{ marginTop: '1.2rem' }}>
+                    <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                      <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Produto ativo no sistema</label>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>
               </div>

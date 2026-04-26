@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Areas.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -102,7 +102,7 @@ export default function Areas() {
       await fetchAreas();
       closeModal();
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Ocorreu um erro ao salvar a área.');
+      setFormError(getErrorMessage(err, 'Ocorreu um erro ao salvar a área.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -224,54 +224,59 @@ export default function Areas() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Nova Área' : 'Editar Área'}</h2>
               <button className="close-btn" onClick={closeModal}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-group">
-                  <label htmlFor="codigo">Código *</label>
-                  <input
-                    type="text"
-                    id="codigo"
-                    className="form-input"
-                    value={codigo}
-                    onChange={(e) => setCodigo(e.target.value)}
-                    placeholder="Ex: INSP, RASP, etc"
-                    required
-                  />
-                </div>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label htmlFor="codigo" style={{ fontWeight: '600', color: '#475569' }}>Código *</label>
+                    <input
+                      type="text"
+                      id="codigo"
+                      className="form-input"
+                      value={codigo}
+                      onChange={(e) => setCodigo(e.target.value)}
+                      placeholder="Ex: INSP, RASP, etc"
+                      required
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="nome">Descrição *</label>
-                  <input
-                    type="text"
-                    id="nome"
-                    className="form-input"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Descrição da área"
-                    required
-                  />
-                </div>
-                
-                <div className="checkbox-group">
-                  <input
-                    type="checkbox"
-                    id="ativo"
-                    checked={ativo}
-                    onChange={(e) => setAtivo(e.target.checked)}
-                  />
-                  <label htmlFor="ativo">Área ativa no sistema</label>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label htmlFor="nome" style={{ fontWeight: '600', color: '#475569' }}>Descrição *</label>
+                    <input
+                      type="text"
+                      id="nome"
+                      className="form-input"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      placeholder="Descrição da área"
+                      required
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  
+                  <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="checkbox"
+                      id="ativo"
+                      checked={ativo}
+                      onChange={(e) => setAtivo(e.target.checked)}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Área ativa no sistema</label>
+                  </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={closeModal} disabled={isSubmitting}>
                   Cancelar
                 </button>

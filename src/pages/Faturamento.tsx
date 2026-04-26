@@ -42,6 +42,7 @@ export default function Faturamento() {
   // Aba 1: Informe de Serviços (Busca por Pneu)
   const [pneuSearchQuery, setPneuSearchQuery] = useState('');
   const [pneuResults, setPneuResults] = useState<PneuSearchResult[]>([]);
+  const [selectedFaturaIds, setSelectedFaturaIds] = useState<number[]>([]);
 
   // Aba 2: Cálculo de Fatura (Busca por OS - Igual Produção)
   const [searchParams, setSearchParams] = useState({ id: '', numos: '', cliente: '', id_pneu: '' });
@@ -62,7 +63,7 @@ export default function Faturamento() {
   const [servicoSearchQuery, setServicoSearchQuery] = useState('');
   const [showServicoSuggestions, setShowServicoSuggestions] = useState(false);
 
-  // Estados para Cálculo de Fatura
+  // Estados para CÃƒÂ¡lculo de Fatura
   const [selectedOSForBilling, setSelectedOSForBilling] = useState<any | null>(null);
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
   const [allPlanosPag, setAllPlanosPag] = useState<any[]>([]);
@@ -89,7 +90,19 @@ export default function Faturamento() {
   const [faturaParcelasPreview, setFaturaParcelasPreview] = useState<any[]>([]);
   const [isEditParcelaModalOpen, setIsEditParcelaModalOpen] = useState(false);
   const [editingParcelaIndex, setEditingParcelaIndex] = useState<number | null>(null);
-  const [editingParcelaData, setEditingParcelaData] = useState({ num_parcela: 0, vencto: '', valor: 0 });
+  const [editingParcelaData, setEditingParcelaData] = useState<any>({ num_parcela: 0, vencto: '', valor: 0, id_tipodocto: null });
+  
+  // Estados para Laudos na Fatura
+  const [faturaLaudosPreview, setFaturaLaudosPreview] = useState<any[]>([]);
+  const [isLaudoModalOpen, setIsLaudoModalOpen] = useState(false);
+  const [laudoSearchQuery, setLaudoSearchQuery] = useState('');
+  const [laudoSuggestions, setLaudoSuggestions] = useState<any[]>([]);
+  const [showLaudoSuggestions, setShowLaudoSuggestions] = useState(false);
+  const [selectedLaudoForLinking, setSelectedLaudoForLinking] = useState<any>(null);
+  const [linkingLaudoValue, setLinkingLaudoValue] = useState<number>(0);
+  const [showClientLaudosList, setShowClientLaudosList] = useState(false);
+  const [clientLaudos, setClientLaudos] = useState<any[]>([]);
+
   const [faturaForm, setFaturaForm] = useState<any>({
     id_contato: null,
     cliente_nome: '',
@@ -230,12 +243,27 @@ export default function Faturamento() {
   };
 
   const handleDeleteFatura = async (id: number) => {
-    if (!window.confirm("Deseja realmente excluir esta fatura? Os pneus retornarão ao status de pendentes.")) return;
+    if (!window.confirm("Deseja realmente excluir esta fatura? Os pneus retornarÃƒÂ£o ao status de pendentes.")) return;
     try {
       await api.delete(`/faturas/${id}`);
       fetchFaturas();
+      setSelectedFaturaIds(prev => prev.filter(fid => fid !== id));
     } catch (err) {
       alert("Erro ao excluir fatura.");
+    }
+  };
+
+  const handleToggleFaturaSelection = (id: number) => {
+    setSelectedFaturaIds(prev => 
+      prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllFaturas = () => {
+    if (selectedFaturaIds.length === faturas.length) {
+      setSelectedFaturaIds([]);
+    } else {
+      setSelectedFaturaIds(faturas.map(f => f.id));
     }
   };
 
@@ -262,6 +290,7 @@ export default function Faturamento() {
       setSelectedPneusForFatura(fatura.pneus?.map((p: any) => p.id) || []);
       setPneuServicosPreview(fatura.items || []);
       setFaturaParcelasPreview(fatura.parcelas || []);
+      fetchFaturaLaudos(fatura.id);
       setActiveFaturaModalTab('dados');
     } else {
       setEditingFatura(null);
@@ -286,15 +315,161 @@ export default function Faturamento() {
       setSearchParams({ pneu_id: '', numos: '', cliente: '' }); // Limpa os filtros
       setPneuServicosPreview([]);
       setFaturaParcelasPreview([]);
+      setFaturaLaudosPreview([]);
       setActiveFaturaModalTab('pneus');
     }
     setIsFaturaModalOpen(true);
   };
 
+  const fetchFaturaLaudos = async (faturaId: number) => {
+    try {
+      const response = await api.get(`/fatura-laudos/fatura/${faturaId}`);
+      setFaturaLaudosPreview(response.data);
+    } catch (err) {
+      console.error("Erro ao buscar laudos da fatura", err);
+    }
+  };
+
+  const handleSearchLaudos = async (q: string) => {
+    setLaudoSearchQuery(q);
+    if (q.length === 0) {
+      setLaudoSuggestions([]);
+      setShowLaudoSuggestions(false);
+      setSelectedLaudoForLinking(null);
+      return;
+    }
+    
+    // Check if q is numeric (ID)
+    if (!/^\d+$/.test(q)) {
+      setLaudoSuggestions([]);
+      setShowLaudoSuggestions(false);
+      setSelectedLaudoForLinking(null);
+      return;
+    }
+
+    try {
+      // Search ONLY by ID
+      const response = await api.get(`/laudos/${q}`);
+      if (response.data) {
+        setSelectedLaudoForLinking(response.data);
+        setLinkingLaudoValue(parseFloat(response.data.vrsaldo || 0));
+        setShowLaudoSuggestions(false);
+      } else {
+        setSelectedLaudoForLinking(null);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar laudo por ID", err);
+      setSelectedLaudoForLinking(null);
+    }
+  };
+
+  const handleConfirmAddLaudo = async () => {
+    if (!selectedLaudoForLinking) {
+      alert("Selecione um laudo na lista ou digite um ID vÃƒÂ¡lido.");
+      return;
+    }
+
+    const valor = parseFloat(linkingLaudoValue as any);
+    if (isNaN(valor) || valor <= 0) {
+      alert("Informe um valor vÃƒÂ¡lido para o laudo.");
+      return;
+    }
+
+    if (valor > parseFloat(selectedLaudoForLinking.vrsaldo || 0)) {
+      alert("O valor aplicado nÃƒÂ£o pode ser maior que o saldo disponÃƒÂ­vel do laudo.");
+      return;
+    }
+
+    // Se estiver editando uma fatura existente, salva no banco imediatamente
+    if (editingFatura) {
+      try {
+        setLoading(true);
+        const payload = {
+          id_fatura: editingFatura.id,
+          id_laudo: selectedLaudoForLinking.id,
+          valor: valor
+        };
+        await api.post('/fatura-laudos/', payload);
+        await fetchFaturaLaudos(editingFatura.id);
+        setIsLaudoModalOpen(false);
+        setSelectedLaudoForLinking(null);
+        setLaudoSearchQuery('');
+        alert("Laudo vinculado com sucesso!");
+      } catch (err: any) {
+        console.error("Erro ao adicionar laudo", err);
+        alert("Erro ao vincular laudo: " + (err.response?.data?.detail || "Erro no servidor"));
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Se for uma fatura nova, adiciona apenas no preview em memÃƒÂ³ria
+      const newLaudoPreview = {
+        id: Math.random(), // Temp ID
+        id_laudo: selectedLaudoForLinking.id,
+        numlaudo: selectedLaudoForLinking.numlaudo,
+        pneu_id: selectedLaudoForLinking.id_pneu,
+        vrcredito: selectedLaudoForLinking.vrcredito,
+        vrsaldo: selectedLaudoForLinking.vrsaldo,
+        valor: valor
+      };
+      
+      setFaturaLaudosPreview(prev => [...prev, newLaudoPreview]);
+      setIsLaudoModalOpen(false);
+      setSelectedLaudoForLinking(null);
+      setLaudoSearchQuery('');
+      alert("Laudo adicionado ÃƒÂ  fatura (serÃƒÂ¡ vinculado ao salvar a fatura).");
+    }
+  };
+
+  const handleFetchClientLaudos = async () => {
+    if (!faturaForm.id_contato) {
+      alert("Selecione um cliente primeiro.");
+      return;
+    }
+    try {
+      const response = await api.get(`/laudos/cliente/${faturaForm.id_contato}`);
+      setClientLaudos(response.data);
+      setShowClientLaudosList(true);
+    } catch (err) {
+      console.error("Erro ao buscar laudos do cliente", err);
+    }
+  };
+
+  const handleSelectLaudoFromList = (laudo: any) => {
+    setLaudoSearchQuery(String(laudo.id));
+    setSelectedLaudoForLinking(laudo);
+    setLinkingLaudoValue(parseFloat(laudo.vrsaldo || 0));
+    setShowClientLaudosList(false);
+  };
+
+  const handleDeleteFaturaLaudo = async (id: number) => {
+    if (!window.confirm("Deseja desvincular este laudo?")) return;
+    try {
+      await api.delete(`/fatura-laudos/${id}`);
+      if (editingFatura) fetchFaturaLaudos(editingFatura.id);
+    } catch (err) {
+      console.error("Erro ao deletar vÃƒÂ­nculo", err);
+      alert("Erro ao remover vÃƒÂ­nculo.");
+    }
+  };
+
+  const handleInlineUpdateLaudoValue = (id: number, newValue: any) => {
+    setFaturaLaudosPreview(prev => prev.map(l => l.id === id ? { ...l, valor: newValue } : l));
+  };
+
+  const handleSaveLaudoValue = async (id: number, value: number) => {
+    try {
+      await api.put(`/fatura-laudos/${id}`, { valor: value });
+    } catch (err) {
+      console.error("Erro ao salvar valor do laudo", err);
+      alert("Erro ao salvar valor do laudo no banco.");
+    }
+  };
+
   const fetchPendingPneus = async (clientId: number) => {
     try {
       setLoading(true);
-      // Busca pneus que estão prontos para faturamento (statusfat = false e qservico > 0)
+      // Busca pneus que estÃƒÂ£o prontos para faturamento (statusfat = false e qservico > 0)
       const response = await api.get(`/ordens-servico/pneus-pendentes?id_contato=${clientId}`);
       setOsResults(response.data);
     } catch (err) {
@@ -315,6 +490,27 @@ export default function Faturamento() {
     });
   };
 
+  const handleSelectAllPneus = () => {
+    if (osResults.length === 0) return;
+    
+    const allIds = osResults.map(p => p.pneu_id);
+    const allSelected = allIds.every(id => selectedPneusForFatura.includes(id));
+    
+    if (allSelected) {
+      // Remove all visible ones from selection
+      setSelectedPneusForFatura(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      // Add all visible ones (avoid duplicates)
+      setSelectedPneusForFatura(prev => {
+        const newSelection = [...prev];
+        allIds.forEach(id => {
+          if (!newSelection.includes(id)) newSelection.push(id);
+        });
+        return newSelection;
+      });
+    }
+  };
+
   // Logic to proceed to fatura details from pneu selection
   const handleProceedToFaturaDetails = async () => {
     if (selectedPneusForFatura.length === 0) {
@@ -329,14 +525,14 @@ export default function Faturamento() {
 
       // Varre a lista de pneus marcados
       for (const pid of selectedPneusForFatura) {
-        // Lê os serviços informados na tabela pneu_servico
+        // LÃƒÂª os serviÃƒÂ§os informados na tabela pneu_servico
         const res = await api.get(`/pneu-servicos/pneu/${pid}`);
         const services = res.data;
         allServices.push(...services);
         totalServicos += services.reduce((acc: number, s: any) => acc + parseFloat(s.vrtotal || 0), 0);
       }
 
-      // Popula os registros de preview (que serão salvos em fatura_servico)
+      // Popula os registros de preview (que serÃƒÂ£o salvos em fatura_servico)
       setPneuServicosPreview(allServices);
 
       // Busca dados do cliente a partir dos pneus selecionados
@@ -353,7 +549,7 @@ export default function Faturamento() {
           : null;
       }
 
-      // Atualiza o formulário com o total de serviços e cliente
+      // Atualiza o formulÃƒÂ¡rio com o total de serviÃƒÂ§os e cliente
       setFaturaForm(prev => ({
         ...prev,
         vrservico: totalServicos,
@@ -365,8 +561,8 @@ export default function Faturamento() {
       // Foca na aba dados da fatura
       setActiveFaturaModalTab('dados');
     } catch (err) {
-      console.error("Erro ao varrer serviços dos pneus", err);
-      setError("Erro ao carregar detalhes dos serviços. Tente novamente.");
+      console.error("Erro ao varrer serviÃƒÂ§os dos pneus", err);
+      setError("Erro ao carregar detalhes dos serviÃƒÂ§os. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -378,7 +574,8 @@ export default function Faturamento() {
       if (isFaturaModalOpen && faturaForm.id_planopag && !editingFatura) {
         const plano = allPlanosPag.find(p => p.id === faturaForm.id_planopag);
         if (plano && plano.numparc) {
-          const total = faturaForm.vrservico + faturaForm.vrproduto + faturaForm.vrcarcaca + faturaForm.vrmontagem - faturaForm.vrbonus;
+          const totalLaudos = faturaLaudosPreview.reduce((acc, curr) => acc + parseFloat(curr.valor || 0), 0);
+          const total = faturaForm.vrservico + faturaForm.vrproduto + faturaForm.vrcarcaca + faturaForm.vrmontagem - faturaForm.vrbonus - totalLaudos;
           const valorParcela = total / plano.numparc;
           const parcelas = [];
           const dataBase = new Date(faturaForm.datafat);
@@ -398,7 +595,7 @@ export default function Faturamento() {
       }
     };
     calculateParcelas();
-  }, [faturaForm.id_planopag, faturaForm.id_tipodocto, faturaForm.vrservico, faturaForm.vrproduto, faturaForm.vrcarcaca, faturaForm.vrmontagem, faturaForm.vrbonus, faturaForm.datafat, allPlanosPag, isFaturaModalOpen, editingFatura]);
+  }, [faturaForm.id_planopag, faturaForm.id_tipodocto, faturaForm.vrservico, faturaForm.vrproduto, faturaForm.vrcarcaca, faturaForm.vrmontagem, faturaForm.vrbonus, faturaForm.datafat, allPlanosPag, isFaturaModalOpen, editingFatura, faturaLaudosPreview]);
 
 
   const handleSaveFatura = async () => {
@@ -412,14 +609,29 @@ export default function Faturamento() {
         ...faturaForm,
         pneu_ids: selectedPneusForFatura,
         parcelas: faturaParcelasPreview,
-        vrtotal: (faturaForm.vrservico + faturaForm.vrproduto + faturaForm.vrcarcaca + faturaForm.vrmontagem - faturaForm.vrbonus)
+        vrtotal: (faturaForm.vrservico + faturaForm.vrproduto + faturaForm.vrcarcaca + faturaForm.vrmontagem - faturaForm.vrbonus - faturaLaudosPreview.reduce((acc, curr) => acc + parseFloat(curr.valor || 0), 0))
       };
 
       if (editingFatura) {
         await api.put(`/faturas/${editingFatura.id}`, payload);
         alert("Fatura atualizada com sucesso!");
       } else {
-        await api.post('/faturas/', payload);
+        const response = await api.post('/faturas/', payload);
+        const newFaturaId = response.data.id;
+        
+        // Se houver laudos em memÃƒÂ³ria (fatura nova), vincula agora
+        if (faturaLaudosPreview.length > 0) {
+          for (const l of faturaLaudosPreview) {
+            if (!l.id_fatura) { // Somente os que ainda nÃƒÂ£o foram salvos
+              await api.post('/fatura-laudos/', {
+                id_fatura: newFaturaId,
+                id_laudo: l.id_laudo,
+                valor: l.valor
+              });
+            }
+          }
+        }
+        
         alert("Fatura gerada com sucesso!");
       }
 
@@ -430,7 +642,7 @@ export default function Faturamento() {
       const data = err.response?.data;
       const detail = data?.detail;
       
-      let errorMessage = "Erro de conexão ou validação no servidor.";
+      let errorMessage = "Erro de conexÃƒÂ£o ou validação no servidor.";
       
       if (typeof detail === 'string') {
         errorMessage = detail;
@@ -440,7 +652,7 @@ export default function Faturamento() {
         errorMessage = data.message;
       }
       
-      alert(`⚠️ Erro ao salvar fatura:\n${errorMessage}`);
+      alert(`Ã¢Å¡Â Ã¯Â¸Â Erro ao salvar fatura:\n${errorMessage}`);
     }
   };
 
@@ -455,7 +667,7 @@ export default function Faturamento() {
       const response = await api.get(`/pneu-servicos/pneu/${pneuId}`);
       setPneuServicos(response.data);
     } catch (err) {
-      console.error("Erro ao buscar serviços adicionais", err);
+      console.error("Erro ao buscar serviÃƒÂ§os adicionais", err);
     }
   };
 
@@ -497,7 +709,7 @@ export default function Faturamento() {
       const response = await api.get('/servicos/');
       setAllServicos(response.data);
     } catch (err) {
-      console.error("Erro ao buscar mestre de serviços", err);
+      console.error("Erro ao buscar mestre de serviÃƒÂ§os", err);
     }
   };
 
@@ -575,7 +787,7 @@ export default function Faturamento() {
       }
       
       await fetchPneuServicos(pneu.pneu_id);
-      // Também atualiza o painel do pneu para ver o novo VrServico
+      // TambÃƒÂ©m atualiza o painel do pneu para ver o novo VrServico
       const pSearch = await api.get(`/ordens-servico/pneu-search/?q=${encodeURIComponent(pneuSearchQuery)}`);
       setPneuResults(pSearch.data);
 
@@ -583,19 +795,19 @@ export default function Faturamento() {
       setNewServico({ id_servico: 0, quant: 1, valor: 0 });
       setEditingServico(null);
     } catch (err) {
-      setError("Erro ao salvar serviço.");
+      setError("Erro ao salvar serviÃƒÂ§o.");
     }
   };
 
   const handleDeleteServico = async (id: number) => {
-    if (!window.confirm("Deseja remover este serviço?")) return;
+    if (!window.confirm("Deseja remover este serviÃƒÂ§o?")) return;
     try {
       await api.delete(`/pneu-servicos/${id}`);
       if (pneuResults.length > 0) {
         await fetchPneuServicos(pneuResults[0].pneu_id);
       }
     } catch (err) {
-      setError("Erro ao excluir serviço.");
+      setError("Erro ao excluir serviÃƒÂ§o.");
     }
   };
 
@@ -619,7 +831,7 @@ export default function Faturamento() {
       const response = await api.get(`/ordens-servico/pneu-search/?q=${encodeURIComponent(pneuSearchQuery)}`);
       setPneuResults(response.data);
       if (response.data.length === 0) {
-        setError('Nenhum pneu encontrado com este número de série ou fogo.');
+        setError('Nenhum pneu encontrado com este nÃƒÂºmero de sÃƒÂ©rie ou fogo.');
       }
     } catch (err: any) {
       setError('Erro ao buscar pneu. Tente novamente.');
@@ -636,13 +848,16 @@ export default function Faturamento() {
     setOsResults([]);
 
     try {
-      let url = '/ordens-servico/pneus-pendentes/?';
+      let url = '/ordens-servico/pneus-pendentes/';
       const params = new URLSearchParams();
+      if (searchParams.id) params.append('os_id', searchParams.id);
       if (searchParams.id_pneu) params.append('pneu_id', searchParams.id_pneu);
       if (searchParams.numos) params.append('numos', searchParams.numos);
       if (searchParams.cliente) params.append('cliente', searchParams.cliente);
 
-      const response = await api.get(url + params.toString());
+      const queryString = params.toString();
+      const finalUrl = queryString ? `${url}?${queryString}` : url;
+      const response = await api.get(finalUrl);
       setOsResults(response.data); // Usando osResults para guardar a lista de pneus pendentes
       if (response.data.length === 0) {
         setError('Nenhum pneu pendente de faturamento encontrado.');
@@ -669,11 +884,19 @@ export default function Faturamento() {
 
   const handleClienteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setSearchParams({ ...searchParams, cliente: value, id: '', numos: '' });
+    setSearchParams({ ...searchParams, cliente: value });
+    
     if (value.length >= 2) {
-      const filtered = clientes.filter(c => 
-        c.nome.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 8);
+      if (clientes.length === 0) {
+        fetchClientes(); // Tenta carregar se estiver vazio
+      }
+      
+      const searchTerm = value.toLowerCase().trim();
+      const filtered = clientes.filter(c => {
+        if (!c || !c.nome) return false;
+        return c.nome.toLowerCase().includes(searchTerm);
+      }).slice(0, 10);
+      
       setFilteredClientes(filtered);
       setShowSuggestions(true);
     } else {
@@ -682,7 +905,7 @@ export default function Faturamento() {
   };
 
   const selectCliente = (clienteNome: string) => {
-    setSearchParams({ ...searchParams, cliente: clienteNome, id: '', numos: '' });
+    setSearchParams({ ...searchParams, cliente: clienteNome });
     setShowSuggestions(false);
     setTimeout(() => {
       document.getElementById('os-search-form')?.dispatchEvent(
@@ -694,11 +917,14 @@ export default function Faturamento() {
   return (
     <div className="faturamento-container">
       <div className="page-header">
-        <h1 className="title">Faturamento</h1>
+        <h1 className="title" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <CreditCard size={32} color="var(--primary-color)" />
+          Faturamento de Pneus
+        </h1>
         <div className="header-actions">
            <button className="btn-primary" onClick={() => navigate('/rel-vendas-servico')}>
             <Printer size={20} />
-            Relatórios de Vendas
+            RelatÃƒÂ³rios de Vendas
           </button>
         </div>
       </div>
@@ -709,7 +935,7 @@ export default function Faturamento() {
           onClick={() => setActiveTab('informe')}
         >
           <FileText size={18} />
-          Informe de Serviços
+          Informe de ServiÃƒÂ§os
         </button>
         <button 
           className={`tab-btn ${activeTab === 'faturas' ? 'active' : ''}`}
@@ -754,7 +980,7 @@ export default function Faturamento() {
             </form>
           </div>
 
-          {/* Resultado Único da Busca por Pneu - Apenas Campos */}
+          {/* Resultado ÃƒÅ¡nico da Busca por Pneu - Apenas Campos */}
           {pneuResults.length > 0 && (
             <div className="animate-fade-in">
               <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', paddingLeft: '0.5rem' }}>
@@ -778,8 +1004,8 @@ export default function Faturamento() {
                     </div>
 
                     <div className="form-group">
-                      <label><FileText size={14} /> Nº Ordem de Serviço</label>
-                      <input type="text" className="form-input" value={p.numos > 0 ? p.numos : 'NÃO VINCULADA'} readOnly style={{ fontWeight: 'bold', color: p.numos > 0 ? 'var(--primary-color)' : '#94a3b8' }} />
+                      <label><FileText size={14} /> NÃ‚Âº Ordem de ServiÃƒÂ§o</label>
+                      <input type="text" className="form-input" value={p.numos > 0 ? p.numos : 'NÃƒÆ’O VINCULADA'} readOnly style={{ fontWeight: 'bold', color: p.numos > 0 ? 'var(--primary-color)' : '#94a3b8' }} />
                     </div>
 
                     <div className="form-group">
@@ -814,7 +1040,7 @@ export default function Faturamento() {
                     </div>
 
                     <div className="form-group">
-                      <label><Hash size={14} /> Num. Série</label>
+                      <label><Hash size={14} /> Num. SÃƒÂ©rie</label>
                       <input type="text" className="form-input" value={p.numserie || '---'} readOnly />
                     </div>
 
@@ -824,12 +1050,12 @@ export default function Faturamento() {
                     </div>
 
                     <div className="form-group">
-                      <label><Activity size={14} /> Qte. Serviço</label>
+                      <label><Activity size={14} /> Qte. ServiÃƒÂ§o</label>
                       <input type="text" className="form-input" value={p.qservico || 0} readOnly style={{ color: '#6366f1', fontWeight: '600' }} />
                     </div>
 
                     <div className="form-group">
-                      <label><DollarSign size={14} /> Vr. Serviço</label>
+                      <label><DollarSign size={14} /> Vr. ServiÃƒÂ§o</label>
                       <input type="text" className="form-input" value={`R$ ${parseFloat(p.vrservico as any || 0).toFixed(2)}`} readOnly style={{ color: '#10b981', fontWeight: '600' }} />
                     </div>
 
@@ -838,7 +1064,7 @@ export default function Faturamento() {
                       <input 
                         type="text" 
                         className="form-input" 
-                        value={p.statuspro ? 'Sim' : 'Não'} 
+                        value={p.statuspro ? 'Sim' : 'NÃƒÂ£o'} 
                         readOnly 
                         style={{ background: p.statuspro ? 'rgba(16, 185, 129, 0.1)' : 'transparent', color: p.statuspro ? '#059669' : '#b91c1c', fontWeight: '700' }} 
                       />
@@ -849,7 +1075,7 @@ export default function Faturamento() {
                       <input 
                         type="text" 
                         className="form-input" 
-                        value={p.statusfat ? 'Sim' : 'Não'} 
+                        value={p.statusfat ? 'Sim' : 'NÃƒÂ£o'} 
                         readOnly 
                         style={{ background: p.statusfat ? 'rgba(37, 99, 235, 0.1)' : 'transparent', color: p.statusfat ? '#1d4ed8' : '#b91c1c', fontWeight: '700' }} 
                       />
@@ -868,10 +1094,10 @@ export default function Faturamento() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#1e293b' }}>
                     <Settings size={20} color="var(--primary-color)" />
-                    Serviços Adicionais do Pneu
+                    ServiÃƒÂ§os Adicionais do Pneu
                   </h3>
                   <button className="btn-primary" onClick={handleOpenAddServicoModal} style={{ padding: '0.6rem 1rem', fontSize: '0.9rem' }}>
-                    <Plus size={16} /> Adicionar Serviço
+                    <Plus size={16} /> Adicionar ServiÃƒÂ§o
                   </button>
                 </div>
 
@@ -920,7 +1146,7 @@ export default function Faturamento() {
         </div>
       )}
 
-      {/* Modal para Adicionar Serviço */}
+      {/* Modal para Adicionar ServiÃƒÂ§o */}
       {isServicoModalOpen && (
         <div className="modal-overlay" style={{ zIndex: 2000 }}>
           <div className="modal-content" style={{ maxWidth: '500px' }}>
@@ -949,7 +1175,7 @@ export default function Faturamento() {
                   {showServicoSuggestions && servicoSearchQuery.length > 0 && (
                     <div className="autocomplete-dropdown glass-panel">
                       {filteredServicos.length === 0 ? (
-                        <div className="autocomplete-item empty">Nenhum serviço encontrado</div>
+                        <div className="autocomplete-item empty">Nenhum serviÃƒÂ§o encontrado</div>
                       ) : (
                         filteredServicos.map(s => (
                           <div 
@@ -1018,7 +1244,27 @@ export default function Faturamento() {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.8rem', paddingBottom: '2px' }}>
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => {
+                      if (selectedFaturaIds.length === 0) return alert("Selecione ao menos uma fatura para gerar NF.");
+                      alert(`Gerando NF para as faturas: ${selectedFaturaIds.join(', ')}`);
+                    }} 
+                    style={{ height: '52px', padding: '0 1.5rem', background: '#10b981', whiteSpace: 'nowrap' }}
+                  >
+                    <FileText size={20} /> Gerar NF
+                  </button>
+                  <button 
+                    className="btn-secondary" 
+                    onClick={() => {
+                      if (selectedFaturaIds.length === 0) return alert("Selecione ao menos uma fatura para imprimir.");
+                      alert(`Imprimindo faturas: ${selectedFaturaIds.join(', ')}`);
+                    }} 
+                    style={{ height: '52px', padding: '0 1.5rem', whiteSpace: 'nowrap' }}
+                  >
+                    <Printer size={20} /> Imprime
+                  </button>
                   <button className="btn-primary" onClick={() => handleOpenFaturaModal()} style={{ height: '52px', padding: '0 1.5rem', whiteSpace: 'nowrap' }}>
                     <Plus size={20} /> Nova Fatura
                   </button>
@@ -1032,17 +1278,25 @@ export default function Faturamento() {
                     <table className="data-table">
                        <thead>
                           <tr>
+                             <th style={{ width: '40px' }}>
+                               <input 
+                                 type="checkbox" 
+                                 checked={faturas.length > 0 && selectedFaturaIds.length === faturas.length}
+                                 onChange={handleSelectAllFaturas}
+                                 onClick={e => e.stopPropagation()}
+                               />
+                             </th>
                              <th style={{ width: '80px' }}>ID</th>
                              <th style={{ width: '100px' }}>Data Fat</th>
                              <th>Vendedor</th>
                              <th>Cliente</th>
                              <th>Valor Total</th>
-                             <th style={{ width: '120px' }}>Ações</th>
+                             <th style={{ width: '120px' }}>AÃƒÂ§ÃƒÂµes</th>
                           </tr>
                        </thead>
                        <tbody>
                           {faturas.length === 0 && !faturaLoading ? (
-                             <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Nenhuma fatura encontrada.</td>
+                             <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Nenhuma fatura encontrada.</td>
                              </tr>
                           ) : (
                              faturas.map(f => (
@@ -1050,8 +1304,21 @@ export default function Faturamento() {
                                   key={f.id} 
                                   onClick={() => setSelectedFatura(f)}
                                   className={selectedFatura?.id === f.id ? 'selected-row' : ''}
-                                  style={{ cursor: 'pointer', background: selectedFatura?.id === f.id ? 'rgba(37, 99, 235, 0.05)' : 'transparent' }}
+                                  style={{ 
+                                    cursor: 'pointer', 
+                                    background: selectedFaturaIds.includes(f.id) 
+                                      ? 'rgba(37, 99, 235, 0.08)' 
+                                      : (selectedFatura?.id === f.id ? 'rgba(37, 99, 235, 0.05)' : 'transparent') 
+                                  }}
                                 >
+                                   <td>
+                                     <input 
+                                       type="checkbox" 
+                                       checked={selectedFaturaIds.includes(f.id)}
+                                       onChange={() => handleToggleFaturaSelection(f.id)}
+                                       onClick={e => e.stopPropagation()}
+                                     />
+                                   </td>
                                    <td><span className="os-number">#{f.id}</span></td>
                                    <td>{new Date(f.datafat).toLocaleDateString()}</td>
                                    <td style={{ fontWeight: '500' }}>{f.vendedor_nome || '---'}</td>
@@ -1059,7 +1326,7 @@ export default function Faturamento() {
                                    <td style={{ fontWeight: '700', color: '#10b981' }}>R$ {parseFloat(f.vrtotal || 0).toFixed(2)}</td>
                                    <td>
                                       <div className="action-buttons" onClick={e => e.stopPropagation()}>
-                                         <button className="icon-btn view" title="Visualizar Detalhes" onClick={() => handleOpenFaturaModal(f, 'view')}><Eye size={18} /></button>
+                                         <button className="icon-btn success" title="Visualizar Detalhes" onClick={() => handleOpenFaturaModal(f, 'view')} style={{ background: '#10b981' }}><Eye size={18} /></button>
                                          <button className="icon-btn edit" title="Editar Fatura" onClick={() => handleOpenFaturaModal(f, 'edit')}><Edit size={18} /></button>
                                          <button className="icon-btn delete" title="Excluir Fatura" onClick={() => handleDeleteFatura(f.id)}><Trash2 size={16} /></button>
                                       </div>
@@ -1089,13 +1356,13 @@ export default function Faturamento() {
                           <span style={{ fontWeight: '600' }}>{selectedFatura.contato_nome}</span>
                           <span style={{ color: '#64748b' }}>Vendedor:</span>
                            <span style={{ fontWeight: '500' }}>{selectedFatura.vendedor_nome || '---'}</span>
-                           <span style={{ color: '#64748b' }}>Data Emissão:</span>
+                           <span style={{ color: '#64748b' }}>Data EmissÃƒÂ£o:</span>
                           <span>{new Date(selectedFatura.datafat).toLocaleString()}</span>
                        </div>
                        
                        <div style={{ background: 'white', borderRadius: '8px', padding: '1rem', border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                             <span style={{ opacity: 0.7 }}>Serviços:</span>
+                             <span style={{ opacity: 0.7 }}>ServiÃƒÂ§os:</span>
                              <span style={{ fontWeight: '600' }}>R$ {parseFloat(selectedFatura.vrservico).toFixed(2)}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
@@ -1144,7 +1411,7 @@ export default function Faturamento() {
         </div>
       )}
 
-      {/* Modal para Cálculo de Fatura */}
+      {/* Modal para CÃƒÂ¡lculo de Fatura */}
       {isBillingModalOpen && selectedOSForBilling && (
         <div className="modal-overlay" style={{ zIndex: 2000 }}>
           <div className="modal-content" style={{ maxWidth: '700px' }}>
@@ -1160,7 +1427,7 @@ export default function Faturamento() {
 
               <div className="billing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 <div className="form-group">
-                  <label><Settings size={14} /> Total de Serviços (R$)</label>
+                  <label><Settings size={14} /> Total de ServiÃƒÂ§os (R$)</label>
                   <input type="number" className="form-input" value={billingFinancials.vrservico} readOnly style={{ background: '#f1f5f9' }} />
                 </div>
                 <div className="form-group">
@@ -1168,7 +1435,7 @@ export default function Faturamento() {
                   <input type="number" step="0.01" className="form-input" value={billingFinancials.vrproduto} onChange={(e) => setBillingFinancials({...billingFinancials, vrproduto: parseFloat(e.target.value) || 0})} />
                 </div>
                 <div className="form-group">
-                  <label><TrendingUp size={14} /> Valor Carcaça (R$)</label>
+                  <label><TrendingUp size={14} /> Valor CarcaÃƒÂ§a (R$)</label>
                   <input type="number" step="0.01" className="form-input" value={billingFinancials.vrcarcaca} onChange={(e) => setBillingFinancials({...billingFinancials, vrcarcaca: parseFloat(e.target.value) || 0})} />
                 </div>
                 <div className="form-group">
@@ -1212,37 +1479,40 @@ export default function Faturamento() {
       )}
       {/* Modal de Edição/Criação de Fatura (CRUD Completo) */}
       {isFaturaModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 2000 }}>
-          <div className="modal-content" style={{ maxWidth: '1100px', display: 'flex', flexDirection: 'column', height: '90vh' }}>
-            <div className="modal-header" style={{ background: '#1e293b', color: 'white' }}>
+        <div className="os-modal-overlay" onClick={() => setIsFaturaModalOpen(false)}>
+          <div className="premium-modal-content full-screen" onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{faturaModalMode === 'view' ? `Visualizando Fatura #${editingFatura?.numfatura || editingFatura?.id}` : editingFatura ? `Editar Fatura #${editingFatura.numfatura || editingFatura.id}` : 'Nova Fatura Manual'}</h2>
-              <button className="close-btn" style={{ color: 'white' }} onClick={() => setIsFaturaModalOpen(false)}><X size={24} /></button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button className="close-btn" onClick={() => setIsFaturaModalOpen(false)}><X size={24} /></button>
+              </div>
             </div>
 
             {/* Sub-tabs da Modal */}
-            <div className="modal-tabs" style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+            <div className="modal-tabs" style={{ display: 'flex', background: '#f8fafc', padding: '0 1rem', borderBottom: '1px solid #e2e8f0' }}>
               <button 
                 className={`modal-tab-btn ${activeFaturaModalTab === 'pneus' ? 'active' : ''}`}
                 onClick={() => setActiveFaturaModalTab('pneus')}
-                style={{ padding: '1rem 2rem', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', color: activeFaturaModalTab === 'pneus' ? 'var(--primary-color)' : '#64748b', borderBottom: activeFaturaModalTab === 'pneus' ? '2px solid var(--primary-color)' : 'none' }}
+                style={{ padding: '1rem 2rem', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', color: activeFaturaModalTab === 'pneus' ? 'var(--primary-color)' : '#64748b', borderBottom: activeFaturaModalTab === 'pneus' ? '3px solid var(--primary-color)' : 'none' }}
               >
                 1. Seleção de Pneus
               </button>
               <button 
                 className={`modal-tab-btn ${activeFaturaModalTab === 'dados' ? 'active' : ''}`}
                 onClick={() => setActiveFaturaModalTab('dados')}
-                style={{ padding: '1rem 2rem', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', color: activeFaturaModalTab === 'dados' ? 'var(--primary-color)' : '#64748b', borderBottom: activeFaturaModalTab === 'dados' ? '2px solid var(--primary-color)' : 'none' }}
+                style={{ padding: '1rem 2rem', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', color: activeFaturaModalTab === 'dados' ? 'var(--primary-color)' : '#64748b', borderBottom: activeFaturaModalTab === 'dados' ? '3px solid var(--primary-color)' : 'none' }}
               >
                 2. Dados da Fatura
               </button>
             </div>
 
-            <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+            <div className="modal-body scrollable" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
               {activeFaturaModalTab === 'pneus' && (
                 <div className="animate-fade-in">
-                  <div className="search-section glass-panel" style={{ marginBottom: '1.5rem', padding: '1.5rem' }}>
+                  <div className="premium-master-panel" style={{ marginBottom: '1.5rem' }}>
+                    <div className="premium-section-title"><Search size={18} /> Filtros de Busca</div>
                     <form onSubmit={handleOSSearch} className="search-form-producao">
-                      <div className="search-grid" style={{ gridTemplateColumns: '80px 100px 1fr auto' }}>
+                      <div className="search-grid" style={{ gridTemplateColumns: '120px 140px 1fr auto', gap: '1rem', alignItems: 'flex-end' }}>
                         <div className="form-group">
                           <label><Hash size={12} /> ID OS</label>
                           <input 
@@ -1250,7 +1520,7 @@ export default function Faturamento() {
                             className="form-input" 
                             placeholder="ID"
                             value={searchParams.id}
-                            onChange={(e) => setSearchParams({...searchParams, id: e.target.value, numos: '', cliente: '', id_pneu: ''})}
+                            onChange={(e) => setSearchParams({...searchParams, id: e.target.value})}
                             disabled={faturaModalMode === 'view'}
                           />
                         </div>
@@ -1259,25 +1529,59 @@ export default function Faturamento() {
                           <input 
                             type="text" 
                             className="form-input" 
-                            placeholder="Nº"
+                            placeholder="NÃ‚Âº"
                             value={searchParams.numos}
-                            onChange={(e) => setSearchParams({...searchParams, numos: e.target.value, id: '', cliente: '', id_pneu: ''})}
+                            onChange={(e) => setSearchParams({...searchParams, numos: e.target.value})}
                             disabled={faturaModalMode === 'view'}
                           />
                         </div>
-                        <div className="form-group relative">
+                        <div className="form-group" style={{ position: 'relative', overflow: 'visible' }}>
                           <label><User size={12} /> Nome do Cliente</label>
                           <input 
                             type="text" 
                             className="form-input" 
-                            placeholder="Digite o nome..." 
+                            placeholder="Digite o nome do cliente para filtrar..." 
                             value={searchParams.cliente}
                             onChange={handleClienteChange}
                             onFocus={() => faturaModalMode !== 'view' && searchParams.cliente.length >= 2 && setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             disabled={faturaModalMode === 'view'}
+                            list="clientes-list"
                           />
+                          <datalist id="clientes-list">
+                            {clientes.map(c => <option key={c.id} value={c.nome} />)}
+                          </datalist>
+                          <style>{`
+                            .suggestions-dropdown {
+                              position: absolute;
+                              left: 0;
+                              right: 0;
+                              background: white;
+                              border: 1px solid #e2e8f0;
+                              border-radius: 8px;
+                              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+                              z-index: 9999 !important;
+                              max-height: 200px;
+                              overflow-y: auto;
+                              margin-top: 4px;
+                            }
+                            .suggestion-item {
+                              padding: 0.8rem 1rem;
+                              display: flex;
+                              align-items: center;
+                              gap: 0.5rem;
+                              cursor: pointer;
+                              transition: background 0.2s;
+                              color: #1e293b;
+                              border-bottom: 1px solid #f1f5f9;
+                            }
+                            .suggestion-item:hover {
+                              background: #f1f5f9;
+                              color: var(--primary-color);
+                            }
+                          `}</style>
                           {showSuggestions && filteredClientes.length > 0 && (
-                            <div className="suggestions-dropdown" style={{ top: '100%' }}>
+                            <div className="suggestions-dropdown">
                               {filteredClientes.map(c => (
                                 <div key={c.id} className="suggestion-item" onClick={() => selectCliente(c.nome)}>
                                   <User size={14} />
@@ -1287,29 +1591,46 @@ export default function Faturamento() {
                             </div>
                           )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2px' }}>
-                          <button type="submit" className="btn-search-producao" disabled={loading || faturaModalMode === 'view'} style={{ height: '42px', width: '42px', padding: 0, justifyContent: 'center' }}>
-                            {loading ? '...' : <Search size={20} />}
+                        <div className="form-group">
+                          <label style={{ visibility: 'hidden' }}><Search size={12} /> Pesquisar</label>
+                          <button type="submit" className="btn-search-producao" disabled={loading || faturaModalMode === 'view'} style={{ height: '42px', padding: '0 1.5rem', display: 'flex', gap: '0.8rem', alignItems: 'center', justifyContent: 'center', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', width: '100%' }}>
+                            {loading ? '...' : <><Search size={20} /> Pesquisar Pneus</>}
                           </button>
                         </div>
                       </div>
                     </form>
                   </div>
 
-                  <h4 style={{ marginBottom: '1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Package size={18} /> Pneus Prontos para Faturamento
-                    {selectedPneusForFatura.length > 0 && (
-                      <span className="pneu-badge" style={{ background: 'var(--primary-color)', color: 'white', fontSize: '0.75rem', padding: '0.1rem 0.6rem' }}>
-                        {selectedPneusForFatura.length} selecionado(s)
-                      </span>
-                    )}
-                  </h4>
+                  <div className="premium-master-panel">
+                    <div className="premium-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Package size={18} /> Pneus Prontos para Faturamento
+                      </div>
+                      {selectedPneusForFatura.length > 0 && (
+                        <span className="pneu-badge" style={{ background: 'var(--primary-color)', color: 'white', fontSize: '0.75rem', padding: '0.1rem 0.6rem' }}>
+                          {selectedPneusForFatura.length} selecionado(s)
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th style={{ width: '40px' }}></th>
+                          <th style={{ width: '40px', cursor: 'pointer' }} onClick={handleSelectAllPneus}>
+                            <div style={{ 
+                              width: '18px', 
+                              height: '18px', 
+                              borderRadius: '4px', 
+                              border: '2px solid #cbd5e1', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              background: osResults.length > 0 && osResults.every(p => selectedPneusForFatura.includes(p.pneu_id)) ? 'var(--primary-color)' : 'white' 
+                            }}>
+                              {osResults.length > 0 && osResults.every(p => selectedPneusForFatura.includes(p.pneu_id)) && <CheckCircle size={12} color="white" />}
+                            </div>
+                          </th>
                           <th>ID Pneu</th>
                           <th>OS</th>
                           <th>Cliente</th>
@@ -1344,7 +1665,7 @@ export default function Faturamento() {
                               <td style={{ fontWeight: '700', color: '#10b981' }}>R$ {parseFloat(p.vrservico || 0).toFixed(2)}</td>
                               <td style={{ textAlign: 'center' }}>
                                 <span className={`status-badge status-${p.statusfat ? 'finalizada' : 'aberta'}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
-                                  {p.statusfat ? 'SIM' : 'NÃO'}
+                                  {p.statusfat ? 'SIM' : 'NÃƒÆ’O'}
                                 </span>
                               </td>
                             </tr>
@@ -1354,13 +1675,17 @@ export default function Faturamento() {
                     </table>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
               {activeFaturaModalTab === 'dados' && (
                 <div className="animate-fade-in">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div className="premium-master-panel" style={{ marginBottom: '1.5rem' }}>
+                    <div className="premium-section-title"><FileText size={18} /> Dados Gerais da Fatura</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                     <div className="form-group span-2">
-                  <input type="text" className="form-input" value={faturaForm.cliente_nome} readOnly style={{ background: '#f8fafc', fontWeight: '700' }} />
+                      <label>Cliente</label>
+                      <input type="text" className="form-input" value={faturaForm.cliente_nome} readOnly style={{ background: '#f8fafc', fontWeight: '700' }} />
                     </div>
                     <div className="form-group">
                        <label><Clock size={14} /> Data Faturamento</label>
@@ -1380,14 +1705,12 @@ export default function Faturamento() {
                         ))}
                       </select>
                     </div>
+                  </div>
 
                   </div>
 
-                  {/* Grid de Serviços da Fatura */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h4 style={{ fontSize: '0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e293b' }}>
-                      <Wrench size={16} /> Detalhamento de Serviços (fatura_servico)
-                    </h4>
+                  <div className="premium-master-panel" style={{ marginBottom: '1.5rem' }}>
+                    <div className="premium-section-title"><Wrench size={18} /> Detalhamento de ServiÃƒÂ§os</div>
                     <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                       <table className="data-table small" style={{ fontSize: '0.8rem' }}>
                         <thead style={{ background: '#f8fafc' }}>
@@ -1403,7 +1726,7 @@ export default function Faturamento() {
                           {pneuServicosPreview.length === 0 ? (
                             <tr>
                               <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
-                                Nenhum serviço encontrado para os pneus selecionados.
+                                Nenhum serviÃƒÂ§o encontrado para os pneus selecionados.
                               </td>
                             </tr>
                           ) : (
@@ -1423,7 +1746,7 @@ export default function Faturamento() {
                         {pneuServicosPreview.length > 0 && (
                           <tfoot style={{ background: '#f8fafc', fontWeight: '700' }}>
                             <tr>
-                              <td colSpan={4} style={{ textAlign: 'right' }}>Soma dos Serviços:</td>
+                              <td colSpan={4} style={{ textAlign: 'right' }}>Soma dos ServiÃƒÂ§os:</td>
                               <td style={{ textAlign: 'right' }}>
                                 R$ {pneuServicosPreview.reduce((acc, curr) => acc + parseFloat(curr.vrtotal || 0), 0).toFixed(2)}
                               </td>
@@ -1434,30 +1757,130 @@ export default function Faturamento() {
                     </div>
                   </div>
 
-                  <hr style={{ margin: '2rem 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div className="premium-master-panel" style={{ marginBottom: '1.5rem' }}>
+                    <div className="premium-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FileText size={18} /> Laudos Vinculados
+                      </div>
+                      {faturaModalMode !== 'view' && (
+                        <button className="btn-primary" onClick={() => setIsLaudoModalOpen(true)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                          <Plus size={14} /> Vincular Laudo
+                        </button>
+                      )}
+                    </div>
+                    <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                      <table className="data-table small" style={{ fontSize: '0.8rem' }}>
+                        <thead style={{ background: '#f8fafc' }}>
+                          <tr style={{ background: '#f1f5f9' }}>
+                            <th style={{ padding: '1rem 0.5rem' }}>ID Laudo</th>
+                            <th style={{ padding: '1rem 0.5rem' }}>NÃ‚Âº Laudo</th>
+                            <th style={{ padding: '1rem 0.5rem' }}>Pneu</th>
+                            <th style={{ textAlign: 'right', padding: '1rem 0.5rem' }}>Vr. CrÃƒÂ©dito</th>
+                            <th style={{ textAlign: 'right', padding: '1rem 0.5rem' }}>Saldo</th>
+                            <th style={{ textAlign: 'right', padding: '1rem 0.5rem' }}>Valor Aplicado</th>
+                            <th style={{ textAlign: 'center', padding: '1rem 0.5rem' }}>AÃƒÂ§ÃƒÂµes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {faturaLaudosPreview.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                                Nenhum laudo vinculado a esta fatura.
+                              </td>
+                            </tr>
+                          ) : (
+                            faturaLaudosPreview.map((item) => (
+                              <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '1.2rem 0.5rem' }}>#{item.id_laudo}</td>
+                                <td style={{ fontWeight: '600', padding: '1.2rem 0.5rem' }}>{item.numlaudo}</td>
+                                <td style={{ padding: '1.2rem 0.5rem' }}><span className="pneu-badge" style={{ fontSize: '0.8rem' }}>#{item.pneu_id}</span></td>
+                                <td style={{ textAlign: 'right', padding: '1.2rem 0.5rem' }}>R$ {parseFloat(item.vrcredito || 0).toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', padding: '1.2rem 0.5rem' }}>R$ {parseFloat(item.vrsaldo || 0).toFixed(2)}</td>
+                                <td style={{ textAlign: 'right' }}>
+                                  {faturaModalMode === 'view' ? (
+                                    <span style={{ fontWeight: '700', color: '#dc2626' }}>
+                                      - R$ {parseFloat(item.valor || 0).toFixed(2)}
+                                    </span>
+                                  ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                                      <span style={{ fontSize: '1rem', color: '#dc2626', fontWeight: '800' }}>R$</span>
+                                      <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        style={{ width: '120px', textAlign: 'right', padding: '0.5rem 0.8rem', height: '42px', fontSize: '1.2rem', fontWeight: '800', color: '#dc2626', border: '2px solid #3b82f6', borderRadius: '6px', background: '#fef2f2', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)' }}
+                                        value={item.valor}
+                                        onChange={(e) => {
+                                          const val = e.target.value.replace(',', '.');
+                                          if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                            handleInlineUpdateLaudoValue(item.id, val);
+                                          }
+                                        }}
+                                        onBlur={(e) => handleSaveLaudoValue(item.id, parseFloat(e.target.value) || 0)}
+                                      />
+                                    </div>
+                                  )}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  {faturaModalMode !== 'view' && (
+                                    <button className="icon-btn delete" onClick={() => handleDeleteFaturaLaudo(item.id)} title="Remover VÃƒÂ­nculo">
+                                      <Trash2 size={14} />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                        {faturaLaudosPreview.length > 0 && (
+                          <tfoot style={{ background: '#f8fafc', fontWeight: '700' }}>
+                            <tr>
+                              <td colSpan={5} style={{ textAlign: 'right' }}>Total CrÃƒÂ©dito Aplicado:</td>
+                              <td style={{ textAlign: 'right', color: '#dc2626' }}>
+                                - R$ {faturaLaudosPreview.reduce((acc, curr) => acc + parseFloat(curr.valor || 0), 0).toFixed(2)}
+                              </td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        )}
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="premium-master-panel" style={{ background: '#f8fafc' }}>
+                    <div className="premium-section-title"><DollarSign size={18} /> Totais e Fechamento</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <div className="form-group">
-                      <label>Valor Serviços</label>
+                      <label>Valor ServiÃƒÂ§os</label>
                       <input type="number" className="form-input" value={faturaForm.vrservico} readOnly style={{ background: '#f8fafc' }} />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ color: '#10b981', fontWeight: '700' }}>(-) CrÃƒÂ©dito Laudo</label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={faturaLaudosPreview.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0)} 
+                        readOnly 
+                        style={{ background: '#ecfdf5', color: '#10b981', fontWeight: '800' }} 
+                      />
                     </div>
                     <div className="form-group">
                       <label>Adicional Produtos</label>
                       <input type="number" className="form-input" value={faturaForm.vrproduto} onChange={e => setFaturaForm({...faturaForm, vrproduto: parseFloat(e.target.value) || 0})} disabled={faturaModalMode === 'view'} />
                     </div>
                     <div className="form-group">
-                      <label>Carcaça / Montagem</label>
+                      <label>CarcaÃƒÂ§a / Montagem</label>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input type="number" className="form-input" placeholder="Carcaça" value={faturaForm.vrcarcaca} onChange={e => setFaturaForm({...faturaForm, vrcarcaca: parseFloat(e.target.value) || 0})} disabled={faturaModalMode === 'view'} />
+                        <input type="number" className="form-input" placeholder="CarcaÃƒÂ§a" value={faturaForm.vrcarcaca} onChange={e => setFaturaForm({...faturaForm, vrcarcaca: parseFloat(e.target.value) || 0})} disabled={faturaModalMode === 'view'} />
                         <input type="number" className="form-input" placeholder="Montagem" value={faturaForm.vrmontagem} onChange={e => setFaturaForm({...faturaForm, vrmontagem: parseFloat(e.target.value) || 0})} disabled={faturaModalMode === 'view'} />
                       </div>
                     </div>
                     <div className="form-group">
-                      <label>Bônus / Desconto</label>
+                      <label>BÃƒÂ´nus / Desconto</label>
                       <input type="number" className="form-input" value={faturaForm.vrbonus} onChange={e => setFaturaForm({...faturaForm, vrbonus: parseFloat(e.target.value) || 0})} style={{ color: '#dc2626', fontWeight: '700' }} disabled={faturaModalMode === 'view'} />
                     </div>
                     <div className="form-group span-2">
-                      <label>Observações</label>
+                      <label>ObservaÃƒÂ§ÃƒÂµes</label>
                       <textarea className="form-input" rows={3} value={faturaForm.obs} onChange={e => setFaturaForm({...faturaForm, obs: e.target.value})} disabled={faturaModalMode === 'view'} />
                     </div>
 
@@ -1537,7 +1960,7 @@ export default function Faturamento() {
                               <tr key={idx}>
                                 <td style={{ textAlign: 'center' }}>
                                   <span style={{ background: '#e2e8f0', padding: '0.1rem 0.6rem', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                                    {p.num_parcela}ª
+                                    {p.num_parcela}Ã‚Âª
                                   </span>
                                 </td>
                                 <td style={{ fontWeight: '500' }}>
@@ -1550,16 +1973,21 @@ export default function Faturamento() {
                                   {tiposDocto.find(t => t.id === p.id_tipodocto)?.descricao || '---'}
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
-                                   {faturaModalMode !== 'view' && (
-                                     <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'center' }}>
-                                       <button className="btn-icon" onClick={() => handleEditParcela(idx)} title="Editar" style={{ background: '#f1f5f9', color: '#64748b' }}>
-                                         <Edit size={14} />
-                                       </button>
-                                       <button className="btn-icon" onClick={() => handleDeleteParcela(idx)} title="Excluir" style={{ background: '#fee2e2', color: '#ef4444' }}>
-                                         <Trash2 size={14} />
-                                       </button>
-                                     </div>
-                                   )}
+                                   <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                                      <button className="btn-icon" onClick={() => handleEditParcela(idx)} title="Visualizar Detalhes" style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                        <Eye size={14} />
+                                      </button>
+                                      {faturaModalMode !== 'view' && (
+                                        <>
+                                          <button className="btn-icon" onClick={() => handleEditParcela(idx)} title="Editar Parcela" style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                            <Edit size={14} />
+                                          </button>
+                                          <button className="btn-icon" onClick={() => handleDeleteParcela(idx)} title="Excluir Parcela" style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                            <Trash2 size={14} />
+                                          </button>
+                                        </>
+                                      )}
+                                   </div>
                                  </td>
                               </tr>
                             ))
@@ -1569,17 +1997,26 @@ export default function Faturamento() {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#1e293b', borderRadius: '12px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '1.1rem', opacity: 0.9 }}>TOTAL FINAL:</span>
-                    <span style={{ fontSize: '1.8rem', fontWeight: '800' }}>
-                      R$ {(faturaForm.vrservico + faturaForm.vrproduto + faturaForm.vrcarcaca + faturaForm.vrmontagem - faturaForm.vrbonus).toFixed(2)}
+
+                  </div>
+                  <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#1e293b', borderRadius: '12px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 15px -3px rgba(30, 41, 59, 0.3)' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '600', opacity: 0.9 }}>TOTAL FINAL DA FATURA:</span>
+                    <span style={{ fontSize: '2.2rem', fontWeight: '800', color: '#10b981' }}>
+                      R$ {(
+                        faturaForm.vrservico + 
+                        faturaForm.vrproduto + 
+                        faturaForm.vrcarcaca + 
+                        faturaForm.vrmontagem - 
+                        faturaForm.vrbonus -
+                        faturaLaudosPreview.reduce((acc, curr) => acc + parseFloat(curr.valor || 0), 0)
+                      ).toFixed(2)}
                     </span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+            <div className="premium-modal-footer">
               <button className="btn-secondary" onClick={() => setIsFaturaModalOpen(false)}>{faturaModalMode === 'view' ? 'Fechar' : 'Cancelar'}</button>
               {faturaModalMode !== 'view' && (
                 activeFaturaModalTab === 'pneus' ? (
@@ -1602,7 +2039,7 @@ export default function Faturamento() {
         <div className="modal-overlay" style={{ zIndex: 3000 }}>
           <div className="modal-content" style={{ maxWidth: '400px' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #e2e8f0', padding: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Editar Parcela {editingParcelaData.num_parcela}ª</h3>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Editar Parcela {editingParcelaData.num_parcela}Ã‚Âª</h3>
               <button className="close-btn" onClick={() => setIsEditParcelaModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
             </div>
             <div className="modal-body" style={{ padding: '1.5rem' }}>
@@ -1644,6 +2081,122 @@ export default function Faturamento() {
             <div className="modal-footer" style={{ padding: '1rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '1rem', background: '#f8fafc' }}>
               <button className="btn-secondary" onClick={() => setIsEditParcelaModalOpen(false)} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>Cancelar</button>
               <button className="btn-primary" onClick={handleSaveEditedParcela} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none' }}>Salvar Parcela</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Vincular Laudo */}
+      {isLaudoModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 3000 }}>
+          <div className="modal-content" style={{ maxWidth: '450px', minHeight: '400px' }}>
+            <div className="modal-header">
+              <h3>Vincular Laudo de Garantia</h3>
+              <button className="close-btn" onClick={() => { setIsLaudoModalOpen(false); setSelectedLaudoForLinking(null); setLaudoSearchQuery(''); }}><X size={24} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.5rem' }}>
+              <div className="form-group">
+                <label style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem', display: 'block' }}>ID do Laudo</label>
+                <div style={{ position: 'relative', display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Hash style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="ID..." 
+                      style={{ paddingLeft: '2.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}
+                      value={laudoSearchQuery}
+                      onChange={(e) => handleSearchLaudos(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  <button 
+                    className="btn-primary" 
+                    title="Buscar laudos deste cliente"
+                    style={{ width: '45px', padding: 0, justifyContent: 'center', background: '#3b82f6' }}
+                    onClick={handleFetchClientLaudos}
+                  >
+                    <Search size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {showClientLaudosList && (
+                <div className="animate-fade-in" style={{ marginTop: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ background: '#f8fafc', padding: '0.5rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>Laudos com Saldo (Cliente)</span>
+                    <button onClick={() => setShowClientLaudosList(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}><X size={14} /></button>
+                  </div>
+                  <div style={{ maxHieght: '200px', overflowY: 'auto', background: 'white' }}>
+                    {clientLaudos.length === 0 ? (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem' }}>Nenhum laudo com saldo encontrado.</div>
+                    ) : (
+                      clientLaudos.map(l => (
+                        <div 
+                          key={l.id} 
+                          className="suggestion-item" 
+                          onClick={() => handleSelectLaudoFromList(l)}
+                          style={{ display: 'flex', justifyContent: 'space-between', padding: '0.8rem', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>ID {l.id} - Laudo #{l.numlaudo}</div>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>SÃƒÂ©rie: {l.numserie || '---'}</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#10b981' }}>R$ {parseFloat(l.vrsaldo || 0).toFixed(2)}</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedLaudoForLinking ? (
+                <div className="animate-fade-in" style={{ marginTop: '1.5rem', padding: '1.2rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>NÃ‚Âº Laudo</label>
+                      <span style={{ fontWeight: '700', fontSize: '1rem' }}>{selectedLaudoForLinking.numlaudo}</span>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Saldo DisponÃƒÂ­vel</label>
+                      <span style={{ fontWeight: '700', fontSize: '1rem', color: '#10b981' }}>R$ {parseFloat(selectedLaudoForLinking.vrsaldo || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ background: '#fff', padding: '1rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                    <label style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1e293b', display: 'block', marginBottom: '0.5rem' }}>
+                      VALOR APLICADO NESTA FATURA (R$):
+                    </label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      style={{ fontSize: '1.4rem', height: '45px', fontWeight: '800', color: '#dc2626', textAlign: 'right' }}
+                      value={linkingLaudoValue}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(',', '.');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setLinkingLaudoValue(val as any);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <button 
+                    className="btn-primary" 
+                    disabled={loading}
+                    style={{ width: '100%', marginTop: '1rem', background: '#10b981', height: '45px', fontSize: '1rem', fontWeight: '700' }} 
+                    onClick={handleConfirmAddLaudo}
+                  >
+                    {loading ? 'Processando...' : 'Vincular Laudo e Salvar'}
+                  </button>
+                </div>
+              ) : laudoSearchQuery.length > 0 && (
+                <div style={{ marginTop: '1rem', padding: '1rem', textAlign: 'center', color: '#ef4444', background: '#fef2f2', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  Aguardando ID vÃƒÂ¡lido ou laudo nÃƒÂ£o encontrado...
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -17,14 +17,21 @@
     -webkit-print-color-adjust: exact;
   }
 
-  /* Ocultar elementos da UI */
-  .p-6, .os-container, .modal-overlay, nav, aside, button, .header-actions {
-    display: none !important;
+  /* Ocultar elementos da UI apenas quando estiver imprimindo a proposta */
+  body.printing-proposal-active * {
+    visibility: hidden;
+  }
+
+  body.printing-proposal-active .proposal-print-container,
+  body.printing-proposal-active .proposal-print-container * {
+    visibility: visible;
   }
 
   .proposal-print-container {
     display: block !important;
-    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
     color: #1a202c;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;

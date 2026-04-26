@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Medidas.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -16,6 +16,10 @@ export default function Medidas() {
   const [filteredMedidas, setFilteredMedidas] = useState<Medida[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(15);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,7 +50,16 @@ export default function Medidas() {
         m.codigo?.toLowerCase().includes(lowerSearch)
       ));
     }
+    setCurrentPage(1); // Reset to first page on search
   }, [searchTerm, medidas]);
+
+  // Paginated Data
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredMedidas.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredMedidas.length / itemsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const fetchData = async () => {
     try {
@@ -108,7 +121,7 @@ export default function Medidas() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar medida.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar medida.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -179,10 +192,10 @@ export default function Medidas() {
                 </tr>
               </thead>
               <tbody>
-                {filteredMedidas.length === 0 ? (
-                  <tr><td colSpan={4} className="empty-state">Nenhuma medida encontrada.</td></tr>
+                {currentItems.length === 0 ? (
+                  <tr><td colSpan={5} className="empty-state">Nenhuma medida encontrada.</td></tr>
                 ) : (
-                  filteredMedidas.map(m => (
+                  currentItems.map(m => (
                     <tr key={m.id}>
                       <td>#{m.id}</td>
                       <td><strong>{m.codigo || '-'}</strong></td>
@@ -205,52 +218,92 @@ export default function Medidas() {
             </table>
           )}
         </div>
+
+        {/* Paginação */}
+        {!loading && filteredMedidas.length > itemsPerPage && (
+          <div className="pagination-container" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            padding: '1.5rem 2rem',
+            borderTop: '1px solid rgba(255,255,255,0.05)'
+          }}>
+            <div className="pagination-info" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Mostrando <strong>{indexOfFirstItem + 1}</strong> a <strong>{Math.min(indexOfLastItem, filteredMedidas.length)}</strong> de <strong>{filteredMedidas.length}</strong> medidas
+            </div>
+            <div className="pagination-controls" style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn-secondary" 
+                onClick={() => paginate(currentPage - 1)} 
+                disabled={currentPage === 1}
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                Anterior
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '0 1rem', fontWeight: 'bold' }}>
+                Página {currentPage} de {totalPages}
+              </div>
+              <button 
+                className="btn-secondary" 
+                onClick={() => paginate(currentPage + 1)} 
+                disabled={currentPage === totalPages}
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Nova Medida' : 'Editar Medida'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-group">
-                  <label htmlFor="codigo">Código</label>
-                  <input 
-                    className="form-input" 
-                    id="codigo" 
-                    value={formData.codigo} 
-                    onChange={handleChange} 
-                    placeholder="Ex: 001, 295, etc."
-                  />
-                </div>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label htmlFor="codigo" style={{ fontWeight: '600', color: '#475569' }}>Código</label>
+                    <input 
+                      className="form-input" 
+                      id="codigo" 
+                      value={formData.codigo} 
+                      onChange={handleChange} 
+                      placeholder="Ex: 001, 295, etc."
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="descricao">Descrição da Medida *</label>
-                  <input 
-                    className="form-input" 
-                    id="descricao" 
-                    value={formData.descricao} 
-                    onChange={handleChange} 
-                    placeholder="Ex: 295/80 R22.5"
-                    required 
-                  />
-                </div>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label htmlFor="descricao" style={{ fontWeight: '600', color: '#475569' }}>Descrição da Medida *</label>
+                    <input 
+                      className="form-input" 
+                      id="descricao" 
+                      value={formData.descricao} 
+                      onChange={handleChange} 
+                      placeholder="Ex: 295/80 R22.5"
+                      required 
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <div className="checkbox-group" style={{ marginTop: '1rem' }}>
-                    <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                    <label htmlFor="ativo">Medida ativa no sistema</label>
+                  <div className="form-group">
+                    <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                      <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Medida ativa no sistema</label>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>
               </div>

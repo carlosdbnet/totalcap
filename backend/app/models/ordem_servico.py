@@ -59,6 +59,8 @@ class OSPneu(Base):
     statuspro = Column(Boolean, default=False) # True=Em Produção
     statusfat = Column(Boolean, default=False) # True=Faturado/Pronto
     codbarra = Column(String, nullable=True) # Código de barras para identificação
+    placa = Column(String, nullable=True)
+    desenhoriginal = Column(String, nullable=True)
     
     obs = Column(Text, nullable=True)
     

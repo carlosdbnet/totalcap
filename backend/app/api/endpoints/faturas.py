@@ -267,11 +267,19 @@ def relatorio_vendas_servico(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     id_contato: Optional[int] = None,
-    id_vendedor: Optional[int] = None
+    id_vendedor: Optional[int] = None,
+    id_area: Optional[int] = None,
+    id_regiao: Optional[int] = None,
+    id_tiporecap: Optional[int] = None,
+    id_medida: Optional[int] = None,
+    id_desenho: Optional[int] = None
 ) -> Any:
     """Relatório detalhado de vendas por serviço baseado em faturas."""
     from backend.app.models.contato import Contato
     from backend.app.models.vendedor import Vendedor
+    from backend.app.models.tiporecap import TipoRecapagem
+    from backend.app.models.medida import Medida
+    from backend.app.models.desenho import Desenho
     
     query = db.query(
         FaturaServicoModel.id,
@@ -285,11 +293,17 @@ def relatorio_vendas_servico(
         Contato.nome.label("cliente_nome"),
         Vendedor.nome.label("vendedor_nome"),
         PneuModel.numserie,
-        PneuModel.numfogo
+        PneuModel.numfogo,
+        TipoRecapagem.descricao.label("tiporecap_nome"),
+        Medida.descricao.label("medida_nome"),
+        Desenho.descricao.label("desenho_nome")
     ).join(FaturaModel, FaturaServicoModel.id_fatura == FaturaModel.id)\
-     .join(Contato, FaturaModel.id_contato == Contato.id)\
-     .join(Vendedor, FaturaModel.id_vendedor == Vendedor.id)\
-     .outerjoin(PneuModel, FaturaServicoModel.id_pneu == PneuModel.id)
+     .outerjoin(Contato, FaturaModel.id_contato == Contato.id)\
+     .outerjoin(Vendedor, FaturaModel.id_vendedor == Vendedor.id)\
+     .outerjoin(PneuModel, FaturaServicoModel.id_pneu == PneuModel.id)\
+     .outerjoin(TipoRecapagem, PneuModel.id_recap == TipoRecapagem.id)\
+     .outerjoin(Medida, PneuModel.id_medida == Medida.id)\
+     .outerjoin(Desenho, PneuModel.id_desenho == Desenho.id)
 
     if start_date:
         query = query.filter(FaturaModel.datafat >= start_date)
@@ -299,6 +313,16 @@ def relatorio_vendas_servico(
         query = query.filter(FaturaModel.id_contato == id_contato)
     if id_vendedor:
         query = query.filter(FaturaModel.id_vendedor == id_vendedor)
+    if id_area:
+        query = query.filter(Contato.id_area == id_area)
+    if id_regiao:
+        query = query.filter(Contato.id_regiao == id_regiao)
+    if id_tiporecap:
+        query = query.filter(PneuModel.id_recap == id_tiporecap)
+    if id_medida:
+        query = query.filter(PneuModel.id_medida == id_medida)
+    if id_desenho:
+        query = query.filter(PneuModel.id_desenho == id_desenho)
 
     results = query.order_by(FaturaModel.datafat.desc(), FaturaServicoModel.id.desc()).all()
     
@@ -316,7 +340,10 @@ def relatorio_vendas_servico(
             "quant": float(r.quant) if r.quant else 0,
             "valor": float(r.valor) if r.valor else 0,
             "vrtotal": float(r.vrtotal) if r.vrtotal else 0,
-            "pcomissao": float(r.pcomissao) if r.pcomissao else 0
+            "pcomissao": float(r.pcomissao) if r.pcomissao else 0,
+            "tiporecap_nome": r.tiporecap_nome or "-",
+            "medida_nome": r.medida_nome or "-",
+            "desenho_nome": r.desenho_nome or "-"
         }
         for r in results
     ]
@@ -342,8 +369,8 @@ def relatorio_comissoes(
         Contato.nome.label("cliente_nome"),
         Vendedor.nome.label("vendedor_nome")
     ).join(FaturaModel, FaturaServicoModel.id_fatura == FaturaModel.id)\
-     .join(Vendedor, FaturaModel.id_vendedor == Vendedor.id)\
-     .join(Contato, FaturaModel.id_contato == Contato.id)
+     .outerjoin(Vendedor, FaturaModel.id_vendedor == Vendedor.id)\
+     .outerjoin(Contato, FaturaModel.id_contato == Contato.id)
 
     if start_date:
         query = query.filter(FaturaModel.datafat >= start_date)

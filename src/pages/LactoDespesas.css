@@ -290,11 +290,12 @@
 }
 
 @media print {
-  body * {
+  body.printing-notadesp-active * {
     visibility: hidden;
   }
   
-  .print-template, .print-template * {
+  body.printing-notadesp-active .print-template, 
+  body.printing-notadesp-active .print-template * {
     visibility: visible;
   }
 

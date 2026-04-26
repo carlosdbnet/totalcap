@@ -97,7 +97,8 @@ def create_mobos(
             garantia=pneu_in.garantia,
             obs=pneu_in.obs,
             medidanova=pneu_in.medidanova,
-            produtonovo=pneu_in.produtonovo
+            marcanova=pneu_in.marcanova,
+            desenhonovo=pneu_in.desenhonovo
         )
         db.add(db_pneu)
         
@@ -201,7 +202,8 @@ def update_mobos(
                 garantia=pneu_in.garantia,
                 obs=pneu_in.obs,
                 medidanova=pneu_in.medidanova,
-                produtonovo=pneu_in.produtonovo
+                marcanova=pneu_in.marcanova,
+                desenhonovo=pneu_in.desenhonovo
             )
             db.add(new_pneu)
 

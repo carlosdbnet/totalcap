@@ -1,38 +1,205 @@
 /* Reusing some styles from RelVendasServico via common classes if possible, 
    but defining specific ones for commissions here */
 
-.comissoes-container {
+/* Print Layout & Header */
+.only-print {
+  display: none !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .only-print {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.printing-report-active * {
+    visibility: hidden !important;
+  }
+
+  body.printing-report-active .comissoes-container, 
+  body.printing-report-active .comissoes-container * {
+    visibility: visible !important;
+  }
+
+  .comissoes-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+}
+
+.report-print-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2pt solid #000;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.print-header-top {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.print-main-row {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.print-header-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.print-logo {
+  width: 100px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.print-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.print-company-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.print-date {
+  font-size: 0.95rem;
+  color: #000;
+}
+
+.print-report-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #000;
+  margin-left: 115px;
+}
+
+.print-meta-info {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.9rem;
+  color: #000;
+}
+
+/* Print Table Adjustments */
+@media print {
+  .results-card {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .comissoes-table {
+    display: table !important;
+    width: 100% !important;
+    border: 1pt solid #000 !important;
+    border-collapse: collapse !important;
+  }
+
+  .comissoes-table th {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    border: 1pt solid #000 !important;
+    padding: 8pt !important;
+  }
+
+  .comissoes-table td {
+    border: 1pt solid #000 !important;
+    color: #000 !important;
+    padding: 6pt !important;
+  }
+
+  .vendedor-row td {
+    background: #e0e0e0 !important;
+    font-weight: bold !important;
+  }
+
+  .summary-footer {
+    border-top: 2pt solid #000 !important;
+    margin-top: 20pt !important;
+    display: block !important;
+  }
+
+  .total-value {
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+}
+
+.relatorio-container {
   padding: 2rem;
   animation: fadeIn 0.4s ease-out;
 }
 
-.comissoes-header {
+.relatorio-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
 
-.comissoes-title {
+.relatorio-title {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.filter-card {
+.relatorio-title h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.filter-bar {
   background: var(--panel-bg);
   backdrop-filter: blur(10px);
   border: 1px solid var(--panel-border);
   padding: 1.5rem;
   border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.filter-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
   align-items: flex-end;
 }
 
-.results-card {
+.results-section {
   background: var(--panel-bg);
   backdrop-filter: blur(10px);
   border: 1px solid var(--panel-border);

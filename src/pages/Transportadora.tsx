@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, ExternalLink, Printer } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Transportadora.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -173,7 +173,7 @@ export default function Transportadoras() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar transportadora.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar transportadora.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -280,104 +280,108 @@ export default function Transportadoras() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '700px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Nova Transportadora' : 'Editar Transportadora'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="codigo">Código</label>
-                    <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} />
-                  </div>
-                  
-                  <div className="form-group full-width">
-                    <label htmlFor="nome">Nome / Razão Social *</label>
-                    <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="cpfcnpj">CPF/CNPJ</label>
-                    <input className="form-input" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} />
-                  </div>
-
-                  <div className="form-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label htmlFor="cep">CEP</label>
-                      <a 
-                        href="https://buscacepinter.correios.com.br/app/endereco/index.php" 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="cep-link"
-                        style={{ fontSize: '0.75rem', color: 'var(--primary-color)', textDecoration: 'none' }}
-                      >
-                        <ExternalLink size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '2px' }} />
-                        Correios
-                      </a>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="codigo" style={{ fontWeight: '600', color: '#475569' }}>Código</label>
+                      <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     </div>
-                    <div className="cep-input-group">
-                      <input 
-                        className="form-input" 
-                        id="cep" 
-                        value={formData.cep} 
-                        onChange={handleChange} 
-                        placeholder="00000-000"
-                      />
-                      <button 
-                        type="button" 
-                        className="btn-search-premium" 
-                        onClick={handleCepSearch}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? '...' : <Search size={16} />}
-                      </button>
+                    
+                    <div className="form-group full-width">
+                      <label htmlFor="nome" style={{ fontWeight: '600', color: '#475569' }}>Nome / Razão Social *</label>
+                      <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     </div>
-                  </div>
 
-                  <div className="form-group full-width">
-                    <label htmlFor="endereco">Endereço</label>
-                    <input className="form-input" id="endereco" value={formData.endereco} onChange={handleChange} />
-                  </div>
+                    <div className="form-group">
+                      <label htmlFor="cpfcnpj" style={{ fontWeight: '600', color: '#475569' }}>CPF/CNPJ</label>
+                      <input className="form-input" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
 
-                  <div className="form-group">
-                    <label htmlFor="cidade">Cidade</label>
-                    <input className="form-input" id="cidade" value={formData.cidade} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="uf">UF</label>
-                    <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} />
-                  </div>
+                    <div className="form-group">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label htmlFor="cep" style={{ fontWeight: '600', color: '#475569' }}>CEP</label>
+                        <a 
+                          href="https://buscacepinter.correios.com.br/app/endereco/index.php" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="cep-link"
+                          style={{ fontSize: '0.75rem', color: 'var(--primary-color)', textDecoration: 'none' }}
+                        >
+                          <ExternalLink size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '2px' }} />
+                          Correios
+                        </a>
+                      </div>
+                      <div className="cep-input-group">
+                        <input 
+                          className="form-input" 
+                          id="cep" 
+                          value={formData.cep} 
+                          onChange={handleChange} 
+                          placeholder="00000-000"
+                          style={{ borderRadius: '8px 0 0 8px', border: '1px solid #cbd5e1' }}
+                        />
+                        <button 
+                          type="button" 
+                          className="btn-search-premium" 
+                          onClick={handleCepSearch}
+                          disabled={isSubmitting}
+                          style={{ borderRadius: '0 8px 8px 0' }}
+                        >
+                          {isSubmitting ? '...' : <Search size={16} />}
+                        </button>
+                      </div>
+                    </div>
 
-                  <div className="form-group">
-                    <label htmlFor="fone">Telefone</label>
-                    <input className="form-input" id="fone" value={formData.fone} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="fax">Fax</label>
-                    <input className="form-input" id="fax" value={formData.fax} onChange={handleChange} />
-                  </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="endereco" style={{ fontWeight: '600', color: '#475569' }}>Endereço</label>
+                      <input className="form-input" id="endereco" value={formData.endereco} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
 
-                  <div className="form-group">
-                    <label htmlFor="inscricao">Inscrição</label>
-                    <input className="form-input" id="inscricao" value={formData.inscricao} onChange={handleChange} />
-                  </div>
+                    <div className="form-group">
+                      <label htmlFor="cidade" style={{ fontWeight: '600', color: '#475569' }}>Cidade</label>
+                      <input className="form-input" id="cidade" value={formData.cidade} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="uf" style={{ fontWeight: '600', color: '#475569' }}>UF</label>
+                      <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
 
-                  <div className="form-group">
-                    <label>Status</label>
-                    <div className="checkbox-group" style={{ marginTop: 0 }}>
-                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                      <label htmlFor="ativo">Transportadora ativa</label>
+                    <div className="form-group">
+                      <label htmlFor="fone" style={{ fontWeight: '600', color: '#475569' }}>Telefone</label>
+                      <input className="form-input" id="fone" value={formData.fone} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="fax" style={{ fontWeight: '600', color: '#475569' }}>Fax</label>
+                      <input className="form-input" id="fax" value={formData.fax} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="inscricao" style={{ fontWeight: '600', color: '#475569' }}>Inscrição</label>
+                      <input className="form-input" id="inscricao" value={formData.inscricao} onChange={handleChange} style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', color: '#475569' }}>Status</label>
+                      <div className="checkbox-group" style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                        <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569' }}>Transportadora ativa</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>
               </div>
