@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  DollarSign, Search, Plus, Trash2, Edit2, X, 
+  DollarSign, Search, Plus, Trash2, Edit2, X, Eye,
   User, Calendar, Truck, FileText, Printer, 
   Loader2, AlertCircle, Save, ChevronRight, Camera
 } from 'lucide-react';

@@ -60,3 +60,34 @@ Stack:
     at App (http://localhost:5173/src/App.tsx?t=1777295430195:125:3)
     at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
 --------------------------------------------------
+[2026-04-27 14:15:26] [ERROR] Global Error: Uncaught ReferenceError: Eye is not defined
+URL: http://localhost:5173/lacto-despesas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/LactoDespesas.tsx?t=1777310060515:710:74
+--------------------------------------------------
+[2026-04-27 14:15:26] [ERROR] Eye is not defined
+URL: http://localhost:5173/lacto-despesas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: 
+    at LactoDespesas (http://localhost:5173/src/pages/LactoDespesas.tsx?t=1777310060515:68:29)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4537:26)
+    at div
+    at main
+    at div
+    at MainLayout (http://localhost:5173/src/layouts/MainLayout.tsx:143:22)
+    at ProtectedRoute (http://localhost:5173/src/App.tsx?t=1777310060515:69:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4131:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4601:5)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:4544:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b2e73d03:5290:5)
+    at AuthProvider (http://localhost:5173/src/context/AuthContext.tsx:20:32)
+    at ThemeProvider (http://localhost:5173/src/context/ThemeContext.tsx:20:33)
+    at App (http://localhost:5173/src/App.tsx?t=1777310060515:125:3)
+    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:7:1)
+--------------------------------------------------
+[2026-04-27 14:15:26] [ERROR] Global Error: Uncaught ReferenceError: Eye is not defined
+URL: http://localhost:5173/lacto-despesas
+UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Stack: http://localhost:5173/src/pages/LactoDespesas.tsx?t=1777310060515:710:74
+--------------------------------------------------
