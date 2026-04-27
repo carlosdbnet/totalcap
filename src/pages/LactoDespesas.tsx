@@ -782,7 +782,10 @@ export default function LactoDespesas() {
                 </button>
                 {ocrPreview && (
                   <button className="btn-send-ia" onClick={handleProcessOCR} disabled={isScanning}>
-                    {isScanning ? <Loader2 className="spinning" /> : <Save size={18} />} Enviar para IA
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
+                      {isScanning ? <Loader2 className="spinning" /> : <Save size={18} />}
+                      <span>{isScanning ? 'Processando...' : 'Enviar para IA'}</span>
+                    </div>
                   </button>
                 )}
               </div>
@@ -819,7 +822,7 @@ export default function LactoDespesas() {
 
       {/* Overlay de Processamento */}
       {isScanning && (
-        <div className="scanning-overlay">
+        <div className="scanning-overlay" key="scanning-overlay-global">
           <div className="scanning-card">
             <Loader2 size={48} className="spinning text-primary" />
             <h3 style={{ marginTop: '1.5rem' }}>Analisando Comprovante...</h3>
