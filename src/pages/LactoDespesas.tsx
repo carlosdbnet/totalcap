@@ -376,7 +376,7 @@ export default function LactoDespesas() {
       setIsScanning(true);
       setFormError('');
       
-      const baseInstructions = "Se for um cupom fiscal de posto de gasolina, procure a placa do veículo se estiver impressa e converta a quantidade abastecida.";
+      const baseInstructions = "Se for um cupom fiscal de posto de gasolina, procure a placa do veículo se estiver impressa e converta a quantidade abastecida. No topo do documento existe um CNPJ que será sempre o do Fornecedor. Se existir um outro CPF ou CNPJ no rodapé do documento (consumidor), este será o do cliente e não deve ser confundido com o do Fornecedor.";
       const combinedInstructions = ocrInstructions.trim() 
         ? `${baseInstructions} Instruções extras: ${ocrInstructions.trim()}`
         : baseInstructions;
