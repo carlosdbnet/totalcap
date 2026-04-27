@@ -425,19 +425,27 @@ export default function LactoDespesas() {
          });
       }
 
-      // Tenta encontrar o ID do contato/cliente localmente pelo CNPJ ou Nome
-      const cnpjClean = cleanString(cabecalho.cpfcnpj || '');
-      const nomeClean = cleanString(cabecalho.nome || '');
-      const matchedContato = contatos.find(c => 
-        (cnpjClean && cleanString(c.cpfcnpj) === cnpjClean) || 
-        (nomeClean && cleanString(c.nome) === nomeClean)
-      );
+      // LÓGICA DE VÍNCULO POR CNPJ (Solicitado pelo usuário)
+      let matchedContato = null;
+      const rawCpfCnpjOCR = String(cabecalho.cpfcnpj || "").replace(/\D/g, "");
+      
+      if (rawCpfCnpjOCR) {
+        matchedContato = contatos.find(c => {
+          const dbCpfCnpj = String(c.cpfcnpj || "").replace(/\D/g, "");
+          return dbCpfCnpj === rawCpfCnpjOCR;
+        });
+      }
+
+      // Se não achou por CNPJ, tenta por nome como fallback (limpeza básica)
+      if (!matchedContato && nomeClean) {
+        matchedContato = contatos.find(c => cleanString(c.nome) === nomeClean);
+      }
 
       setFormData((prev: any) => ({
         ...prev,
-        id_contato: matchedContato?.id || prev.id_contato || 0,
-        nome: cabecalho.nome || prev.nome,
-        cpfcnpj: cabecalho.cpfcnpj || prev.cpfcnpj,
+        id_contato: matchedContato ? matchedContato.id : (prev.id_contato || 0),
+        nome: matchedContato ? matchedContato.nome : (cabecalho.nome || prev.nome),
+        cpfcnpj: matchedContato ? (matchedContato.cpfcnpj || '') : (cabecalho.cpfcnpj || prev.cpfcnpj),
         itens: [...prev.itens, ...novosItens],
         vtotal: calculateTotal([...prev.itens, ...novosItens])
       }));
