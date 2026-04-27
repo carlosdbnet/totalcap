@@ -444,13 +444,28 @@ export default function LactoDespesas() {
 
       let log = `IA (${provedorNome}) - ${new Date().toLocaleString()}\n`;
       log += `-----------------------------------\n`;
-      log += `Cliente: ${cabecalho.nome || '???'}\n`;
-      log += `CNPJ: ${cabecalho.cpfcnpj || '???'}\n`;
-      log += `Itens Detectados: ${novosItens.length}\n`;
+      
+      if (data.raciocinio) {
+        log += `[AUDITORIA CNPJ]: ${data.raciocinio}\n`;
+        log += `-----------------------------------\n`;
+      }
+
+      log += `FORNECEDOR: ${cabecalho.nome || '???'}\n`;
+      log += `CNPJ EMISSOR: ${cabecalho.cpfcnpj || '???'}\n`;
+      log += `DATA EMISSÃO: ${cabecalho.data || '???'}\n`;
+      log += `VEÍCULO/PLACA: ${cabecalho.veiculo || '???'}\n`;
+      log += `KM: ${cabecalho.km || '???'}\n`;
+      log += `TIPO DESPESA: ${cabecalho.tipo || '???'}\n`;
       log += `-----------------------------------\n`;
+      log += `ITENS (${novosItens.length}):\n`;
+      
       novosItens.forEach((it: any, i: number) => {
-        log += `[${i+1}] ${it.tipo}: R$ ${it.vtotal.toFixed(2)}\n`;
+        log += `[${i+1}] ${it.descricao}\n`;
+        log += `    QTD: ${it.qlitro} | UN: R$ ${it.vlitro.toFixed(2)} | TOTAL: R$ ${it.vtotal.toFixed(2)}\n`;
       });
+      
+      log += `-----------------------------------\n`;
+      log += `TOTAL DA NOTA: R$ ${data.rodape?.valor_total || '???'}\n`;
       
       setOcrResultText(log);
       if (!isModalOpen) setModalMode('create');
