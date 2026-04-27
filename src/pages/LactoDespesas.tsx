@@ -729,29 +729,29 @@ export default function LactoDespesas() {
         <div className="despesas-modal-overlay" style={{ zIndex: 1100 }}>
           <div className="despesas-modal-content" style={{ maxWidth: '700px' }}>
             <div className="despesas-modal-header">
-              <h2>{editingItemIndex !== null ? 'Editar Item' : 'Novo Item de Despesa'}</h2>
+              <h2>{modalMode === 'view' ? 'Detalhes do Item' : editingItemIndex !== null ? 'Editar Item' : 'Novo Item de Despesa'}</h2>
               <button className="close-btn" onClick={() => setIsItemModalOpen(false)}><X size={20} /></button>
             </div>
             <div className="despesas-modal-body scrollable">
               <div className="form-grid-despesas" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                 <div className="input-group">
                   <label>Data Movimento</label>
-                  <input type="date" value={tempItem.datamov?.split('T')[0]} onChange={(e) => setTempItem({...tempItem, datamov: e.target.value})} />
+                  <input type="date" value={tempItem.datamov?.split('T')[0]} onChange={(e) => setTempItem({...tempItem, datamov: e.target.value})} disabled={modalMode === 'view'} />
                 </div>
                 <div className="input-group">
                   <label>Veículo</label>
-                  <select value={tempItem.id_veiculo} onChange={(e) => setTempItem({...tempItem, id_veiculo: parseInt(e.target.value)})}>
+                  <select value={tempItem.id_veiculo} onChange={(e) => setTempItem({...tempItem, id_veiculo: parseInt(e.target.value)})} disabled={modalMode === 'view'}>
                     <option value="0">Nenhum / Selecione...</option>
                     {veiculos.map(v => <option key={v.id} value={v.id}>{v.placa} - {v.descricao}</option>)}
                   </select>
                 </div>
                 <div className="input-group span-2">
                   <label>Descrição / Detalhes</label>
-                  <input type="text" value={tempItem.descricao} onChange={(e) => setTempItem({...tempItem, descricao: e.target.value})} />
+                  <input type="text" value={tempItem.descricao} onChange={(e) => setTempItem({...tempItem, descricao: e.target.value})} disabled={modalMode === 'view'} />
                 </div>
                 <div className="input-group">
                   <label>Tipo de Despesa</label>
-                  <select value={tempItem.tipo} onChange={(e) => setTempItem({...tempItem, tipo: e.target.value})}>
+                  <select value={tempItem.tipo} onChange={(e) => setTempItem({...tempItem, tipo: e.target.value})} disabled={modalMode === 'view'}>
                     <option value="Combustível">Combustível</option>
                     <option value="Pedágio">Pedágio</option>
                     <option value="Refeição">Refeição</option>
@@ -766,6 +766,7 @@ export default function LactoDespesas() {
                   <input 
                     type="number" 
                     value={tempItem.qlitro} 
+                    disabled={modalMode === 'view'}
                     onChange={(e) => {
                       const q = parseFloat(e.target.value) || 0;
                       setTempItem({...tempItem, qlitro: q, vtotal: q * (tempItem.vlitro || 0)})
@@ -777,6 +778,7 @@ export default function LactoDespesas() {
                   <input 
                     type="number" 
                     value={tempItem.vlitro} 
+                    disabled={modalMode === 'view'}
                     onChange={(e) => {
                       const v = parseFloat(e.target.value) || 0;
                       setTempItem({...tempItem, vlitro: v, vtotal: v * (tempItem.qlitro || 0)})
@@ -787,20 +789,23 @@ export default function LactoDespesas() {
                   <label>Valor Total do Item</label>
                   <input 
                     type="number" 
-                    style={{ background: '#f8fafc', fontWeight: 'bold' }}
+                    style={{ background: modalMode === 'view' ? '#f1f5f9' : '#f8fafc', fontWeight: 'bold' }}
                     value={tempItem.vtotal} 
+                    disabled={modalMode === 'view'}
                     onChange={(e) => setTempItem({...tempItem, vtotal: parseFloat(e.target.value) || 0})}
                   />
                 </div>
                 <div className="input-group">
                   <label>KM Atual</label>
-                  <input type="number" value={tempItem.kmatual} onChange={(e) => setTempItem({...tempItem, kmatual: parseInt(e.target.value) || 0})} />
+                  <input type="number" value={tempItem.kmatual} onChange={(e) => setTempItem({...tempItem, kmatual: parseInt(e.target.value) || 0})} disabled={modalMode === 'view'} />
                 </div>
               </div>
             </div>
             <div className="modal-footer-despesas">
-              <button className="btn-secondary" onClick={() => setIsItemModalOpen(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={saveItem}>Confirmar Item</button>
+              <button className="btn-secondary" onClick={() => setIsItemModalOpen(false)}>
+                {modalMode === 'view' ? 'Fechar' : 'Cancelar'}
+              </button>
+              {modalMode !== 'view' && <button className="btn-primary" onClick={saveItem}>Confirmar Item</button>}
             </div>
           </div>
         </div>
