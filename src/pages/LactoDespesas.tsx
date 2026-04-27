@@ -437,6 +437,8 @@ export default function LactoDespesas() {
 
       // LÓGICA DE VÍNCULO POR CNPJ DO FORNECEDOR
       let matchedContato = null;
+      const cnpjClean = cleanString(cabecalho.cpfcnpj || '');
+      const nomeClean = cleanString(cabecalho.nome || '');
       const rawCpfCnpjOCR = String(cabecalho.cpfcnpj || "").replace(/\D/g, "");
       
       if (rawCpfCnpjOCR) {
