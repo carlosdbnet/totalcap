@@ -1357,7 +1357,7 @@ export default function ColetaPneus() {
                   <button className="btn-camera-action" onClick={() => fileInputRef.current?.click()} style={{ flex: 1 }}>
                     <Camera size={20} /> Câmera
                   </button>
-                  <button className="btn-secondary" onClick={handleOCRFileClick} style={{ flex: 1 }}>
+                  <button className="btn-camera-action" onClick={handleOCRFileClick} style={{ flex: 1 }}>
                     <Plus size={20} /> Selecionar Foto
                   </button>
               </div>
