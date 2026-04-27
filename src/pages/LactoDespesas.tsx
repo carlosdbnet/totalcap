@@ -468,6 +468,7 @@ export default function LactoDespesas() {
       
       log += `FORNECEDOR: ${cabecalho.nome || '???'}\n`;
       log += `CNPJ EMISSOR: ${cabecalho.cpfcnpj || '???'}\n`;
+      log += `CPF/CNPJ CLIENTE: ${cabecalho.cpfcnpj_cliente || 'NÃO IDENTIFICADO'}\n`;
       log += `CÓDIGO VENDEDOR: ${cabecalho.codigo_vendedor || 'NÃO ENCONTRADO'}\n`;
       log += `DATA EMISSÃO: ${cabecalho.data || '???'}\n`;
       log += `VEÍCULO/PLACA: ${cabecalho.veiculo || '???'}\n`;
