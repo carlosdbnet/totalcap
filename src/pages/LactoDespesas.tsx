@@ -79,6 +79,7 @@ export default function LactoDespesas() {
   const [ocrPreview, setOcrPreview] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [ocrResultText, setOcrResultText] = useState('');
+  const [ocrInstructions, setOcrInstructions] = useState('');
   const ocrFileInputRef = React.useRef<HTMLInputElement>(null);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -375,10 +376,15 @@ export default function LactoDespesas() {
       setIsScanning(true);
       setFormError('');
       
+      const baseInstructions = "Se for um cupom fiscal de posto de gasolina, procure a placa do veículo se estiver impressa e converta a quantidade abastecida.";
+      const combinedInstructions = ocrInstructions.trim() 
+        ? `${baseInstructions} Instruções extras: ${ocrInstructions.trim()}`
+        : baseInstructions;
+
       const response = await api.post('/ocr/analyze', { 
         image: ocrPreview,
         tipo_documento: 'despesa',
-        instrucoes: "Se for um cupom fiscal de posto de gasolina, procure a placa do veículo se estiver impressa e converta a quantidade abastecida."
+        instrucoes: combinedInstructions
       });
       
       const data = response.data;
@@ -773,6 +779,25 @@ export default function LactoDespesas() {
                     <span>Clique para capturar ou anexar</span>
                   </div>
                 )}
+              </div>
+
+              <div className="ocr-middle-actions" style={{ margin: '1rem 0' }}>
+                <input 
+                  type="text" 
+                  placeholder="Instruções extras p/ IA (ex: focar apenas no valor total)"
+                  className="ocr-instruction-input"
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.8rem', 
+                    borderRadius: '8px', 
+                    background: 'rgba(0,0,0,0.05)', 
+                    border: '1px solid rgba(0,0,0,0.1)', 
+                    color: '#1e293b',
+                    fontSize: '0.9rem'
+                  }}
+                  value={ocrInstructions}
+                  onChange={(e) => setOcrInstructions(e.target.value)}
+                />
               </div>
 
               <div className="ocr-action-buttons">
