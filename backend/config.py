@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
-    AI_PROVIDER: str = "openai" # 'openai' ou 'gemini'
+    AI_PROVIDER: str = "gemini" # Default para Gemini se nao especificado no .env/vercel
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"), 

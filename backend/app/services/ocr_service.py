@@ -99,6 +99,8 @@ def analyze_tire_image(base64_image: str, custom_instructions: str = None, tipo_
         raise e
 
 def _analyze_with_openai(base64_image: str, prompt: str):
+    if not settings.OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY não configurada. Se estiver no Vercel, configure esta variável no Dashboard do Projeto.")
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -124,7 +126,7 @@ def _analyze_with_openai(base64_image: str, prompt: str):
 
 def _analyze_with_gemini(base64_image: str, prompt: str):
     if not settings.GOOGLE_API_KEY:
-        raise ValueError("GOOGLE_API_KEY não configurada no arquivo .env")
+        raise ValueError("GOOGLE_API_KEY não configurada. Se estiver no Vercel, configure esta variável no Dashboard do Projeto.")
         
     # Log da chave para conferência (apenas os primeiros caracteres)
     masked_key = settings.GOOGLE_API_KEY[:6] + "..." + settings.GOOGLE_API_KEY[-4:]
