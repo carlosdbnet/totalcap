@@ -445,11 +445,8 @@ export default function LactoDespesas() {
       let log = `IA (${provedorNome}) - ${new Date().toLocaleString()}\n`;
       log += `-----------------------------------\n`;
       
-      if (data.raciocinio) {
-        log += `[AUDITORIA CNPJ]: ${data.raciocinio}\n`;
-        log += `-----------------------------------\n`;
-      }
-
+      log += `-----------------------------------\n`;
+      
       log += `FORNECEDOR: ${cabecalho.nome || '???'}\n`;
       log += `CNPJ EMISSOR: ${cabecalho.cpfcnpj || '???'}\n`;
       log += `CPF/CNPJ CLIENTE: ${cabecalho.cpfcnpj_cliente || 'NÃO IDENTIFICADO'}\n`;
