@@ -1255,7 +1255,10 @@ export default function ColetaPneus() {
 
                 {modalMode !== 'view' && (
                   <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="spinning" size={18} /> : (modalMode === 'create' ? 'Salvar Coleta' : 'Salvar Alterações')}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                      {isSubmitting ? <Loader2 className="spinning" size={18} /> : <Save size={18} />}
+                      <span>{modalMode === 'create' ? 'Salvar Coleta' : 'Salvar Alterações'}</span>
+                    </div>
                   </button>
                 )}
               </div>

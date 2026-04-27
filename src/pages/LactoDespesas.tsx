@@ -698,7 +698,10 @@ export default function LactoDespesas() {
               <div className="modal-footer-despesas">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary-despesas" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="spinning" /> : <Save size={18} />} Salvar Lançamento
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                    {isSubmitting ? <Loader2 className="spinning" /> : <Save size={18} />} 
+                    <span>{modalMode === 'create' ? 'Salvar Lançamento' : 'Salvar Alterações'}</span>
+                  </div>
                 </button>
               </div>
             </form>
