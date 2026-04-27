@@ -392,14 +392,27 @@ export default function LactoDespesas() {
       const ocrItens = data.itens || [];
       const provedorNome = data.provedor === 'gemini' ? 'Google Gemini' : 'OpenAI GPT-4o-mini';
 
-      // Mapear itens
+      // LÓGICA DE VÍNCULO DO VENDEDOR PELO CPF/CNPJ DO CLIENTE (Solicitado pelo usuário)
+      let matchedVendedor = null;
+      const rawCpfCnpjCliente = String(cabecalho.cpfcnpj_cliente || "").replace(/\D/g, "");
+      
+      if (rawCpfCnpjCliente) {
+        matchedVendedor = vendedores.find(v => {
+          const dbCpfCnpj = String(v.cpfcnpj || "").replace(/\D/g, "");
+          return dbCpfCnpj === rawCpfCnpjCliente;
+        });
+      }
+
+      const finalVendedorId = matchedVendedor ? matchedVendedor.id : (formData.id_vendedor || 0);
+
+      // Mapear itens (usando o vendedor identificado ou o selecionado anteriormente)
       const novosItens = ocrItens.map((item: any) => {
         const placaClean = cleanString(item.veiculo || item.placa || '');
         const matchedVeic = veiculos.find(v => cleanString(v.placa) === placaClean);
         
         return {
           id_veiculo: matchedVeic?.id || 0,
-          id_vendedor: formData.id_vendedor,
+          id_vendedor: finalVendedorId,
           descricao: item.descricao || 'Item via OCR',
           datamov: item.data || formData.dataemi,
           tipo: item.tipo || 'Outros',
@@ -414,7 +427,7 @@ export default function LactoDespesas() {
       if (novosItens.length === 0 && (data.valor_total || data.vtotal)) {
          novosItens.push({
             id_veiculo: 0,
-            id_vendedor: formData.id_vendedor,
+            id_vendedor: finalVendedorId,
             descricao: data.descricao || 'Despesa via OCR',
             datamov: data.data || formData.dataemi,
             tipo: data.tipo || 'Outros',
@@ -425,7 +438,7 @@ export default function LactoDespesas() {
          });
       }
 
-      // LÓGICA DE VÍNCULO POR CNPJ (Solicitado pelo usuário)
+      // LÓGICA DE VÍNCULO POR CNPJ DO FORNECEDOR
       let matchedContato = null;
       const rawCpfCnpjOCR = String(cabecalho.cpfcnpj || "").replace(/\D/g, "");
       
@@ -443,6 +456,7 @@ export default function LactoDespesas() {
 
       setFormData((prev: any) => ({
         ...prev,
+        id_vendedor: finalVendedorId,
         id_contato: matchedContato ? matchedContato.id : (prev.id_contato || 0),
         nome: matchedContato ? matchedContato.nome : (cabecalho.nome || prev.nome),
         cpfcnpj: matchedContato ? (matchedContato.cpfcnpj || '') : (cabecalho.cpfcnpj || prev.cpfcnpj),
