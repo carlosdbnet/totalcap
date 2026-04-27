@@ -376,7 +376,7 @@ export default function LactoDespesas() {
       setIsScanning(true);
       setFormError('');
       
-      const baseInstructions = "Se for um cupom fiscal de posto de gasolina, procure a placa do veículo se estiver impressa e converta a quantidade abastecida. No topo do documento existe um CNPJ que será sempre o do Fornecedor. Se existir um outro CPF ou CNPJ no rodapé do documento (consumidor), este será o do cliente e não deve ser confundido com o do Fornecedor.";
+      const baseInstructions = "REGRAS CRÍTICAS: 1. O CNPJ no TOPO da nota é sempre do FORNECEDOR (Emissor). 2. O CPF/CNPJ no RODAPÉ (consumidor) é do CLIENTE e deve ser IGNORADO. Nunca use o CPF do cliente no campo de CNPJ do fornecedor. 3. Extraia km, placa e dados de abastecimento se houver.";
       const combinedInstructions = ocrInstructions.trim() 
         ? `${baseInstructions} Instruções extras: ${ocrInstructions.trim()}`
         : baseInstructions;
