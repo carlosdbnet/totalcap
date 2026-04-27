@@ -804,7 +804,7 @@ export default function LactoDespesas() {
                 <button className="btn-camera-action" onClick={() => cameraInputRef.current?.click()}>
                   <Camera size={18} /> Câmera
                 </button>
-                <button className="btn-secondary" onClick={() => ocrFileInputRef.current?.click()}>
+                <button className="btn-gray" onClick={() => ocrFileInputRef.current?.click()}>
                   <FileText size={18} /> Selecionar Foto
                 </button>
                 {ocrPreview && (
