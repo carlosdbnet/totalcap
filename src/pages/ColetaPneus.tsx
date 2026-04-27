@@ -468,7 +468,7 @@ export default function ColetaPneus() {
         garantia: '',
         obs: '',
         medidanova: '',
-        produtonovo: '',
+        marcanova: '',
         desenhonovo: ''
       });
     }
@@ -717,9 +717,9 @@ export default function ColetaPneus() {
           numserie: itemData.numserie || '',
           numfogo: itemData.numfogo || '',
           dot: itemData.dot_data || itemData.dot || '',
-          medidanova: matchedMedida === 0 ? itemData.medida : '',
-          marcanova: matchedMarca === 0 ? itemData.marca : '',
-          desenhonovo: matchedDesenho === 0 ? itemData.desenho : '',
+          medidanova: itemData.medida || '',
+          marcanova: itemData.marca || '',
+          desenhonovo: itemData.desenho || '',
           obs: (itemData.raw_text || '') + (ocrData.provedor ? ` (IA: ${ocrData.provedor})` : '')
         };
       };
@@ -1196,18 +1196,20 @@ export default function ColetaPneus() {
                           <th>Recap</th>
                           <th style={{ width: '100px' }}>Valor</th>
                           <th style={{ width: '120px' }}>Série/Fogo</th>
+                          <th style={{ width: '180px' }}>Medida OCR</th>
+                          <th>Desenho OCR</th>
                           <th style={{ width: '80px' }}>Ações</th>
                         </tr>
                       </thead>
                       <tbody>
                         {formData.pneus?.length === 0 ? (
-                          <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Nenhum pneu adicionado.</td></tr>
+                          <tr><td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Nenhum pneu adicionado.</td></tr>
                         ) : (
                           formData.pneus.map((p: any, idx: number) => (
                             <tr key={idx}>
-                              <td>{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || p.medidanova || '---'}</td>
+                              <td>{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</td>
                               <td>{marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || p.marcanova || '---'}</td>
-                              <td>{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || p.desenhonovo || '---'}</td>
+                              <td>{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</td>
                               <td>{tiposRecap.find(t => t.id === parseInt(p.id_recap))?.descricao || '---'}</td>
                               <td>R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
                               <td>
@@ -1215,6 +1217,8 @@ export default function ColetaPneus() {
                                   S: {p.numserie || '-'} / F: {p.numfogo || '-'}
                                 </div>
                               </td>
+                              <td style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{p.medidanova || '---'}</td>
+                              <td style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{p.desenhonovo || '---'}</td>
                               <td>
                                 <div style={{ display: 'flex', gap: '5px' }}>
                                   <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)}><Edit2 size={16} /></button>
@@ -1318,6 +1322,14 @@ export default function ColetaPneus() {
               <div className="form-group">
                 <label>DOT</label>
                 <input className="form-input" type="text" value={tempPneu.dot} onChange={e => handleTempPneuChange('dot', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Medida OCR (Capturada)</label>
+                <input className="form-input" type="text" value={tempPneu.medidanova} onChange={e => handleTempPneuChange('medidanova', e.target.value)} placeholder="Valor detectado pela IA" />
+              </div>
+              <div className="form-group">
+                <label>Desenho OCR (Capturado)</label>
+                <input className="form-input" type="text" value={tempPneu.desenhonovo} onChange={e => handleTempPneuChange('desenhonovo', e.target.value)} placeholder="Valor detectado pela IA" />
               </div>
             </div>
             <div className="modal-footer-coleta">
