@@ -7,7 +7,7 @@ import {
 import api, { getErrorMessage } from '../lib/api';
 import './LactoDespesas.css';
 
-const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
+const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -450,7 +450,9 @@ export default function LactoDespesas() {
       if (!isModalOpen) setModalMode('create');
       
     } catch (err: any) {
-      setOcrResultText("Erro no processamento OCR:\n" + (err.response?.data?.detail || err.message));
+      console.error("Erro OCR:", err);
+      const errorMessage = getErrorMessage(err);
+      setOcrResultText("Erro no processamento OCR:\n" + errorMessage);
     } finally {
       setIsScanning(false);
     }

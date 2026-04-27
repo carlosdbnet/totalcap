@@ -6,6 +6,7 @@ const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
 
 const api = axios.create({
   baseURL: baseURL,
+  timeout: 60000, // 60 segundos para operações de IA
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,6 +34,14 @@ export const getErrorMessage = (error: any, defaultMessage: string = 'Erro desco
     return JSON.stringify(detail);
   }
   
+  if (error.code === 'ECONNABORTED') {
+    return 'Tempo limite esgotado. A IA demorou demais para responder ou o servidor cortou a conexão.';
+  }
+  
+  if (error.message === 'Network Error') {
+    return 'Erro de Rede. Verifique sua conexão ou se o servidor está online. (Pode ser um bloqueio de CORS ou timeout do servidor)';
+  }
+
   return error.response?.data?.message || error.message || defaultMessage;
 };
 
