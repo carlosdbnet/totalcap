@@ -44,10 +44,7 @@ from backend.app.api.endpoints import (
     laudos,
     fatura_laudos,
     dispositivos,
-<<<<<<< HEAD
     veiculos,
-=======
->>>>>>> 4a63460713883c2e106ba249f7947e58aae1d0cc
     exportacao,
     logs
 )
@@ -94,10 +91,7 @@ api_router.include_router(notadesp.router, prefix="/notadesp", tags=["despesas"]
 api_router.include_router(laudos.router, prefix="/laudos", tags=["laudos"])
 api_router.include_router(fatura_laudos.router, prefix="/fatura-laudos", tags=["fatura-laudos"])
 api_router.include_router(dispositivos.router, prefix="/dispositivos", tags=["dispositivos"])
-<<<<<<< HEAD
 api_router.include_router(veiculos.router, prefix="/veiculos", tags=["veículos"])
-=======
->>>>>>> 4a63460713883c2e106ba249f7947e58aae1d0cc
 api_router.include_router(logs.router, prefix="/logs", tags=["logs"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
