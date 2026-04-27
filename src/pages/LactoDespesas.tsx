@@ -392,15 +392,12 @@ export default function LactoDespesas() {
       const ocrItens = data.itens || [];
       const provedorNome = data.provedor === 'gemini' ? 'Google Gemini' : 'OpenAI GPT-4o-mini';
 
-      // LÓGICA DE VÍNCULO DO VENDEDOR PELO CPF/CNPJ DO CLIENTE (Solicitado pelo usuário)
+      // LÓGICA DE VÍNCULO DO VENDEDOR PELO CÓDIGO (Solicitado pelo usuário)
       let matchedVendedor = null;
-      const rawCpfCnpjCliente = String(cabecalho.cpfcnpj_cliente || "").replace(/\D/g, "");
+      const codigoVendedorOCR = String(cabecalho.codigo_vendedor || "").trim();
       
-      if (rawCpfCnpjCliente) {
-        matchedVendedor = vendedores.find(v => {
-          const dbCpfCnpj = String(v.cpfcnpj || "").replace(/\D/g, "");
-          return dbCpfCnpj === rawCpfCnpjCliente;
-        });
+      if (codigoVendedorOCR) {
+        matchedVendedor = vendedores.find(v => String(v.id) === codigoVendedorOCR || String(v.codigo || "") === codigoVendedorOCR);
       }
 
       const finalVendedorId = matchedVendedor ? matchedVendedor.id : (formData.id_vendedor || 0);
@@ -471,7 +468,7 @@ export default function LactoDespesas() {
       
       log += `FORNECEDOR: ${cabecalho.nome || '???'}\n`;
       log += `CNPJ EMISSOR: ${cabecalho.cpfcnpj || '???'}\n`;
-      log += `CPF/CNPJ CLIENTE: ${cabecalho.cpfcnpj_cliente || 'NÃO IDENTIFICADO'}\n`;
+      log += `CÓDIGO VENDEDOR: ${cabecalho.codigo_vendedor || 'NÃO ENCONTRADO'}\n`;
       log += `DATA EMISSÃO: ${cabecalho.data || '???'}\n`;
       log += `VEÍCULO/PLACA: ${cabecalho.veiculo || '???'}\n`;
       log += `KM: ${cabecalho.km || '???'}\n`;
