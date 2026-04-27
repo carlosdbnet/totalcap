@@ -18,7 +18,7 @@ def analyze_tire_image(base64_image: str, custom_instructions: str = None, tipo_
             "### REGRAS CRÍTICAS DE AUDITORIA FISCAL ###\n"
             "VOCÊ NÃO PODE CONFUNDIR O EMISSOR COM O CLIENTE. LEIA COM ATENÇÃO:\n\n"
             "1. REGRA DE OURO (CNPJ DO FORNECEDOR): O CNPJ que aparece no TOPO do documento (cabeçalho da nota) é OBRIGATORIAMENTE o do FORNECEDOR (Emissor). Este deve ser colocado no campo 'cabecalho.cpfcnpj'.\n"
-            "2. REGRA DE OURO (CPF/CNPJ DO CLIENTE): Se houver um CPF ou CNPJ no RODAPÉ ou no meio da nota identificado como 'Consumidor', 'Cliente' ou 'CPF/CNPJ do Consumidor', este é o do CLIENTE. VOCÊ DEVE IGNORAR ESTE NÚMERO e NUNCA colocá-lo no campo 'cabecalho.cpfcnpj'.\n"
+            "2. REGRA DE OURO (CPF/CNPJ DO CLIENTE): Se houver um CPF ou CNPJ localizado após o Valor Total Pago (geralmente no rodapé), este é o do CLIENTE. VOCÊ DEVE IGNORAR ESTE NÚMERO e NUNCA colocá-lo no campo 'cabecalho.cpfcnpj'.\n"
             "3. EM NENHUMA HIPÓTESE o CPF/CNPJ do cliente deve ser extraído como se fosse o do fornecedor.\n\n"
             "Analise a imagem e extraia os dados ESTRITAMENTE para o formato JSON abaixo.\n\n"
             "O que você precisa encontrar:\n"

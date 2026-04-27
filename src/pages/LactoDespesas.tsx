@@ -376,7 +376,7 @@ export default function LactoDespesas() {
       setIsScanning(true);
       setFormError('');
       
-      const baseInstructions = "REGRAS CRÍTICAS: 1. O CNPJ no TOPO da nota é sempre do FORNECEDOR (Emissor). 2. O CPF/CNPJ no RODAPÉ (consumidor) é do CLIENTE e deve ser IGNORADO. Nunca use o CPF do cliente no campo de CNPJ do fornecedor. 3. Extraia km, placa e dados de abastecimento se houver.";
+      const baseInstructions = "REGRAS CRÍTICAS: 1. O CNPJ no TOPO da nota é sempre do FORNECEDOR. 2. O CPF/CNPJ que aparece APÓS O VALOR TOTAL PAGO é do CLIENTE e deve ser COMPLETAMENTE IGNORADO. 3. Extraia km e placa se houver.";
       const combinedInstructions = ocrInstructions.trim() 
         ? `${baseInstructions} Instruções extras: ${ocrInstructions.trim()}`
         : baseInstructions;
