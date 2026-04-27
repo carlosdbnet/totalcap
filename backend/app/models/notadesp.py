@@ -15,6 +15,7 @@ class Notadesp(Base):
     id_vendedor = Column(Integer, ForeignKey("vendedor.id"), nullable=False)
     datalan = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String(3), default="")
+    obs = Column(String, nullable=True)
 
     # Relacionamentos
     contato = relationship("Contato")

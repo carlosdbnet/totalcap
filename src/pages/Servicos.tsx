@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Servicos.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -96,8 +96,14 @@ export default function Servicos() {
 
   // Auto-generate código e descrição
   useEffect(() => {
-    // Se selecionou um produto, usa o código e descrição do produto
-    if (formData.id_produto) {
+    // Only auto-generate if we are creating or if the user changed the IDs
+    // We check if the values are actually different from the current formData to avoid loops
+    // and we only run if the auxiliary data is loaded.
+    
+    if (medidas.length === 0 || desenhos.length === 0 || tiposRecap.length === 0) return;
+
+    // Rule 1: Product Priority (only if id_produto is set and > 0)
+    if (formData.id_produto && Number(formData.id_produto) > 0) {
       const prod = produtos.find(p => p.id === Number(formData.id_produto));
       if (prod) {
         const novoCodigo = prod.codprod || '';
@@ -109,7 +115,7 @@ export default function Servicos() {
       }
     }
 
-    // Caso contrário, usa a regra de Medida + Desenho + Tipo Recapagem
+    // Rule 2: Medida + Desenho + Tipo Recapagem
     if (Number(formData.id_medida) > 0 && Number(formData.id_desenho) > 0 && Number(formData.id_recap) > 0) {
       const med = medidas.find(m => m.id === Number(formData.id_medida));
       const des = desenhos.find(d => d.id === Number(formData.id_desenho));
@@ -161,20 +167,29 @@ export default function Servicos() {
       setCurrentId(servico.id);
       setFormData({
         codigo: servico.codigo || '',
-        descricao: servico.descricao,
-        id_medida: servico.id_medida || '',
-        id_desenho: servico.id_desenho || '',
-        id_produto: servico.id_produto || '',
-        id_recap: servico.id_recap || '',
+        descricao: servico.descricao || '',
+        id_medida: (servico.id_medida || servico.medida?.id)?.toString() || '',
+        id_desenho: (servico.id_desenho || servico.desenho?.id)?.toString() || '',
+        id_produto: (servico.id_produto || servico.produto?.id)?.toString() || '',
+        id_recap: (servico.id_recap || servico.recap?.id)?.toString() || '',
         valor: servico.valor || 0,
-        ativo: servico.ativo !== false,
+        ativo: servico.ativo,
         grupo: servico.grupo || ''
       });
-      // Init autocomplete query with current product name
       setProdutoSearchQuery(servico.produto?.descricao || '');
     } else {
       setCurrentId(null);
-      setFormData({ codigo: '', descricao: '', id_medida: '', id_desenho: '', id_produto: '', id_recap: '', valor: 0, ativo: true, grupo: '' });
+      setFormData({
+        codigo: '',
+        descricao: '',
+        id_medida: '',
+        id_desenho: '',
+        id_produto: '',
+        id_recap: '',
+        valor: 0,
+        ativo: true,
+        grupo: ''
+      });
       setProdutoSearchQuery('');
     }
     setShowProdutoSuggestions(false);
@@ -233,7 +248,7 @@ export default function Servicos() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar serviço.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar serviço.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -343,93 +358,99 @@ export default function Servicos() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content large" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content large" style={{ maxWidth: '800px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Novo Serviço' : 'Editar Serviço'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem', minHeight: '400px' }}>
                 {formError && <div className="form-error full-width">{formError}</div>}
 
-                <div className="grid-code-desc" style={{ marginBottom: '1rem' }}>
-                  <div className="form-group">
-                    <label htmlFor="codigo">Código</label>
-                    <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} placeholder="---" />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="descricao">Descrição *</label>
-                    <input className="form-input" id="descricao" value={formData.descricao} onChange={handleChange} placeholder="Gerada automaticamente..." required />
-                  </div>
-                </div>
-
-                <div className="grid-2">
-                  <div className="form-group">
-                    <label htmlFor="id_medida">Medida</label>
-                    <select className="form-select" id="id_medida" value={formData.id_medida} onChange={handleChange}>
-                      <option value="">Selecione a Medida</option>
-                      {medidas.map(m => <option key={m.id} value={m.id}>{m.descricao}</option>)}
-                    </select>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                  <div className="grid-code-desc" style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="codigo" style={{ fontWeight: '600', color: '#475569' }}>Código</label>
+                      <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} placeholder="---" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="descricao" style={{ fontWeight: '600', color: '#475569' }}>Descrição *</label>
+                      <input className="form-input" id="descricao" value={formData.descricao} onChange={handleChange} placeholder="Gerada automaticamente..." required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="id_desenho">Desenho</label>
-                    <select className="form-select" id="id_desenho" value={formData.id_desenho} onChange={handleChange}>
-                      <option value="">Selecione o Desenho</option>
-                      {desenhos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
-                    </select>
-                  </div>
+                  <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="id_medida">Medida</label>
+                      <select className="form-select" id="id_medida" value={formData.id_medida} onChange={handleChange}>
+                        <option value="">Selecione a Medida</option>
+                        {medidas.map(m => <option key={m.id} value={m.id.toString()}>{m.descricao}</option>)}
+                      </select>
+                    </div>
 
-                  <div className="form-group">
-                    <label htmlFor="id_recap">Tipo de Recapagem</label>
-                    <select className="form-select" id="id_recap" value={formData.id_recap} onChange={handleChange}>
-                      <option value="">Selecione o Tipo</option>
-                      {tiposRecap.map(r => <option key={r.id} value={r.id}>{r.descricao}</option>)}
-                    </select>
-                  </div>
+                    <div className="form-group">
+                      <label htmlFor="id_desenho">Desenho</label>
+                      <select className="form-select" id="id_desenho" value={formData.id_desenho} onChange={handleChange}>
+                        <option value="">Selecione o Desenho</option>
+                        {desenhos.map(d => <option key={d.id} value={d.id.toString()}>{d.descricao}</option>)}
+                      </select>
+                    </div>
 
-                  {/* Produto com busca autocomplete */}
-                  <div className="form-group" ref={produtoRef} style={{ position: 'relative' }}>
-                    <label>Produto</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Buscar produto..."
-                      value={produtoSearchQuery}
-                      onChange={(e) => {
-                        setProdutoSearchQuery(e.target.value);
-                        setShowProdutoSuggestions(true);
-                        if (formData.id_produto) setFormData(prev => ({ ...prev, id_produto: '' }));
-                      }}
-                      onFocus={() => setShowProdutoSuggestions(true)}
-                    />
-                    {showProdutoSuggestions && produtoSearchQuery.length > 0 && (
-                      <div className="autocomplete-dropdown glass-panel" style={{ zIndex: 4000 }}>
-                        {filteredProdutos.length === 0 ? (
-                          <div className="autocomplete-item empty">Nenhum produto encontrado</div>
-                        ) : (
-                          filteredProdutos.map(p => (
-                            <div
-                              key={p.id}
-                              className="autocomplete-item"
-                              onClick={() => handleSelectProduto(p)}
-                            >
-                              <span className="name">{p.descricao}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    <div className="form-group">
+                      <label htmlFor="id_recap">Tipo de Recapagem</label>
+                      <select className="form-select" id="id_recap" value={formData.id_recap} onChange={handleChange}>
+                        <option value="">Selecione o Tipo</option>
+                        {tiposRecap.map(r => <option key={r.id} value={r.id.toString()}>{r.descricao}</option>)}
+                      </select>
+                    </div>
 
-                    <div className="form-group span-2">
-                      <label>Grupo de Serviço</label>
+                    {/* Produto com busca autocomplete */}
+                    <div className="form-group" ref={produtoRef} style={{ position: 'relative' }}>
+                      <label style={{ fontWeight: '600', color: '#475569' }}>Produto</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Buscar produto..."
+                        value={produtoSearchQuery}
+                        onChange={(e) => {
+                          setProdutoSearchQuery(e.target.value);
+                          setShowProdutoSuggestions(true);
+                          if (formData.id_produto) setFormData(prev => ({ ...prev, id_produto: '' }));
+                        }}
+                        onFocus={() => setShowProdutoSuggestions(true)}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                      {showProdutoSuggestions && produtoSearchQuery.length > 0 && (
+                        <div className="autocomplete-dropdown glass-panel" style={{ zIndex: 4000, position: 'absolute', width: '100%', backgroundColor: '#fff', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+                          {filteredProdutos.length === 0 ? (
+                            <div className="autocomplete-item empty" style={{ padding: '0.75rem', color: '#64748b' }}>Nenhum produto encontrado</div>
+                          ) : (
+                            filteredProdutos.map(p => (
+                              <div
+                                key={p.id}
+                                className="autocomplete-item"
+                                onClick={() => handleSelectProduto(p)}
+                                style={{ padding: '0.75rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                              >
+                                <span className="name" style={{ color: '#1e293b', fontWeight: '500' }}>{p.descricao}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', color: '#475569' }}>Grupo de Serviço</label>
                       <select 
                         className="form-input" 
                         id="grupo" 
                         value={formData.grupo} 
                         onChange={(e) => setFormData({...formData, grupo: e.target.value})}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff' }}
                       >
                         <option value="">Selecione um grupo...</option>
                         <option value="RECAPAGEM">RECAPAGEM</option>
@@ -442,20 +463,21 @@ export default function Servicos() {
                     </div>
 
                     <div className="form-group">
-                      <label>Valor (R$)</label>
-                      <input type="number" step="0.01" className="form-input" id="valor" value={formData.valor} onChange={handleMasterChange} placeholder="0.00" />
+                      <label style={{ fontWeight: '600', color: '#475569' }}>Valor (R$)</label>
+                      <input type="number" step="0.01" className="form-input" id="valor" value={formData.valor} onChange={handleMasterChange} placeholder="0.00" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     </div>
 
-                  <div className="form-group full-width">
-                    <div className="checkbox-group">
-                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                      <label htmlFor="ativo">Serviço ativo para novas ordens</label>
+                    <div className="form-group" style={{ gridColumn: 'span 2', marginTop: '0.5rem' }}>
+                      <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                        <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Serviço ativo para novas ordens</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>
               </div>

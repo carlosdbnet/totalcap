@@ -281,8 +281,8 @@ export default function Bancos() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content wide" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content wide" onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <div className="modal-title-group">
                 <Landmark size={24} className="modal-title-icon" />
                 <h2>{modalMode === 'create' ? 'Novo Banco' : 'Editar Banco'}</h2>
@@ -291,144 +291,157 @@ export default function Bancos() {
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body custom-scrollbar">
+              <div className="modal-body custom-scrollbar" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-grid">
-                  <div className="form-group col-2">
-                    <label><Building2 size={14} /> Nome do Banco *</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({...formData, nome: e.target.value})}
-                      placeholder="Ex: Banco do Brasil"
-                      maxLength={20}
-                      required
-                    />
-                  </div>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-grid">
+                    <div className="form-group col-2">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><Building2 size={14} /> Nome do Banco *</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.nome}
+                        onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                        placeholder="Ex: Banco do Brasil"
+                        maxLength={20}
+                        required
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group">
-                    <label><Hash size={14} /> Código</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.codigo}
-                      onChange={(e) => setFormData({...formData, codigo: e.target.value})}
-                      placeholder="Ex: 001"
-                      maxLength={4}
-                    />
-                  </div>
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><Hash size={14} /> Código</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.codigo}
+                        onChange={(e) => setFormData({...formData, codigo: e.target.value})}
+                        placeholder="Ex: 001"
+                        maxLength={4}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group col-3">
-                    <label><Building2 size={14} /> Razão Social</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.razaosocial}
-                      onChange={(e) => setFormData({...formData, razaosocial: e.target.value})}
-                      placeholder="Nome oficial da instituição"
-                      maxLength={50}
-                    />
-                  </div>
+                    <div className="form-group col-3">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><Building2 size={14} /> Razão Social</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.razaosocial}
+                        onChange={(e) => setFormData({...formData, razaosocial: e.target.value})}
+                        placeholder="Nome oficial da instituição"
+                        maxLength={50}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group col-2">
-                    <label><CreditCard size={14} /> CNPJ</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.cnpj}
-                      onChange={(e) => setFormData({...formData, cnpj: e.target.value})}
-                      placeholder="00.000.000/0000-00"
-                      maxLength={18}
-                    />
-                  </div>
+                    <div className="form-group col-2">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><CreditCard size={14} /> CNPJ</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.cnpj}
+                        onChange={(e) => setFormData({...formData, cnpj: e.target.value})}
+                        placeholder="00.000.000/0000-00"
+                        maxLength={18}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group col-3">
-                    <label><MapPin size={14} /> Endereço</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.endereco}
-                      onChange={(e) => setFormData({...formData, endereco: e.target.value})}
-                      placeholder="Rua, número, bairro..."
-                      maxLength={100}
-                    />
-                  </div>
+                    <div className="form-group col-3">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><MapPin size={14} /> Endereço</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.endereco}
+                        onChange={(e) => setFormData({...formData, endereco: e.target.value})}
+                        placeholder="Rua, número, bairro..."
+                        maxLength={100}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group">
-                    <label>CEP</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.cep}
-                      onChange={(e) => setFormData({...formData, cep: e.target.value})}
-                      placeholder="00000-000"
-                      maxLength={9}
-                    />
-                  </div>
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', color: '#475569' }}>CEP</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.cep}
+                        onChange={(e) => setFormData({...formData, cep: e.target.value})}
+                        placeholder="00000-000"
+                        maxLength={9}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group col-2">
-                    <label>Cidade</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.cidade}
-                      onChange={(e) => setFormData({...formData, cidade: e.target.value})}
-                      placeholder="Nome da cidade"
-                      maxLength={60}
-                    />
-                  </div>
+                    <div className="form-group col-2">
+                      <label style={{ fontWeight: '600', color: '#475569' }}>Cidade</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.cidade}
+                        onChange={(e) => setFormData({...formData, cidade: e.target.value})}
+                        placeholder="Nome da cidade"
+                        maxLength={60}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group">
-                    <label>UF</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.uf}
-                      onChange={(e) => setFormData({...formData, uf: e.target.value})}
-                      placeholder="Estado (ex: SP)"
-                      maxLength={2}
-                    />
-                  </div>
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', color: '#475569' }}>UF</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.uf}
+                        onChange={(e) => setFormData({...formData, uf: e.target.value})}
+                        placeholder="Estado (ex: SP)"
+                        maxLength={2}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group col-2">
-                    <label><User size={14} /> Contato</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.contato}
-                      onChange={(e) => setFormData({...formData, contato: e.target.value})}
-                      placeholder="Nome do gerente ou contato"
-                      maxLength={20}
-                    />
-                  </div>
+                    <div className="form-group col-2">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><User size={14} /> Contato</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.contato}
+                        onChange={(e) => setFormData({...formData, contato: e.target.value})}
+                        placeholder="Nome do gerente ou contato"
+                        maxLength={20}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
 
-                  <div className="form-group">
-                    <label><Phone size={14} /> Telefone</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.fone}
-                      onChange={(e) => setFormData({...formData, fone: e.target.value})}
-                      placeholder="(00) 0000-0000"
-                      maxLength={17}
-                    />
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', color: '#475569' }}><Phone size={14} /> Telefone</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.fone}
+                        onChange={(e) => setFormData({...formData, fone: e.target.value})}
+                        placeholder="(00) 0000-0000"
+                        maxLength={17}
+                        style={{ borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
                   </div>
-                </div>
-                
-                <div className="checkbox-group">
-                  <input
-                    type="checkbox"
-                    id="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => setFormData({...formData, ativo: e.target.checked})}
-                  />
-                  <label htmlFor="ativo">Banco ativo para faturamento</label>
+                  
+                  <div className="checkbox-group" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="checkbox"
+                      id="ativo"
+                      checked={formData.ativo}
+                      onChange={(e) => setFormData({...formData, ativo: e.target.checked})}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Banco ativo para faturamento</label>
+                  </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={closeModal} disabled={isSubmitting}>
                   Cancelar
                 </button>

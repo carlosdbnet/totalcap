@@ -37,6 +37,7 @@ class Fatura(Base):
     pneus = relationship("OSPneu", back_populates="fatura")
     items = relationship("FaturaServico", back_populates="fatura", cascade="all, delete-orphan", foreign_keys="FaturaServico.id_fatura")
     parcelas = relationship("FaturaParcela", back_populates="fatura", cascade="all, delete-orphan", foreign_keys="FaturaParcela.id_fatura")
+    laudos = relationship("FaturaLaudo", back_populates="fatura", cascade="all, delete-orphan")
 
 class FaturaServico(Base):
     __tablename__ = "fatura_servico"

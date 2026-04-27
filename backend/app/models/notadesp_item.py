@@ -13,10 +13,11 @@ class NotadespItem(Base):
     
     descricao = Column(String(200), nullable=True)
     datamov = Column(DateTime)
-    tipo = Column(String(10), nullable=True)
-    qlitro = Column(Numeric(10, 2), default=0.00)
-    vlitro = Column(Numeric(10, 2), default=0.00)
-    vtotal = Column(Numeric(10, 2), default=0.00)
+    tipo = Column(String(20), nullable=True)
+
+    qlitro = Column(Numeric(15, 4), default=0.0000)
+    vlitro = Column(Numeric(15, 4), default=0.0000)
+    vtotal = Column(Numeric(15, 2), default=0.00)
     kmanter = Column(Integer, nullable=True)
     kmatual = Column(Integer, nullable=True)
     foto = Column(LargeBinary, nullable=True)

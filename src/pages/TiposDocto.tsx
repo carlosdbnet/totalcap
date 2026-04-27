@@ -233,8 +233,8 @@ export default function TiposDocto() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <div className="modal-title-group">
                 <FileText size={24} className="modal-title-icon" />
                 <h2>{modalMode === 'create' ? 'Novo Tipo de Documento' : 'Editar Tipo de Documento'}</h2>
@@ -243,46 +243,51 @@ export default function TiposDocto() {
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-group">
-                  <label><Hash size={14} /> Código *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.codigo}
-                    onChange={(e) => setFormData({...formData, codigo: e.target.value.toUpperCase()})}
-                    placeholder="Ex: NFE"
-                    maxLength={5}
-                    required
-                  />
-                </div>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label style={{ fontWeight: '600', color: '#475569' }}><Hash size={14} /> Código *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.codigo}
+                      onChange={(e) => setFormData({...formData, codigo: e.target.value.toUpperCase()})}
+                      placeholder="Ex: NFE"
+                      maxLength={5}
+                      required
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label><FileText size={14} /> Descrição</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({...formData, descricao: e.target.value})}
-                    placeholder="Ex: Nota Fiscal Eletrônica"
-                    maxLength={30}
-                  />
-                </div>
-                
-                <div className="checkbox-group">
-                  <input
-                    type="checkbox"
-                    id="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => setFormData({...formData, ativo: e.target.checked})}
-                  />
-                  <label htmlFor="ativo">Tipo de documento ativo</label>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label style={{ fontWeight: '600', color: '#475569' }}><FileText size={14} /> Descrição</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.descricao}
+                      onChange={(e) => setFormData({...formData, descricao: e.target.value})}
+                      placeholder="Ex: Nota Fiscal Eletrônica"
+                      maxLength={30}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  
+                  <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="checkbox"
+                      id="ativo"
+                      checked={formData.ativo}
+                      onChange={(e) => setFormData({...formData, ativo: e.target.checked})}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Tipo de documento ativo</label>
+                  </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={closeModal} disabled={isSubmitting}>
                   Cancelar
                 </button>

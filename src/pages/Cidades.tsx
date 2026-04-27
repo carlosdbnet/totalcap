@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Cidades.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -113,7 +113,7 @@ export default function Cidades() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar cidade.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar cidade.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -216,41 +216,43 @@ export default function Cidades() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Nova Cidade' : 'Editar Cidade'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-group">
-                  <label htmlFor="nome">Nome da Cidade *</label>
-                  <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required />
-                </div>
-                
-                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label htmlFor="uf">UF *</label>
-                    <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} required />
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label htmlFor="nome" style={{ fontWeight: '600', color: '#475569' }}>Nome da Cidade *</label>
+                    <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="codibge">Código IBGE</label>
-                    <input className="form-input" id="codibge" value={formData.codibge} onChange={handleChange} />
+                  
+                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="uf" style={{ fontWeight: '600', color: '#475569' }}>UF *</label>
+                      <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="codibge" style={{ fontWeight: '600', color: '#475569' }}>Código IBGE</label>
+                      <input className="form-input" id="codibge" value={formData.codibge} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
                   </div>
-                </div>
 
-                <div className="form-group">
-                  <div className="checkbox-group" style={{ marginTop: '1rem' }}>
-                    <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                    <label htmlFor="ativo">Cidade ativa no sistema</label>
+                  <div className="form-group">
+                    <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                      <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Cidade ativa no sistema</label>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>
               </div>

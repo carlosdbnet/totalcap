@@ -169,3 +169,237 @@
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
+
+/* Dispositivos Panel Styles */
+.span-2-config {
+  grid-column: span 2;
+}
+
+.search-container-config {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.search-container-config .input-with-icon {
+  flex: 1;
+}
+
+.dispositivos-list {
+  margin-top: 1rem;
+  min-height: 100px;
+}
+
+.empty-state-config {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: var(--text-muted);
+  border: 2px dashed var(--panel-border);
+  border-radius: 12px;
+  font-style: italic;
+}
+
+.dispositivos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.dispositivo-item {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.dispositivo-item.authorized {
+  border-left: 4px solid #10b981;
+}
+
+.dispositivo-item.pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.dispositivo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.device-id {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.device-model {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.device-user {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dispositivo-actions {
+  margin-top: auto;
+}
+
+.btn-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-action.authorize {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.btn-action.authorize:hover {
+  background: #10b981;
+  color: white;
+}
+
+.btn-action.deauthorize {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-action.deauthorize:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Dispositivos Table Grid */
+.dispositivos-table-container {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dispositivos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dispositivos-table th {
+  text-align: left;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.dispositivos-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text-main);
+}
+
+.dispositivos-table tr:last-child td {
+  border-bottom: none;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.status-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-badge.inactive {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.btn-table {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.btn-table.authorize {
+  background: transparent;
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-table.authorize:hover {
+  background: #10b981;
+  color: white;
+}
+
+.btn-table.deauthorize {
+  background: transparent;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-table.deauthorize:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-main);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-muted);
+}
+
+@media (max-width: 1024px) {
+  .span-2-config {
+    grid-column: span 1;
+  }
+}

@@ -30,3 +30,9 @@ from backend.app.models.despesa import Despesa
 from backend.app.models.veiculo import Veiculo
 from backend.app.models.notadesp import Notadesp
 from backend.app.models.notadesp_item import NotadespItem
+from backend.app.models.dispositivo import Dispositivo
+from backend.app.models.fatura_laudo import FaturaLaudo
+from backend.app.models.laudo import Laudo
+from backend.app.models.falha import Falha
+from backend.app.models.registro_falha import RegistroFalha
+from backend.app.models.consumo_materia import ConsumoMateria

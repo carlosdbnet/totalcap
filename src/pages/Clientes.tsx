@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Eye, Printer, User, Home, Mail, DollarSign, Users, BookOpen } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Clientes.css';
 
 interface Endereco {
@@ -105,7 +105,12 @@ export default function Clientes() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('geral');
+  const [selectedClienteIds, setSelectedClienteIds] = useState<number[]>([]);
   const [searchingCEP, setSearchingCEP] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(15);
 
   // Lookup data
   const [listCidades, setListCidades] = useState<LookupItem[]>([]);
@@ -175,12 +180,12 @@ export default function Clientes() {
     ref_fin: '',
     ref_com: '',
     ref_prod: '',
-    id_cidade: undefined,
-    id_area: undefined,
-    id_regiao: undefined,
-    id_vendedor: undefined,
-    id_atividade: undefined,
-    id_banco: undefined,
+    id_cidade: '',
+    id_area: '',
+    id_regiao: '',
+    id_vendedor: '',
+    id_atividade: '',
+    id_banco: '',
     contribuinte: true,
     consumidor: true,
     flagcliente: true,
@@ -236,6 +241,14 @@ export default function Clientes() {
     }
   }, [searchTerm, clientes]);
 
+  // Paginated Data
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredClientes.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredClientes.length / itemsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -245,6 +258,20 @@ export default function Clientes() {
       console.error("Erro ao buscar clientes:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleClienteSelection = (id: number) => {
+    setSelectedClienteIds(prev => 
+      prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllClientes = () => {
+    if (selectedClienteIds.length === filteredClientes.length && filteredClientes.length > 0) {
+      setSelectedClienteIds([]);
+    } else {
+      setSelectedClienteIds(filteredClientes.map(c => c.id));
     }
   };
 
@@ -399,14 +426,7 @@ export default function Clientes() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      const detail = err.response?.data?.detail;
-      if (Array.isArray(detail)) {
-        // Pydantic validation errors
-        const msgs = detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join(', ');
-        setFormError(msgs);
-      } else {
-        setFormError(detail || 'Erro ao salvar cliente.');
-      }
+      setFormError(getErrorMessage(err, 'Erro ao salvar cliente.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -417,7 +437,24 @@ export default function Clientes() {
       <div className="page-header">
         <h1 className="title">Gestão de Clientes</h1>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={() => window.print()}><Printer size={20} /> Imprimir</button>
+          <button 
+            className="btn-primary" 
+            style={{ background: '#10b981' }}
+            onClick={() => {
+              if (selectedClienteIds.length === 0) return alert("Selecione clientes para exportar.");
+              alert(`Exportando ${selectedClienteIds.length} clientes via API...`);
+            }}
+          >
+            <Users size={20} /> Exporta API
+          </button>
+          <button 
+            className="btn-secondary" 
+            style={{ background: '#3b82f6', color: 'white' }}
+            onClick={() => alert("Iniciando importação de clientes via API...")}
+          >
+            <Search size={20} /> Importa API
+          </button>
+          <button className="btn-print" onClick={() => window.print()}><Printer size={20} /> Imprimir</button>
           <button className="btn-primary" onClick={() => openModal('create')}><Plus size={20} /> Novo Cliente</button>
         </div>
       </div>
@@ -442,6 +479,13 @@ export default function Clientes() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={filteredClientes.length > 0 && selectedClienteIds.length === filteredClientes.length}
+                      onChange={handleSelectAllClientes}
+                    />
+                  </th>
                   <th>Cliente</th>
                   <th>Documento</th>
                   <th>Cidade/UF</th>
@@ -451,11 +495,19 @@ export default function Clientes() {
                 </tr>
               </thead>
               <tbody>
-                {filteredClientes.length === 0 ? (
-                  <tr><td colSpan={6} className="empty-state">Nenhum cliente encontrado.</td></tr>
+                 {currentItems.length === 0 ? (
+                  <tr><td colSpan={7} className="empty-state">Nenhum cliente encontrado.</td></tr>
                 ) : (
-                    filteredClientes.map(c => (
-                    <tr key={c.id}>
+                    currentItems.map(c => (
+                    <tr key={c.id} style={{ background: selectedClienteIds.includes(c.id) ? 'rgba(37, 99, 235, 0.05)' : 'transparent' }}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedClienteIds.includes(c.id)}
+                          onChange={() => handleToggleClienteSelection(c.id)}
+                          onClick={e => e.stopPropagation()}
+                        />
+                      </td>
                       <td>
                         <div className="servico-info">
                           <span className="servico-desc">{c.nome}</span>
@@ -484,14 +536,57 @@ export default function Clientes() {
             </table>
           )}
         </div>
+
+        {/* Paginação */}
+        {!loading && filteredClientes.length > itemsPerPage && (
+          <div className="pagination-container" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            padding: '1.5rem 2rem',
+            borderTop: '1px solid rgba(255,255,255,0.05)'
+          }}>
+            <div className="pagination-info" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Mostrando <strong>{indexOfFirstItem + 1}</strong> a <strong>{Math.min(indexOfLastItem, filteredClientes.length)}</strong> de <strong>{filteredClientes.length}</strong> clientes
+            </div>
+            <div className="pagination-controls" style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn-secondary" 
+                onClick={() => paginate(currentPage - 1)} 
+                disabled={currentPage === 1}
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                Anterior
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '0 1rem', fontWeight: 'bold' }}>
+                Página {currentPage} de {totalPages}
+              </div>
+              <button 
+                className="btn-secondary" 
+                onClick={() => paginate(currentPage + 1)} 
+                disabled={currentPage === totalPages}
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content extra-large" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{modalMode === 'create' ? 'Novo Cadastro de Cliente' : modalMode === 'view' ? 'Visualizar Cliente' : 'Editar Cliente'}</h2>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+          <div className="premium-modal-content large" style={{ maxWidth: '1000px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
+              <h2>{modalMode === 'create' ? 'Novo Cliente' : (modalMode === 'edit' ? 'Editar Cliente' : 'Visualizar Cliente')}</h2>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {(modalMode === 'edit' || modalMode === 'view') && (
+                  <button type="button" className="btn-print" onClick={() => window.print()}>
+                    <Printer size={18} /> Imprimir Cliente
+                  </button>
+                )}
+                <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+              </div>
             </div>
             
             <div className="modal-tabs">
@@ -508,9 +603,10 @@ export default function Clientes() {
                 {formError && <div className="form-error">{formError}</div>}
                 
                 {activeTab === 'geral' && (
-                  <div className="tab-content">
+                  <div className="tab-content" style={{ padding: '2rem' }}>
                     {/* SEÇÃO 1: IDENTIFICAÇÃO */}
-                    <div className="section-title"><User size={18} /> Identificação Principal</div>
+                    <div className="premium-master-panel">
+                      <div className="premium-section-title"><User size={18} /> Identificação Principal</div>
                     <div className="grid-4">
                         <div className="form-group span-2">
                             <label>Nome / Razão Social *</label>
@@ -553,10 +649,10 @@ export default function Clientes() {
                         </div>
                     </div>
 
-                    <div className="section-divider"></div>
+                    </div>
                     
-                    {/* SEÇÃO 2: LOCALIZAÇÃO E COMUNICAÇÃO */}
-                    <div className="section-title"><Home size={18} /> Localização e Contato</div>
+                    <div className="premium-master-panel">
+                        <div className="premium-section-title"><Home size={18} /> Localização e Contato</div>
                     <div className="grid-4">
                         <div className="form-group">
                             <label>CEP</label>
@@ -592,12 +688,12 @@ export default function Clientes() {
                         </div>
                         <div className="form-group span-2"><label>Site</label><input className="form-input" id="site" value={formData.site || ''} onChange={handleChange} /></div>
                     </div>
+                </div>
 
-                    <div className="section-divider"></div>
-
-                    {/* SEÇÃO 6: PARÂMETROS E FLAGS */}
-                    <div className="section-title"><Users size={18} /> Parâmetros de Sistema e Flags</div>
-                    <div className="grid-4" style={{ marginBottom: '2rem' }}>
+                <div className="premium-master-panel">
+                    <div className="premium-section-title"><Users size={18} /> Parâmetros de Sistema e Flags</div>
+  
+                  <div className="grid-4" style={{ marginBottom: '2rem' }}>
                         <div className="form-group">
                             <label>Cidade (Associação)</label>
                             <select className="form-select" id="id_cidade" value={formData.id_cidade || ''} onChange={handleChange}>
@@ -677,6 +773,7 @@ export default function Clientes() {
                         </div>
                     </div>
                   </div>
+                  </div>
                 )}
 
                 {activeTab === 'enderecos' && (
@@ -753,10 +850,10 @@ export default function Clientes() {
                 )}
 
                 {activeTab === 'social' && (
-                  <div className="tab-content">
-                    {/* SEÇÃO SOCIAL */}
-                    <div className="section-title"><Users size={18} /> Social / Cônjuge</div>
-                    <div className="grid-4">
+                  <div className="tab-content" style={{ padding: '2rem' }}>
+                    <div className="premium-master-panel">
+                      <div className="premium-section-title"><Users size={18} /> Social / Cônjuge</div>
+                      <div className="grid-4">
                         <div className="form-group"><label>Nascimento</label><input type="date" className="form-input" id="datanascto" value={formData.datanascto || ''} onChange={handleChange} /></div>
                         <div className="form-group">
                             <label>Sexo</label>
@@ -780,17 +877,20 @@ export default function Clientes() {
                     <div className="grid-4">
                         <div className="form-group span-2"><label>Nome do Pai</label><input className="form-input" id="nomepai" value={formData.nomepai || ''} onChange={handleChange} /></div>
                         <div className="form-group span-2"><label>Nome da Mãe</label><input className="form-input" id="nomemae" value={formData.nomemae || ''} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome do Cônjuge</label><input className="form-input" id="nomeconjuge" value={formData.nomeconjuge || ''} onChange={handleChange} /></div>
+                        <div className="form-group span-2"><label>Nome Cônjuge</label><input className="form-input" id="nomeconjuge" value={formData.nomeconjuge || ''} onChange={handleChange} /></div>
+                        <div className="form-group"><label>CPF Cônjuge</label><input className="form-input" id="cpfconjuge" value={formData.cpfconjuge || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>RG Cônjuge</label><input className="form-input" id="rgconjuge" value={formData.rgconjuge || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>Nasc. Cônjuge</label><input type="date" className="form-input" id="nasctoconjuge" value={formData.nasctoconjuge || ''} onChange={handleChange} /></div>
                     </div>
                   </div>
+                  </div>
                 )}
 
                 {activeTab === 'financeiro' && (
-                  <div className="tab-content">
-                    <div className="section-title"><DollarSign size={18} /> Dados Financeiros</div>
-                    <div className="grid-4">
+                  <div className="tab-content" style={{ padding: '2rem' }}>
+                    <div className="premium-master-panel">
+                      <div className="premium-section-title"><DollarSign size={18} /> Informações Financeiras</div>
+                      <div className="grid-4">
                         <div className="form-group"><label>Limite Crédito</label><input type="number" className="form-input" id="limicredito" value={formData.limicredito || 0} onChange={handleChange} /></div>
                         <div className="form-group"><label>Prazo Máx.</label><input type="number" className="form-input" id="prazomax" value={formData.prazomax || 0} onChange={handleChange} /></div>
                         <div className="form-group"><label>Dia Fat.</label><input type="number" className="form-input" id="diafat" value={formData.diafat || 0} onChange={handleChange} /></div>
@@ -803,42 +903,150 @@ export default function Clientes() {
                         <div className="form-group"><label>Vlr. Maior Compra</label><input type="number" className="form-input" id="valmaicompra" value={formData.valmaicompra || 0} onChange={handleChange} /></div>
                         <div className="form-group"><label>Vlr. Ult. Compra</label><input type="number" className="form-input" id="valultcompra" value={formData.valultcompra || 0} onChange={handleChange} /></div>
                         <div className="form-group span-4"><label>Conceito</label><textarea className="form-input" id="conceito" value={formData.conceito || ''} onChange={handleChange} rows={4} /></div>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'referencias' && (
-                  <div className="tab-content">
-                    <div className="section-title"><BookOpen size={18} /> Referências</div>
-                    <div className="grid-2">
+                  <div className="tab-content" style={{ padding: '2rem' }}>
+                    <div className="premium-master-panel">
+                      <div className="premium-section-title"><BookOpen size={18} /> Referências</div>
+                      <div className="grid-2">
                         <div className="form-group"><label>Ref. SPC</label><textarea className="form-input" id="ref_spc" value={formData.ref_spc || ''} onChange={handleChange} rows={2} /></div>
                         <div className="form-group"><label>Ref. Financeira</label><textarea className="form-input" id="ref_fin" value={formData.ref_fin || ''} onChange={handleChange} rows={2} /></div>
                         <div className="form-group"><label>Ref. Comercial</label><textarea className="form-input" id="ref_com" value={formData.ref_com || ''} onChange={handleChange} rows={2} /></div>
                         <div className="form-group"><label>Ref. Produto</label><textarea className="form-input" id="ref_prod" value={formData.ref_prod || ''} onChange={handleChange} rows={2} /></div>
                         <div className="form-group span-2"><label>Observações Gerais</label><textarea className="form-input" id="obs" value={formData.obs || ''} onChange={handleChange} rows={4} /></div>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'contatos' && (
-                  <div className="tab-content">
-                    <div className="section-title"><Mail size={18} /> Comunicação Adicional</div>
-                    <div className="grid-2">
+                  <div className="tab-content" style={{ padding: '2rem' }}>
+                    <div className="premium-master-panel">
+                      <div className="premium-section-title"><Mail size={18} /> Comunicação Adicional</div>
+                      <div className="grid-2">
                         <div className="form-group"><label>Telefone Principal</label><input className="form-input" id="foneprincipal" value={formData.foneprincipal || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>E-mail Principal</label><input className="form-input" id="email" value={formData.email || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>E-mail NFe</label><input className="form-input" id="emailnfe" value={formData.emailnfe || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>Site</label><input className="form-input" id="site" value={formData.site || ''} onChange={handleChange} /></div>
+                      </div>
                     </div>
                   </div>
                 )}
 
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer no-print">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>{modalMode === 'view' ? 'Fechar' : 'Cancelar'}</button>
                 {modalMode !== 'view' && <button type="submit" className="btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : 'Salvar Cadastro'}</button>}
               </div>
             </form>
+
+            {/* FICHA DO CLIENTE PARA IMPRESSÃO */}
+            <div className="print-only">
+              <div className="client-report-header">
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '1.5rem' }}>FICHA CADASTRAL DO CLIENTE</h1>
+                  <p style={{ margin: 0, opacity: 0.7 }}>Totalcap - Sistema de Gerenciamento</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ margin: 0 }}>ID: <strong>{formData.id || 'NOVO'}</strong></p>
+                  <p style={{ margin: 0 }}>Data: <strong>{new Date().toLocaleDateString()}</strong></p>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-title">IDENTIFICAÇÃO PRINCIPAL</div>
+                <div className="report-grid">
+                  <div className="report-item" style={{ gridColumn: 'span 2' }}><span className="report-label">Nome / Razão Social</span><span className="report-value">{formData.nome || '---'}</span></div>
+                  <div className="report-item" style={{ gridColumn: 'span 1' }}><span className="report-label">Nome Fantasia</span><span className="report-value">{formData.razaosocial || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">CPF/CNPJ</span><span className="report-value">{formData.cpfcnpj || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">RG/Insc. Estadual</span><span className="report-value">{formData.rgie || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">Pessoa</span><span className="report-value">{formData.pessoa === 'F' ? 'Física' : 'Jurídica'}</span></div>
+                  <div className="report-item"><span className="report-label">Telefone Principal</span><span className="report-value">{formData.foneprincipal || '---'}</span></div>
+                  <div className="report-item" style={{ gridColumn: 'span 2' }}><span className="report-label">E-mail</span><span className="report-value">{formData.email || '---'}</span></div>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-title">ENDEREÇOS</div>
+                <div style={{ marginBottom: '15px' }}>
+                  <span className="report-label">Endereço Principal</span>
+                  <p style={{ margin: '5px 0', fontSize: '1rem' }}>
+                    {formData.rua || '---'}, {formData.numcasa || 'S/N'} {formData.bairro ? `- ${formData.bairro}` : ''}<br />
+                    {formData.cidade || '---'} / {formData.uf || '---'} - CEP: {formData.cep || '---'}
+                  </p>
+                </div>
+                {formData.enderecos && formData.enderecos.length > 0 && (
+                  <div>
+                    <span className="report-label">Endereços Adicionais</span>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                          <th style={{ padding: '5px', borderBottom: '1px solid #ddd' }}>Tipo</th>
+                          <th style={{ padding: '5px', borderBottom: '1px solid #ddd' }}>Logradouro</th>
+                          <th style={{ padding: '5px', borderBottom: '1px solid #ddd' }}>Cidade/UF</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.enderecos.map((end: any, i: number) => (
+                          <tr key={i}>
+                            <td style={{ padding: '5px', borderBottom: '1px solid #eee' }}>{end.tipo}</td>
+                            <td style={{ padding: '5px', borderBottom: '1px solid #eee' }}>{end.rua}, {end.numcasa} {end.bairro}</td>
+                            <td style={{ padding: '5px', borderBottom: '1px solid #eee' }}>{end.cidade}/{end.uf}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-title">DADOS SOCIAIS / CÔNJUGE</div>
+                <div className="report-grid">
+                  <div className="report-item"><span className="report-label">Data Nascimento</span><span className="report-value">{formData.datanascto || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">Sexo</span><span className="report-value">{formData.sexo || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">Estado Civil</span><span className="report-value">{formData.ecivil || '---'}</span></div>
+                  <div className="report-item" style={{ gridColumn: 'span 2' }}><span className="report-label">Pai</span><span className="report-value">{formData.nomepai || '---'}</span></div>
+                  <div className="report-item" style={{ gridColumn: 'span 1' }}><span className="report-label">Mãe</span><span className="report-value">{formData.nomemae || '---'}</span></div>
+                  <div className="report-item" style={{ gridColumn: 'span 2' }}><span className="report-label">Cônjuge</span><span className="report-value">{formData.nomeconjuge || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">CPF Cônjuge</span><span className="report-value">{formData.cpfconjuge || '---'}</span></div>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-title">INFORMAÇÕES FINANCEIRAS</div>
+                <div className="report-grid">
+                  <div className="report-item"><span className="report-label">Limite de Crédito</span><span className="report-value">R$ {parseFloat(formData.limicredito || 0).toFixed(2)}</span></div>
+                  <div className="report-item"><span className="report-label">Prazo Máximo</span><span className="report-value">{formData.prazomax || 0} dias</span></div>
+                  <div className="report-item"><span className="report-label">Dia Faturamento</span><span className="report-value">{formData.diafat || 0}</span></div>
+                  <div className="report-item"><span className="report-label">Data Cadastro</span><span className="report-value">{formData.datacad || '---'}</span></div>
+                  <div className="report-item"><span className="report-label">Qtd. Compras</span><span className="report-value">{formData.numcompra || 0}</span></div>
+                  <div className="report-item"><span className="report-label">Maior Compra</span><span className="report-value">R$ {parseFloat(formData.valmaicompra || 0).toFixed(2)}</span></div>
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                  <span className="report-label">Conceito Financeiro</span>
+                  <p style={{ margin: '5px 0', fontStyle: 'italic' }}>{formData.conceito || 'Sem observações financeiras.'}</p>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-title">REFERÊNCIAS E OBSERVAÇÕES</div>
+                <div className="report-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                  <div className="report-item"><span className="report-label">Ref. Comercial</span><p style={{ margin: '2px 0' }}>{formData.ref_com || '---'}</p></div>
+                  <div className="report-item"><span className="report-label">Ref. Financeira</span><p style={{ margin: '2px 0' }}>{formData.ref_fin || '---'}</p></div>
+                  <div className="report-item" style={{ gridColumn: 'span 2' }}><span className="report-label">Observações Gerais</span><p style={{ margin: '2px 0' }}>{formData.obs || '---'}</p></div>
+                </div>
+              </div>
+              
+              <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8' }}>
+                Impresso em {new Date().toLocaleString()} - Sistema Totalcap
+              </div>
+            </div>
           </div>
         </div>
       )}

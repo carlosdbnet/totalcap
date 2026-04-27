@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   Layers,
   Calculator,
-  DollarSign
+  DollarSign,
+  Receipt
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './MainLayout.css';
@@ -34,17 +35,18 @@ const menuItems = [
   { icon: Calculator, label: 'Orçamento', path: '/orcamento' },
   {
     icon: Factory,
-    label: 'Chão de Fábrica',
+    label: 'Produção',
     path: '#',
     subItems: [
       { label: 'Localização', path: '/localizacao' },
       { label: 'Apontamento', path: '/apontamento' },
       { label: 'Registro de Falhas', path: '/falhas' },
       { label: 'Consumo de Mat.Prima', path: '/consumo-materia' },
-      { label: 'Produção', path: '/producao' },
+      { label: 'Laudos', path: '/laudos' },
+      { label: 'Gerador Código de Barra', path: '/gerador-etiquetas' },
     ]
   },
-  { icon: DollarSign, label: 'Despesas C/ Vendas', path: '/lacto-despesas' },
+  { icon: Receipt, label: 'Despesas C/ Vendas', path: '/lacto-despesas' },
   {
     icon: BarChart2,
     label: 'Relatórios',
@@ -55,8 +57,20 @@ const menuItems = [
         path: '#',
         isGroup: true,
         subItems: [
-          { label: 'Rel. Vendas por serviço', path: '/rel-vendas-servico' },
+          { label: 'Rel. Vendas', path: '/rel-vendas-servico' },
           { label: 'Rel. Comissões', path: '/rel-comissoes' },
+        ]
+      },
+      {
+        label: 'Produção',
+        path: '#',
+        isGroup: true,
+        subItems: [
+          { label: 'Rel. Produtividade', path: '/rel-produtividade' },
+          { label: 'Rel. Falhas', path: '/rel-falhas' },
+          { label: 'Rel. Consumo Mat.Prima', path: '/rel-consumo-materia' },
+          { label: 'Rel. Laudos', path: '/rel-laudos' },
+          { label: 'Rel. Ordens de Serviço', path: '/rel-ordem-servico' },
         ]
       }
     ]
@@ -71,17 +85,20 @@ const menuItems = [
         label: 'Auxiliares',
         path: '#',
         isGroup: true,
-        subItems: [
-          { label: 'Áreas', path: '/areas' },
-          { label: 'Regiões', path: '/regioes' },
-          { label: 'Atividades', path: '/atividades' },
-          { label: 'Vendedores', path: '/vendedores' },
-          { label: 'Transportadoras', path: '/transportadoras' },
-          { label: 'Cidades', path: '/cidades' },
-          { label: 'Estados', path: '/estados' },
-          { label: 'Bancos', path: '/bancos' },
-          { label: 'Tipo de Docto', path: '/tipos-docto' },
-        ]
+
+          subItems: [
+            { label: 'Áreas', path: '/areas' },
+            { label: 'Regiões', path: '/regioes' },
+            { label: 'Atividades', path: '/atividades' },
+            { label: 'Vendedores', path: '/vendedores' },
+            { label: 'Transportadoras', path: '/transportadoras' },
+            { label: 'Cidades', path: '/cidades' },
+            { label: 'Estados', path: '/estados' },
+            { label: 'Veículos', path: '/veiculos' },
+            { label: 'Bancos', path: '/bancos' },
+            { label: 'Tipo de Docto', path: '/tipos-docto' },
+            { label: 'Tipos de Falha', path: '/cad-falhas' },
+          ]
       },
       {
         label: 'Produção',
@@ -97,6 +114,7 @@ const menuItems = [
           { label: 'Serviços', path: '/servicos' },
           { label: 'Setores', path: '/setores' },
           { label: 'Operadores', path: '/operadores' },
+          { label: 'Falhas', path: '/cad-falhas' },
         ]
       },
       { label: 'Empresa', path: '/empresas' },

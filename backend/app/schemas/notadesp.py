@@ -36,7 +36,9 @@ class NotadespBase(BaseModel):
     nome: Optional[str] = None
     vtotal: Optional[Decimal] = 0
     id_vendedor: int
+
     status: Optional[str] = ""
+    obs: Optional[str] = None
 
 class NotadespCreate(NotadespBase):
     itens: List[NotadespItemCreate] = []

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Printer } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Operadores.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -161,7 +161,7 @@ export default function Operadores() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar operador.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar operador.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -274,56 +274,62 @@ export default function Operadores() {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Novo Operador' : 'Editar Operador'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-group">
-                  <label htmlFor="codigo">Código</label>
-                  <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} placeholder="Ex: OP01" />
-                </div>
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="codigo" style={{ fontWeight: '600', color: '#475569' }}>Código</label>
+                      <input className="form-input" id="codigo" value={formData.codigo} onChange={handleChange} placeholder="Ex: OP01" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
 
-                <div className="form-group">
-                  <label htmlFor="nome">Nome Completo *</label>
-                  <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} placeholder="Nome do operador" required />
-                </div>
+                    <div className="form-group">
+                      <label htmlFor="nome" style={{ fontWeight: '600', color: '#475569' }}>Nome Completo *</label>
+                      <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} placeholder="Nome do operador" required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="cargo">Cargo / Função</label>
-                  <input className="form-input" id="cargo" value={formData.cargo} onChange={handleChange} placeholder="Ex: Vulcanizador" />
-                </div>
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                    <label htmlFor="cargo" style={{ fontWeight: '600', color: '#475569' }}>Cargo / Função</label>
+                    <input className="form-input" id="cargo" value={formData.cargo} onChange={handleChange} placeholder="Ex: Vulcanizador" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="id_setor">Setor</label>
-                  <select className="form-select" id="id_setor" value={formData.id_setor} onChange={handleChange}>
-                    <option value="">Selecione o Setor</option>
-                    {setores.map(s => <option key={s.id} value={s.id}>{s.descricao}</option>)}
-                  </select>
-                </div>
+                  <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="id_setor" style={{ fontWeight: '600', color: '#475569' }}>Setor</label>
+                      <select className="form-select" id="id_setor" value={formData.id_setor} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff' }}>
+                        <option value="">Selecione o Setor</option>
+                        {setores.map(s => <option key={s.id} value={s.id}>{s.descricao}</option>)}
+                      </select>
+                    </div>
 
-                <div className="form-group">
-                  <label htmlFor="id_depto">Departamento</label>
-                  <select className="form-select" id="id_depto" value={formData.id_depto} onChange={handleChange}>
-                    <option value="">Selecione o Departamento</option>
-                    {departamentos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
-                  </select>
-                </div>
+                    <div className="form-group">
+                      <label htmlFor="id_depto" style={{ fontWeight: '600', color: '#475569' }}>Departamento</label>
+                      <select className="form-select" id="id_depto" value={formData.id_depto} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff' }}>
+                        <option value="">Selecione o Departamento</option>
+                        {departamentos.map(d => <option key={d.id} value={d.id}>{d.descricao}</option>)}
+                      </select>
+                    </div>
+                  </div>
 
-                <div className="form-group">
-                  <div className="checkbox-group" style={{ marginTop: '1rem' }}>
-                    <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                    <label htmlFor="ativo">Operador ativo</label>
+                  <div className="form-group">
+                    <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                      <label htmlFor="ativo" style={{ fontSize: '0.9rem', color: '#475569', fontWeight: '500' }}>Operador ativo</label>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Salvar</button>
               </div>

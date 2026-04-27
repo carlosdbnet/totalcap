@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import JsBarcode from 'jsbarcode';
-import { 
-  Plus, Search, Edit2, Trash2, X, Printer, Package, 
-  User, Truck, Calendar, FileText, Settings, 
-  Hash, DollarSign, Eye 
+import {
+  Plus, Search, Edit2, Trash2, X, Printer, Package,
+  User, Truck, Calendar, FileText, Settings,
+  Hash, DollarSign, Eye
 } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './OrdemServico.css';
 import './PrintFicha.css';
+import './PrintOS.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
 interface OSPneu {
@@ -53,7 +54,8 @@ interface OrdemServico {
 export default function OrdemServico() {
   const [oss, setOss] = useState<OrdemServico[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [empresa, setEmpresa] = useState<any>(null);
+
   // Search State (Unified with Producao)
   const [searchParams, setSearchParams] = useState({
     id: '',
@@ -67,7 +69,7 @@ export default function OrdemServico() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Lookups
   const [clientes, setClientes] = useState<any[]>([]);
   const [vendedores, setVendedores] = useState<any[]>([]);
@@ -90,7 +92,8 @@ export default function OrdemServico() {
   const [selectedPneus, setSelectedPneus] = useState<number[]>([]);
 
   // Form State
-  const [pneuForPrint, setPneuForPrint] = useState<any | null>(null);
+  const [pneusForPrint, setPneusForPrint] = useState<any[]>([]);
+  const [osToPrint, setOsToPrint] = useState<OrdemServico | null>(null);
 
   const [formData, setFormData] = useState<any>({
     numos: '',
@@ -138,37 +141,37 @@ export default function OrdemServico() {
   const barcodeRef2 = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    if (pneuForPrint && barcodeRef1.current) {
-      try {
-        const barcodeValue = String(pneuForPrint.id).padStart(8, '0');
-        JsBarcode(barcodeRef1.current, barcodeValue, {
-          format: "CODE128",
-          width: 1.5,
-          height: 40,
-          displayValue: true,
-          fontSize: 10,
-          margin: 0
+    let timer: any;
+    if (pneusForPrint.length > 0) {
+      // Pequeno delay para garantir renderização dos SVGs antes de aplicar JsBarcode
+      timer = setTimeout(() => {
+        pneusForPrint.forEach(pneu => {
+          const barcodeValue = String(pneu.id || 0).padStart(8, '0');
+          try {
+            JsBarcode(`.barcode-pneu-1-${pneu.id}`, barcodeValue, {
+              format: "CODE128",
+              width: 1.5,
+              height: 40,
+              displayValue: true,
+              fontSize: 10,
+              margin: 0
+            });
+            JsBarcode(`.barcode-pneu-2-${pneu.id}`, barcodeValue, {
+              format: "CODE128",
+              width: 1.5,
+              height: 35,
+              displayValue: true,
+              fontSize: 10,
+              margin: 0
+            });
+          } catch (err) {
+            console.error(`Erro ao gerar barcode para pneu ${pneu.id}:`, err);
+          }
         });
-      } catch (err) {
-         console.error("Erro ao gerar barcode 1:", err);
-      }
+      }, 150);
     }
-    if (pneuForPrint && barcodeRef2.current) {
-      try {
-        const barcodeValue = String(pneuForPrint.id).padStart(8, '0');
-        JsBarcode(barcodeRef2.current, barcodeValue, {
-          format: "CODE128",
-          width: 1.5,
-          height: 35,
-          displayValue: true,
-          fontSize: 10,
-          margin: 0
-        });
-      } catch (err) {
-         console.error("Erro ao gerar barcode 2:", err);
-      }
-    }
-  }, [pneuForPrint]);
+    return () => clearTimeout(timer);
+  }, [pneusForPrint]);
 
   useEffect(() => {
     fetchData();
@@ -179,7 +182,7 @@ export default function OrdemServico() {
     if (location.state?.fromColeta && location.state?.coletaData) {
       const coleta = location.state.coletaData;
       console.log("Recebendo dados da coleta para gerar OS:", coleta);
-      
+
       setFormData({
         numos: coleta.numos ? String(coleta.numos) : '',
         dataentrada: coleta.dataos ? new Date(coleta.dataos).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -196,9 +199,9 @@ export default function OrdemServico() {
         id_coleta: coleta.id,
         pneus: (coleta.pneus || []).map((p: any) => {
           // Busca automática de serviço baseada em Medida, Desenho e Recap
-          const matchedServico = servicos.find(s => 
-            Number(s.id_medida) === Number(p.id_medida) && 
-            Number(s.id_desenho) === Number(p.id_desenho) && 
+          const matchedServico = servicos.find(s =>
+            Number(s.id_medida) === Number(p.id_medida) &&
+            Number(s.id_desenho) === Number(p.id_desenho) &&
             Number(s.id_recap) === Number(p.id_recap) &&
             s.ativo !== false
           );
@@ -222,7 +225,7 @@ export default function OrdemServico() {
       });
       setIsModalOpen(true);
       setModalMode('create');
-      
+
       // Limpa o state para não reabrir ao atualizar a página
       window.history.replaceState({}, document.title);
     }
@@ -251,7 +254,7 @@ export default function OrdemServico() {
 
       const response = await api.get(`${endpoint}?${params.toString()}`);
       setOss(response.data);
-      
+
       if (response.data.length === 0) {
         setSearchError('Nenhum resultado encontrado para os filtros aplicados.');
       }
@@ -262,7 +265,9 @@ export default function OrdemServico() {
         setOss([]);
         setSearchError('Ordem de Serviço não encontrada.');
       } else {
-        setSearchError('Erro ao realizar a busca.');
+        const errorDetail = err.response?.data?.detail || err.message || 'Erro desconhecido';
+        setSearchError(`Erro ao realizar a busca: ${errorDetail}`);
+        console.error("Detalhes do erro na busca:", err.response?.data);
       }
     } finally {
       setIsSearching(false);
@@ -274,7 +279,7 @@ export default function OrdemServico() {
     setSearchParams({ ...searchParams, cliente: value, id: '', numos: '' });
 
     if (value.length >= 2) {
-      const filtered = clientes.filter(c => 
+      const filtered = clientes.filter(c =>
         c.nome.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 8);
       setFilteredClientes(filtered);
@@ -287,7 +292,7 @@ export default function OrdemServico() {
   const selectCliente = (clienteNome: string) => {
     setSearchParams({ ...searchParams, cliente: clienteNome, id: '', numos: '' });
     setShowSuggestions(false);
-    
+
     // Dispara a busca automaticamente
     setTimeout(() => handleSearch(), 50);
   };
@@ -321,11 +326,15 @@ export default function OrdemServico() {
       loadResource('/transportadoras/', setTransportadoras, 'Transportadoras'),
       loadResource('/medidas/', setMedidas, 'Medidas'),
       loadResource('/produtos/', setProdutos, 'Produtos'),
+      loadResource('/marcas/', setMarcas, 'Marcas'),
       loadResource('/desenhos/', setDesenhos, 'Desenhos'),
       loadResource('/servicos/', setServicos, 'Serviços'),
       loadResource('/tipo-recapagem/', setTiposRecap, 'Tipos de Recapagem'),
       loadResource('/planos-pagamento/', setPlanosPagamento, 'Planos de Pagamento'),
       loadResource('/regioes/', setRegioes, 'Regioes'),
+      api.get('/empresas/').then(res => {
+        if (res.data && res.data.length > 0) setEmpresa(res.data[0]);
+      }).catch(err => console.error("Erro ao buscar empresa:", err))
     ]);
   };
 
@@ -409,7 +418,7 @@ export default function OrdemServico() {
 
   const savePneu = () => {
     const newPneus = [...formData.pneus];
-    
+
     // Automatização do código de barras baseada no ID
     let finalPneu = { ...tempPneu };
     if (finalPneu.id && !finalPneu.codbarras) {
@@ -453,11 +462,11 @@ export default function OrdemServico() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: string[] = [];
-    
+
     if (!formData.numos) errors.push("Número da OS não informado.");
     if (!formData.id_contato || formData.id_contato === "0" || formData.id_contato === 0) errors.push("Selecione um Cliente.");
     if (!formData.id_vendedor || formData.id_vendedor === "0" || formData.id_vendedor === 0) errors.push("Selecione um Vendedor.");
-    
+
     if (!formData.pneus || formData.pneus.length === 0) {
       errors.push("Adicione ao menos um pneu à OS.");
     } else {
@@ -517,17 +526,7 @@ export default function OrdemServico() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      console.error("Erro ao salvar OS:", err);
-      const detail = err.response?.data?.detail;
-      if (typeof detail === 'string') {
-        setFormError(detail);
-      } else if (Array.isArray(detail)) {
-        setFormError(detail.map((d: any) => `${d.loc?.join('.') || ''}: ${d.msg}`).join('\n'));
-      } else if (detail) {
-        setFormError(JSON.stringify(detail));
-      } else {
-        setFormError('Erro ao salvar Ordem de Serviço.');
-      }
+      setFormError(getErrorMessage(err, 'Erro ao salvar Ordem de Serviço.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -545,13 +544,54 @@ export default function OrdemServico() {
   };
 
   const handlePrintFicha = (pneu: any) => {
-    setPneuForPrint(pneu);
-    // Delay para garantir que o DOM de impressão foi renderizado
+    setPneusForPrint([pneu]);
+    document.body.classList.add('printing-os-active');
     setTimeout(() => {
       window.print();
-    }, 500);
+      setTimeout(() => {
+        setPneusForPrint([]);
+        document.body.classList.remove('printing-os-active');
+      }, 150);
+    }, 700);
   };
 
+  const handlePrintSelectedFichas = () => {
+    const selectedData = formData.pneus.filter((_: any, idx: number) => selectedPneus.includes(idx));
+    if (selectedData.length === 0) {
+      alert("Selecione pelo menos um pneu para imprimir a ficha de produção.");
+      return;
+    }
+    setPneusForPrint(selectedData);
+    document.body.classList.add('printing-os-active');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        setPneusForPrint([]);
+        document.body.classList.remove('printing-os-active');
+      }, 150);
+    }, 700);
+  };
+  
+  const handlePrintOS = (os: OrdemServico) => {
+    setOsToPrint(os);
+    document.body.classList.add('printing-os-active');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        setOsToPrint(null);
+        document.body.classList.remove('printing-os-active');
+      }, 300); // Aumentado para 300ms para maior estabilidade
+    }, 700);
+  };
+
+
+  const handlePrintList = () => {
+    document.body.classList.add('printing-os-list-active');
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-os-list-active');
+    }, 500);
+  };
 
   return (
     <div className="os-container">
@@ -561,15 +601,18 @@ export default function OrdemServico() {
       </div>
 
       <div className="page-header">
-        <h1 className="title">Ordens de Serviço</h1>
-        <div className="header-actions">
-          <button className="btn-secondary" onClick={() => window.print()}>
-            <Printer size={20} />
-            Imprimir Lista
+        <h1 className="title" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <FileText size={32} color="var(--primary-color)" />
+          Ordens de Serviço
+        </h1>
+        <div className="header-actions" translate="no">
+          <button className="btn-print" onClick={handlePrintList}>
+            <span><Printer size={20} /></span>
+            <span>Imprimir Lista</span>
           </button>
           <button className="btn-primary" onClick={() => openModal('create')}>
-            <Plus size={20} />
-            Nova OS
+            <span><Plus size={20} /></span>
+            <span>Nova OS</span>
           </button>
         </div>
       </div>
@@ -579,45 +622,45 @@ export default function OrdemServico() {
           <div className="search-grid">
             <div className="form-group">
               <label><Hash size={14} /> ID Interno</label>
-              <input 
-                type="number" 
-                className="form-input" 
-                placeholder="Ex: 45" 
+              <input
+                type="number"
+                className="form-input"
+                placeholder="Ex: 45"
                 value={searchParams.id}
-                onChange={(e) => setSearchParams({...searchParams, id: e.target.value, numos: '', cliente: ''})}
+                onChange={(e) => setSearchParams({ ...searchParams, id: e.target.value, numos: '', cliente: '' })}
               />
             </div>
             <div className="form-group">
               <label><FileText size={14} /> Número da OS</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Ex: 5020" 
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: 5020"
                 value={searchParams.numos}
-                onChange={(e) => setSearchParams({...searchParams, numos: e.target.value, id: '', cliente: ''})}
+                onChange={(e) => setSearchParams({ ...searchParams, numos: e.target.value, id: '', cliente: '' })}
               />
             </div>
             <div className="form-group span-2 relative">
               <label><User size={14} /> Nome do Cliente</label>
               <div className="input-with-button">
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="Busque pelo cliente..." 
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Busque pelo cliente..."
                   value={searchParams.cliente}
                   onChange={handleClienteChange}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 />
-                <button type="submit" className="btn-search-producao" disabled={isSearching}>
-                  {isSearching ? 'Buscando...' : <><Search size={18} /> Filtrar Lista</>}
+                <button type="submit" className="btn-search-producao" disabled={isSearching} translate="no">
+                  {isSearching ? <span>Buscando...</span> : <><span><Search size={18} /></span> <span>Filtrar Lista</span></>}
                 </button>
               </div>
 
               {showSuggestions && filteredClientes.length > 0 && (
                 <div className="suggestions-dropdown glass-panel">
                   {filteredClientes.map(c => (
-                    <div 
-                      key={c.id} 
+                    <div
+                      key={c.id}
                       className="suggestion-item"
                       onClick={() => selectCliente(c.nome)}
                     >
@@ -661,30 +704,37 @@ export default function OrdemServico() {
               </thead>
               <tbody>
                 {(oss || []).length === 0 ? (
-                  <tr><td colSpan={8} className="empty-state">Nenhuma Ordem de Serviço encontrada.</td></tr>
+                  <tr><td colSpan={8} className="empty-state"><span>Nenhuma Ordem de Serviço encontrada.</span></td></tr>
                 ) : (
-                  (oss || []).map(os => (
-                    <tr key={os.id}>
-                      <td><span className="os-id">{os.id}</span></td>
-                      <td><span className="os-number">#{os.numos}</span></td>
-                      <td>{os.dataentrada ? new Date(os.dataentrada).toLocaleDateString() : '-'}</td>
-                      <td>{(clientes || []).find(c => c.id === os.id_contato)?.nome || 'Cliente não identificado'}</td>
-                      <td>
-                        <span className={`status-badge status-${(os.status || 'ABERTA').toLowerCase()}`}>
-                          {os.status || 'ABERTA'}
-                        </span>
-                      </td>
-                      <td>{(os.pneus || []).length} pneus</td>
-                      <td>R$ {(os.pneus || []).reduce((s,p) => s + (Number(p.valor) || 0), 0).toFixed(2)}</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="icon-btn view" onClick={() => openModal('view', os)} title="Visualizar"><Eye size={16} /></button>
-                          <button className="icon-btn edit" onClick={() => openModal('edit', os)} title="Editar"><Edit2 size={16} /></button>
-                          <button className="icon-btn delete" onClick={() => handleDelete(os.id, os.numos)} title="Excluir"><Trash2 size={16} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  (oss || []).map(os => {
+                    try {
+                      return (
+                        <tr key={os.id}>
+                          <td><span className="os-id">{os.id}</span></td>
+                          <td><span className="os-number">#{os.numos}</span></td>
+                          <td><span className="os-date">{os.dataentrada ? new Date(os.dataentrada).toLocaleDateString() : '-'}</span></td>
+                          <td><span className="os-client">{(clientes || []).find(c => c.id === os.id_contato)?.nome?.trim() || 'Cliente não identificado'}</span></td>
+                          <td>
+                            <span className={`status-badge status-${(os.status || 'ABERTA').toLowerCase()}`}>
+                              <span>{os.status || 'ABERTA'}</span>
+                            </span>
+                          </td>
+                          <td><span className="os-pneus-count">{(os.pneus || []).length} pneus</span></td>
+                          <td><span className="os-value">R$ {Number(os.vrtotal || 0).toFixed(2)}</span></td>
+                          <td>
+                            <div className="action-buttons" translate="no">
+                              <button className="icon-btn success" onClick={() => openModal('view', os)} title="Visualizar" style={{ background: '#10b981' }}><span><Eye size={18} /></span></button>
+                              <button className="icon-btn edit" onClick={() => openModal('edit', os)} title="Editar"><span><Edit2 size={16} /></span></button>
+                              <button className="icon-btn delete" onClick={() => handleDelete(os.id, os.numos)} title="Excluir"><span><Trash2 size={16} /></span></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    } catch (renderErr) {
+                      console.error("Erro ao renderizar linha da OS:", os.id, renderErr);
+                      return <tr key={os.id}><td colSpan={8} style={{ color: 'red', fontSize: '0.8rem' }}>Erro nos dados da OS #{os.numos}</td></tr>;
+                    }
+                  })
                 )}
               </tbody>
             </table>
@@ -693,125 +743,116 @@ export default function OrdemServico() {
       </div>
 
       {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content full-screen" onClick={e => e.stopPropagation()}>
-            <div className="modal-header" style={{ backgroundColor: '#E5E5E5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div className="header-title-group">
-                <FileText className="header-icon" />
-                <h2>{modalMode === 'create' ? 'Configurar Nova Ordem de Serviço' : modalMode === 'edit' ? `Editando OS #${formData.numos}` : `Visualizando OS #${formData.numos}`}</h2>
+        <div className="os-modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="premium-modal-content full-screen" onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Hash size={24} />
+                <h2>{modalMode === 'create' ? 'Nova Ordem de Serviço' : modalMode === 'view' ? `Visualizar OS #${formData.numos}` : `Editar OS #${formData.numos}`}</h2>
               </div>
-              
-              <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}>
-                <X size={24} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="os-form" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-              <div className="modal-body scrollable">
-                {formError && (
-                  <div className="error-banner" style={{ 
-                    backgroundColor: '#fef2f2', 
-                    color: '#ef4444', 
-                    padding: '1rem', 
-                    borderRadius: '8px', 
-                    marginBottom: '1rem',
-                    border: '1px solid #fee2e2',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.8rem',
-                    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.1)',
-                    animation: 'slideDown 0.3s ease-out',
-                    whiteSpace: 'pre-wrap'
-                  }}>
-                    <FileText size={20} />
-                    <span>{formError}</span>
-                  </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {(modalMode === 'edit' || modalMode === 'view') && (
+                  <button type="button" className="btn-print" onClick={() => handlePrintOS(formData)}>
+                    <Printer size={18} /> Imprimir OS
+                  </button>
                 )}
-                
-                {/* MESTRE (CABEÇALHO) */}
-                <div className="os-master-section">
-                   <div className="form-grid-os">
-                      <div className="form-group">
-                        <div className="input-with-icon">
-                          <Hash size={18} className="field-icon" />
-                          <label htmlFor="numos">Número da OS *</label>
-                        </div>
-                        <input className="form-input" id="numos" value={formData.numos} onChange={handleMasterChange} placeholder="Ex: 12345" required disabled={modalMode === 'view'} />
-                      </div>
+                <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+              </div>
+            </div>
 
-                      <div className="form-group">
-                        <div className="input-with-icon">
-                          <User size={18} className="field-icon" />
-                          <label htmlFor="id_contato">Cliente *</label>
-                        </div>
-                        <select className="form-select" id="id_contato" value={formData.id_contato} onChange={handleMasterChange} required disabled={modalMode === 'view'}>
-                          <option value="0">Selecione o Cliente</option>
-                          {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                        </select>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body scrollable">
+                <div className="premium-master-panel">
+                  <div className="premium-section-title"><User size={18} /> Dados Principais e Cliente</div>
+                  <div className="form-grid-os">
+                    <div className="form-group">
+                      <div className="input-with-icon">
+                        <Hash size={18} className="field-icon" />
+                        <label htmlFor="numos">Número da OS *</label>
                       </div>
+                      <input className="form-input" id="numos" value={formData.numos} onChange={handleMasterChange} placeholder="Ex: 12345" required disabled={modalMode === 'view'} />
+                    </div>
 
-                      <div className="form-group">
-                        <div className="input-with-icon">
-                          <Calendar size={18} className="field-icon" />
-                          <label htmlFor="dataentrada">Data Entrada</label>
-                        </div>
-                        <input type="date" className="form-input" id="dataentrada" value={formData.dataentrada} onChange={handleMasterChange} disabled={modalMode === 'view'} />
+                    <div className="form-group">
+                      <div className="input-with-icon">
+                        <User size={18} className="field-icon" />
+                        <label htmlFor="id_contato">Cliente *</label>
                       </div>
+                      <select className="form-select" id="id_contato" value={formData.id_contato} onChange={handleMasterChange} required disabled={modalMode === 'view'}>
+                        <option value="0">Selecione o Cliente</option>
+                        {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                      </select>
+                    </div>
 
-                      <div className="form-group">
-                        <div className="input-with-icon">
-                          <Calendar size={18} className="field-icon" />
-                          <label htmlFor="dataprevisao">Previsão de Entrega</label>
-                        </div>
-                        <input type="date" className="form-input" id="dataprevisao" value={formData.dataprevisao} onChange={handleMasterChange} disabled={modalMode === 'view'} />
+                    <div className="form-group">
+                      <div className="input-with-icon">
+                        <Calendar size={18} className="field-icon" />
+                        <label htmlFor="dataentrada">Data Entrada</label>
                       </div>
-                      <div className="form-group">
-                        <label><Settings size={14} /> Status</label>
-                        <select className="form-input" id="status" value={formData.status} onChange={handleMasterChange} disabled={modalMode === 'view'}>
-                          <option value="ABERTA">ABERTA</option>
-                          <option value="PRODUCAO">EM PRODUÇÃO</option>
-                          <option value="FINALIZADA">FINALIZADA</option>
-                          <option value="CANCELADA">CANCELADA</option>
-                        </select>
-                      </div>
+                      <input type="date" className="form-input" id="dataentrada" value={formData.dataentrada} onChange={handleMasterChange} disabled={modalMode === 'view'} />
+                    </div>
 
-                      <div className="form-group span-2">
-                        <label>Vendedor</label>
-                        <select className="form-input" id="id_vendedor" value={formData.id_vendedor} onChange={handleMasterChange} disabled={modalMode === 'view'}>
-                          <option value="0">Sem vendedor</option>
-                          {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
-                        </select>
+                    <div className="form-group">
+                      <div className="input-with-icon">
+                        <Calendar size={18} className="field-icon" />
+                        <label htmlFor="dataprevisao">Previsão de Entrega</label>
                       </div>
+                      <input type="date" className="form-input" id="dataprevisao" value={formData.dataprevisao} onChange={handleMasterChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label><Settings size={14} /> Status</label>
+                      <select className="form-input" id="status" value={formData.status} onChange={handleMasterChange} disabled={modalMode === 'view'}>
+                        <option value="ABERTA">ABERTA</option>
+                        <option value="PRODUCAO">EM PRODUÇÃO</option>
+                        <option value="FINALIZADA">FINALIZADA</option>
+                        <option value="CANCELADA">CANCELADA</option>
+                      </select>
+                    </div>
 
-                      <div className="form-group span-2">
-                        <label>Plano de Pagamento</label>
-                        <select className="form-input" id="id_planopag" value={formData.id_planopag} onChange={handleMasterChange} disabled={modalMode === 'view'}>
-                          <option value="0">Selecione o plano...</option>
-                          {planosPagamento.map(p => <option key={p.id} value={p.id}>{p.formapag}</option>)}
-                        </select>
-                      </div>
+                    <div className="form-group span-2">
+                      <label>Vendedor</label>
+                      <select className="form-input" id="id_vendedor" value={formData.id_vendedor} onChange={handleMasterChange} disabled={modalMode === 'view'}>
+                        <option value="0">Sem vendedor</option>
+                        {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
+                      </select>
+                    </div>
 
-                      <div className="form-group span-4">
-                        <label>Observações</label>
-                        <textarea className="form-input" id="observacao" value={formData.observacao} onChange={handleMasterChange} rows={2} disabled={modalMode === 'view'} />
-                      </div>
-                   </div>
+                    <div className="form-group span-2">
+                      <label>Plano de Pagamento</label>
+                      <select className="form-input" id="id_planopag" value={formData.id_planopag} onChange={handleMasterChange} disabled={modalMode === 'view'}>
+                        <option value="0">Selecione o plano...</option>
+                        {planosPagamento.map(p => <option key={p.id} value={p.id}>{p.formapag}</option>)}
+                      </select>
+                    </div>
+                    </div>
                 </div>
 
-                {/* DETALHE (GRADE DE PNEUS) */}
-                <div className="os-detail-section">
+                <div className="premium-master-panel">
+                  <div className="premium-section-title"><Package size={18} /> Itens da OS (Pneus)</div>
+                  <div className="os-detail-section">
                   <div className="section-title-bar">
                     <div className="title-left">
                       <Package size={18} />
                       <h3>Itens da OS (Pneus)</h3>
                       <span className="item-count">{formData.pneus.length} pneus adicionados</span>
                     </div>
-                    {modalMode !== 'view' && (
-                      <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
-                        <Plus size={16} /> Adicionar Pneu
+                    <div className="title-right" style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={handlePrintSelectedFichas}
+                        disabled={selectedPneus.length === 0}
+                        style={{ opacity: selectedPneus.length === 0 ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '4px' }}
+                        translate="no"
+                      >
+                        <span><Printer size={16} /></span> <span>Ficha de Produção</span>
                       </button>
-                    )}
+                      {modalMode !== 'view' && (
+                        <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
+                          <Plus size={16} /> Adicionar Pneu
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pneus-grid-container">
@@ -825,6 +866,7 @@ export default function OrdemServico() {
                               onChange={toggleAllPneus}
                             />
                           </th>
+                          <th style={{ width: '60px' }}>ID</th>
                           <th>Medida / Marca</th>
                           <th>Desenho / Serviço</th>
                           <th>Recapagem</th>
@@ -836,7 +878,7 @@ export default function OrdemServico() {
                       </thead>
                       <tbody>
                         {formData.pneus.length === 0 ? (
-                          <tr><td colSpan={8} className="empty-pneus">Nenhum pneu adicionado a esta OS.</td></tr>
+                          <tr><td colSpan={9} className="empty-pneus">Nenhum pneu adicionado a esta OS.</td></tr>
                         ) : (
                           formData.pneus.map((p: any, idx: number) => (
                             <tr key={idx}>
@@ -847,6 +889,7 @@ export default function OrdemServico() {
                                   onChange={() => togglePneuSelection(idx)}
                                 />
                               </td>
+                              <td style={{ fontWeight: 'bold', color: '#64748b', fontSize: '0.85rem' }}>{p.id || 'NEW'}</td>
                               <td>
                                 <div className="pneu-info-cell">
                                   <span className="primary-info">{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</span>
@@ -903,10 +946,10 @@ export default function OrdemServico() {
                     </div>
                   </div>
 
-                  <div className="financeiro-section" style={{ 
-                    marginTop: '2rem', 
-                    padding: '1.5rem', 
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)', 
+                  <div className="financeiro-section" style={{
+                    marginTop: '2rem',
+                    padding: '1.5rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
                     borderRadius: '12px',
                     border: '1px solid rgba(226, 232, 240, 0.8)'
                   }}>
@@ -951,19 +994,17 @@ export default function OrdemServico() {
                 </div>
               </div>
 
-              <div className="modal-footer-os">
-                <div className="footer-btns" style={{ display: 'flex', gap: '1rem' }}>
-                  {modalMode === 'view' ? (
-                    <button type="button" className="btn-secondary-os" onClick={() => setIsModalOpen(false)}>Fechar Visualização</button>
-                  ) : (
-                    <>
-                      <button type="button" className="btn-secondary-os" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                      <button type="submit" className="btn-primary-os" disabled={isSubmitting}>
-                        {isSubmitting ? 'Processando...' : (modalMode === 'create' ? 'Salvar Ordem de Serviço' : 'Salvar Alterações')}
-                      </button>
-                    </>
-                  )}
-                </div>
+              </div>
+
+              <div className="premium-modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
+                  {modalMode === 'view' ? 'Fechar' : 'Cancelar'}
+                </button>
+                {modalMode !== 'view' && (
+                  <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                    {isSubmitting ? 'Salvando...' : 'Salvar Ordem de Serviço'}
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -1054,19 +1095,19 @@ export default function OrdemServico() {
                   <label>Controles de Produção</label>
                   <div className="checkbox-group" style={{ display: 'flex', gap: '2rem', marginTop: '0.5rem' }}>
                     <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={tempPneu.statuspro} 
-                        onChange={(e) => handleTempPneuChange('statuspro', e.target.checked)} 
+                      <input
+                        type="checkbox"
+                        checked={tempPneu.statuspro}
+                        onChange={(e) => handleTempPneuChange('statuspro', e.target.checked)}
                         disabled={modalMode === 'view'}
                       />
                       Produzido ?
                     </label>
                     <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={tempPneu.statusfat} 
-                        onChange={(e) => handleTempPneuChange('statusfat', e.target.checked)} 
+                      <input
+                        type="checkbox"
+                        checked={tempPneu.statusfat}
+                        onChange={(e) => handleTempPneuChange('statusfat', e.target.checked)}
                         disabled={modalMode === 'view'}
                       />
                       Faturado ?
@@ -1081,225 +1122,333 @@ export default function OrdemServico() {
               </div>
             </div>
 
-                <div className="footer-btns">
-                  {modalMode === 'view' ? (
-                    <button type="button" className="btn-secondary" onClick={() => setIsPneuModalOpen(false)}>Fechar Detalhes</button>
-                  ) : (
-                    <>
-                      <button type="button" className="btn-secondary" onClick={() => setIsPneuModalOpen(false)}>Cancelar</button>
-                      <button type="button" className="btn-primary" onClick={savePneu}>
-                        {editingPneuIndex !== null ? 'Atualizar Pneu' : 'Confirmar Pneu'}
-                      </button>
-                    </>
-                  )}
-                </div>
+            <div className="footer-btns">
+              {modalMode === 'view' ? (
+                <button type="button" className="btn-secondary" onClick={() => setIsPneuModalOpen(false)}>Fechar Detalhes</button>
+              ) : (
+                <>
+                  <button type="button" className="btn-secondary" onClick={() => setIsPneuModalOpen(false)}>Cancelar</button>
+                  <button type="button" className="btn-primary" onClick={savePneu}>
+                    {editingPneuIndex !== null ? 'Atualizar Pneu' : 'Confirmar Pneu'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
-      {/* Componente de Impressão Refatorado (Baseado no PDF) */}
-      {pneuForPrint && (
-        <div className="printable-ficha-container">
-          {/* CARTÃO 1: ACOMPANHAMENTO DO PNEU */}
-          <div className="ficha-card">
-            <div className="ficha-header">
-              <div className="header-logo"><img src={logoEmpresa} alt="LOGO" /></div>
-              <div className="header-center-title">CARTÃO DE ACOMPANHAMENTO DO PNEU</div>
-              <div className="header-id-grid">
-                <div className="id-box"><span className="id-label">Usuário</span><span className="id-value">ADMIN</span></div>
-                <div className="id-box no-right"><span className="id-label">ID Pneu</span><span className="id-value">{pneuForPrint.id || '---'}</span></div>
-                <div className="id-box"><span className="id-label">Data Entrada</span><span className="id-value">{formData.dataentrada ? new Date(formData.dataentrada).toLocaleDateString() : '___/___/___'}</span></div>
-                <div className="id-box no-right"><span className="id-label">Data Entrega</span><span className="id-value">___/___/___</span></div>
-                <div className="id-box">
-                  <span className="id-label">Região</span>
-                  <span className="id-value">
-                    {(() => {
-                      const cliente = clientes.find(c => c.id === parseInt(formData.id_contato));
-                      const reg = regioes.find(r => r.id === cliente?.id_regiao);
-                      return reg?.codigo || '---';
-                    })()}
+      <div id="print-fichas-section">
+        {pneusForPrint.length > 0 && (
+          <div className="printable-ficha-container">
+            {pneusForPrint.map((p, idx) => (
+              <div key={p.id || idx} className="printable-ficha-page">
+                {/* CARTÃO 1: ACOMPANHAMENTO DO PNEU */}
+                <div className="ficha-card">
+                  <div className="ficha-header">
+                    <div className="header-logo"><img src={logoEmpresa} alt="LOGO" /></div>
+                    <div className="header-center-title">CARTÃO DE ACOMPANHAMENTO DO PNEU</div>
+                    <div className="header-id-grid">
+                      <div className="id-box"><span className="id-label">Usuário</span><span className="id-value">ADMIN</span></div>
+                      <div className="id-box no-right"><span className="id-label">ID Pneu</span><span className="id-value">{p.id || '---'}</span></div>
+                      <div className="id-box"><span className="id-label">Data Entrada</span><span className="id-value">{formData.dataentrada ? new Date(formData.dataentrada).toLocaleDateString() : '___/___/___'}</span></div>
+                      <div className="id-box no-right"><span className="id-label">Data Entrega</span><span className="id-value">___/___/___</span></div>
+                      <div className="id-box">
+                        <span className="id-label">Região</span>
+                        <span className="id-value">
+                          {(() => {
+                            const cliente = clientes.find(c => c.id === parseInt(formData.id_contato));
+                            const reg = regioes.find(r => r.id === cliente?.id_regiao);
+                            return reg?.codigo || '---';
+                          })()}
+                        </span>
+                      </div>
+                      <div className="id-box no-right"><span className="id-label">Desenho Original</span><span className="id-value">{p.desenhoriginal || '---'}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="full-row-field" style={{ borderBottom: '1px solid #000' }}>
+                    <span className="id-label">Cliente</span>
+                    <span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span>
+                  </div>
+
+                  <div className="technical-row">
+                    <div className="id-box"><span className="id-label">Bitola / Medida</span><span className="id-value">{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</span></div>
+                    <div className="id-box"><span className="id-label">Marca</span><span className="id-value">{marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || '---'}</span></div>
+                    <div className="id-box"><span className="id-label">Matrícula / Série</span><span className="id-value">{p.numserie || '---'}</span></div>
+                    <div className="id-box"><span className="id-label">Nº Fogo</span><span className="id-value">{p.numfogo || '---'}</span></div>
+                    <div className="id-box no-right"><span className="id-label">DOT</span><span className="id-value">{p.dot || '---'}</span></div>
+                  </div>
+
+                  <div className="ficha-main-area">
+                    <div className="production-table-area">
+                      <table className="prod-table">
+                        <thead>
+                          <tr>
+                            <th className="sector-name">SETOR</th>
+                            <th style={{ width: '100px' }}>ASSINATURA</th>
+                            <th style={{ width: '40px' }}>EQ.</th>
+                            <th>D E S C R I Ç Ã O</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr><td className="sector-name">EXAME PRELIMINAR</td><td></td><td></td><td><div className="sub-field-group"><span>OBS:</span><div className="sub-field-item"><div className="mini-box"></div> <span>CONSERTO ANTERIOR</span></div></div></td></tr>
+                          <tr><td className="sector-name">RASPAGEM</td><td></td><td></td><td><div className="sub-field-group"><span>PERÍMETRO:</span><span>RAIO:</span><span>LARGURA DO PISO:</span></div></td></tr>
+                          <tr><td className="sector-name">ESCAREAÇÃO</td><td></td><td></td><td><div className="sub-field-group"><div className="sub-field-item"><div className="mini-box"></div> <span>NORMAL</span></div><div className="sub-field-item"><div className="mini-box"></div> <span>ABERTURA CANALETA</span></div></div><div className="sub-field-group"><div className="sub-field-item"><div className="mini-box"></div> <span>EXCESSO</span></div><div className="sub-field-item"><div className="mini-box"></div> <span>RETIRADA 4ª CINTA</span></div></div></td></tr>
+                          <tr><td className="sector-name">REEXAME / PREP. CONSERTO</td><td></td><td></td><td><span className="id-label">TIPO E QUANTIDADE</span></td></tr>
+                          <tr><td className="sector-name">APLICAÇÃO DE COLA</td><td></td><td></td><td><div style={{ textAlign: 'right', fontSize: '6pt' }}>HORAS _______</div></td></tr>
+                          <tr><td className="sector-name">CORTE DE BANDA</td><td></td><td></td><td></td></tr>
+                          <tr><td className="sector-name">PREENCHIMENTO APLIC. MANCHÃO</td><td></td><td></td><td></td></tr>
+                          <tr><td className="sector-name">COBERTURA</td><td></td><td></td><td><div className="sub-field-group"><span>PERÍMETRO ________ M.M.</span><span>LOTE/BANDA ___________________</span></div></td></tr>
+                          <tr><td className="sector-name">VULCANIZAÇÃO PRENSA</td><td></td><td></td><td><div className="sub-field-group"><span>INÍCIO: _________</span><span>FINAL: _________</span><span>HORAS: _________</span></div></td></tr>
+                          <tr><td className="sector-name">VULCANIZAÇÃO AUTOCLAVE</td><td></td><td></td><td><div className="sub-field-group"><span>INÍCIO: _________</span><span>FINAL: _________</span><span style={{ marginLeft: '10px' }}>S [ ] E [ ] B [ ]</span></div></td></tr>
+                          <tr><td className="sector-name">EXAME FINAL ACABAMENTO</td><td></td><td></td><td><div className="sub-field-group"><span>DATA: ___/___/___</span><div className="sub-field-item"><div className="mini-box"></div> <span>APROVADO</span></div><div className="sub-field-item"><div className="mini-box"></div> <span>REPROVADO</span></div></div></td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="side-panel">
+                      <div className="side-item"><span className="id-label">DESENHO DA REFORMA</span><span className="id-value">---</span></div>
+                      <div className="side-item check"><div className="mini-box"></div> <span>RECAPAGEM</span></div>
+                      <div className="side-item check"><div className="mini-box"></div> <span>RECAUCHUTAGEM</span></div>
+                      <div className="side-item check"><div className="mini-box"></div> <span>VULCANIZAÇÃO</span></div>
+                      <div className="side-item check"><div className="mini-box"></div> <span>RECUSADO</span></div>
+                      <div className="side-item check"><div className="mini-box"></div> <span>APROVADO</span></div>
+                      <div className="side-item check"><div className="mini-box"></div> <span>APROVADO S.G.</span></div>
+                      <div className="side-item" style={{ flex: 1, textAlign: 'center', fontSize: '6pt', display: 'flex', alignItems: 'center' }}>CARIMBO DE GARANTIA / RECUSA</div>
+                      <div className="barcode-area">
+                        <svg className={`barcode-pneu-1-${p.id}`}></svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="obs-area">
+                    <span className="id-label">OBSERVAÇÃO:</span>
+                  </div>
+                </div>
+
+                {/* CARTÃO 2: MOTIVOS DE RECUSA / NÃO GARANTIA */}
+                <div className="ficha-card recusa-card">
+                  <div className="ficha-header">
+                    <div className="header-logo"><img src={logoEmpresa} alt="LOGO" /></div>
+                    <div className="header-center-title" style={{ fontSize: '13pt' }}>CARTÃO DE ACOMPANHAMENTO DO PNEU</div>
+                    <div className="header-id-grid" style={{ width: '200px' }}>
+                      <div className="id-box"><span className="id-label">ID Pneu</span><span className="id-value">{p.id || '---'}</span></div>
+                      <div className="id-box no-right"><span className="id-label">Usuário</span><span className="id-value">ADMIN</span></div>
+                      <div className="id-box no-bottom"><span className="id-label">Região</span><span className="id-value">{(() => { const cliente = clientes.find(c => c.id === parseInt(formData.id_contato)); const reg = regioes.find(r => r.id === cliente?.id_regiao); return reg?.codigo || '---'; })()}</span></div>
+                      <div className="id-box no-right no-bottom"><span className="id-label">Data</span><span className="id-value">{new Date().toLocaleDateString()}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="recusa-main-grid">
+                    <div className="recusa-fields">
+                      <div className="id-box" style={{ borderRight: 'none' }}><span className="id-label">Cliente</span><span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span></div>
+                      <div className="technical-row" style={{ gridTemplateColumns: '1.5fr 1.5fr', borderRight: 'none' }}>
+                        <div className="id-box" style={{ borderBottom: 'none' }}><span className="id-label">Cidade</span><span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.cidade || '---'}</span></div>
+                        <div className="id-box" style={{ borderRight: 'none', borderBottom: 'none' }}><span className="id-label">Desenho da Reforma</span><span className="id-value">{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</span></div>
+                      </div>
+                      <div className="id-box" style={{ borderTop: '1px solid #000', borderRight: 'none' }}><span className="id-label">Bitola / Medida</span><span className="id-value">{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</span></div>
+                      <div className="id-box no-bottom" style={{ borderRight: 'none' }}><span className="id-label">Série</span><span className="id-value">{p.numserie || '---'}</span></div>
+                      <div className="obs-area" style={{ borderTop: '1px solid #000' }}>
+                        <span className="id-label">OBSERVAÇÃO:</span>
+                      </div>
+                    </div>
+
+                    <div className="motivos-panel">
+                      <div className="motivo-header">( X ) MOTIVO DA RECUSA ( ) NÃO GARANTIA</div>
+                      <div className="motivos-area">
+                        {[
+                          'EXCESSO DE CONSERTOS', 'EXCESSO DE PICOTAMENTOS', 'DESLOCAMENTO ENTRE LONAS',
+                          'DESGASTE EXCESSIVO', 'RODAGEM COM BAIXA PRESSÃO', 'NUMEROSOS RACHOS RADIAIS',
+                          'DETERIORIZAÇÃO DO TALÃO', 'CONTAMINAÇÃO COM ÓLEO OU GRAXA', 'OUTROS'
+                        ].map(m => (
+                          <div key={m} className="motivo-item"><div className="mini-box"></div> <span>{m}</span></div>
+                        ))}
+                      </div>
+                      <div className="barcode-area" style={{ borderTop: '1px solid #000', height: '45px' }}>
+                        <svg className={`barcode-pneu-2-${p.id}`}></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div id="print-os-section">
+        {osToPrint && (
+          <div className="print-os-wrapper">
+            <div className="os-print-header">
+              <div className="os-print-logo">
+                <img src={logoEmpresa} alt="Logo" />
+              </div>
+              <div className="os-print-company-info">
+                <div><strong>{empresa?.razaosocial || 'TOTALCAP RECAPAGEM'}</strong></div>
+                <div>CNPJ: {empresa?.cnpj || '00.000.000/0000-00'}</div>
+                <div>Fone: {empresa?.telefone || '(00) 0000-0000'}</div>
+                <div>{empresa?.rua || 'Rua da Recapagem'}, {empresa?.numcasa || '100'}</div>
+                <div>{empresa?.cidade || 'Cidade'} - {empresa?.uf || 'UF'}</div>
+              </div>
+            </div>
+
+            <div className="os-print-title-area">
+              <h2>Ordem de Serviço</h2>
+              <div style={{ fontSize: '14pt', fontWeight: 700 }}>Nº {osToPrint.numos}</div>
+            </div>
+
+            <div className="os-print-info-grid">
+              <div className="info-box">
+                <div><strong>Cliente:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.nome || '---'}</div>
+                <div><strong>CPF/CNPJ:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.cpfcnpj || '---'}</div>
+                <div><strong>Endereço:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.rua || '---'}, {clientes.find(c => c.id === osToPrint.id_contato)?.numcasa || ''}</div>
+                <div><strong>Cidade:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.cidade || '---'} - {clientes.find(c => c.id === osToPrint.id_contato)?.uf || '--'}</div>
+              </div>
+              <div className="info-box">
+                <div><strong>Data Entrada:</strong> {osToPrint.dataentrada ? new Date(osToPrint.dataentrada).toLocaleDateString('pt-BR') : '---'}</div>
+                <div><strong>Previsão:</strong> {osToPrint.dataprevisao ? new Date(osToPrint.dataprevisao).toLocaleDateString('pt-BR') : '---'}</div>
+                <div><strong>Vendedor:</strong> {vendedores.find(v => v.id === osToPrint.id_vendedor)?.nome || '---'}</div>
+                <div><strong>Status:</strong> {osToPrint.status}</div>
+              </div>
+            </div>
+
+            <table className="os-print-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Medida</th>
+                  <th>Marca / Desenho</th>
+                  <th>Serviço</th>
+                  <th>Série / Fogo</th>
+                  <th style={{ textAlign: 'right' }}>V. Unit</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {osToPrint.pneus.map((p, idx) => (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    <td>{medidas.find(m => m.id === p.id_medida)?.descricao || '---'}</td>
+                    <td>{marcas.find(m => m.id === p.id_marca)?.descricao || '-'} / {desenhos.find(d => d.id === p.id_desenho)?.descricao || '-'}</td>
+                    <td>{servicos.find(s => s.id === p.id_servico)?.descricao || '---'}</td>
+                    <td>{p.numserie || '-'} / {p.numfogo || '-'}</td>
+                    <td style={{ textAlign: 'right' }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor)}</td>
+                    <td style={{ textAlign: 'right' }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="os-print-totals">
+              <div className="totals-grid">
+                <div className="total-row">
+                  <span>Total Itens:</span>
+                  <span>{osToPrint.pneus.length}</span>
+                </div>
+                <div className="total-row">
+                  <span>Sub-Total:</span>
+                  <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(osToPrint.pneus.reduce((acc, curr) => acc + (curr.valor || 0), 0))}</span>
+                </div>
+                <div className="total-row">
+                  <span>Total OS:</span>
+                  <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(osToPrint.pneus.reduce((acc, curr) => acc + (curr.valor || 0), 0))}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="os-print-obs">
+              <strong>Observações:</strong>
+              <p style={{ margin: '5px 0', fontSize: '10pt' }}>{osToPrint.observacao || 'Nenhuma observação informada.'}</p>
+            </div>
+
+            <div className="os-print-signatures">
+              <div className="sig-box">RESPONSÁVEL TÉCNICO</div>
+              <div className="sig-box">ASSINATURA DO CLIENTE</div>
+            </div>
+            
+            <div style={{ marginTop: '30px', fontSize: '8pt', textAlign: 'center', color: '#666' }}>
+              Este documento é apenas para controle interno e conferência de serviços.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* RELATÓRIO DE LISTA - Layout de Qualidade */}
+      <div className="report-list-container only-print">
+        <div className="report-list-header">
+          <div className="report-header-main">
+            <div className="report-logo-box">
+              <img src={logoEmpresa} alt="Logo" />
+            </div>
+            <div className="report-company-info">
+              <h2>{empresa?.razaosocial || 'TOTALCAP GESTÃO DE PNEUS'}</h2>
+              <p className="company-subtitle">Sistema de Gestão de Recapagem de Pneus</p>
+            </div>
+            <div className="report-meta-info">
+              <div className="meta-item">
+                <span className="meta-label">Data:</span>
+                <span className="meta-value">{new Date().toLocaleDateString('pt-BR')}</span>
+              </div>
+              <div className="meta-item">
+                <span className="meta-label">Hora:</span>
+                <span className="meta-value">{new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="report-title-bar">
+            <h1>RELATÓRIO DE ORDENS DE SERVIÇO</h1>
+            <div className="report-filter-info">
+              {searchParams.numos || searchParams.cliente || searchParams.id ? `Filtros Aplicados` : 'Filtro: Todos os registros'}
+            </div>
+          </div>
+        </div>
+
+        <table className="report-modern-table">
+          <thead>
+            <tr>
+              <th style={{ width: '80px' }}>ID</th>
+              <th style={{ width: '100px' }}>Número OS</th>
+              <th style={{ width: '110px' }}>Data</th>
+              <th>Cliente</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>Itens</th>
+              <th style={{ width: '150px', textAlign: 'right' }}>Valor Total</th>
+              <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {oss.map((os: any) => (
+              <tr key={os.id}>
+                <td className="cell-id">#{os.id}</td>
+                <td className="cell-os">#{os.numos}</td>
+                <td>{os.dataentrada ? new Date(os.dataentrada).toLocaleDateString('pt-BR') : '---'}</td>
+                <td className="cell-client">{clientes.find(c => c.id === os.id_contato)?.nome || '---'}</td>
+                <td style={{ textAlign: 'center' }}>{os.pneus?.length || 0}</td>
+                <td className="cell-value">R$ {parseFloat(os.vrtotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="cell-status">
+                  <span className={`status-pill ${String(os.status || '').toLowerCase()}`}>
+                    {os.status || 'ABERTA'}
                   </span>
-                </div>
-                <div className="id-box no-right"><span className="id-label">Desenho Original</span><span className="id-value">{pneuForPrint.desenhoriginal || '---'}</span></div>
-              </div>
-            </div>
-
-            <div className="full-row-field" style={{ borderBottom: '1px solid #000' }}>
-              <span className="id-label">Cliente</span>
-              <span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span>
-            </div>
-
-            <div className="technical-row">
-              <div className="id-box"><span className="id-label">Bitola / Medida</span><span className="id-value">{medidas.find(m => m.id === parseInt(pneuForPrint.id_medida))?.descricao || '---'}</span></div>
-              <div className="id-box"><span className="id-label">Marca</span><span className="id-value">{marcas.find(m => m.id === parseInt(pneuForPrint.id_marca))?.descricao || '---'}</span></div>
-              <div className="id-box"><span className="id-label">Matrícula / Série</span><span className="id-value">{pneuForPrint.numserie || '---'}</span></div>
-              <div className="id-box"><span className="id-label">Nº Fogo</span><span className="id-value">{pneuForPrint.numfogo || '---'}</span></div>
-              <div className="id-box no-right"><span className="id-label">DOT</span><span className="id-value">{pneuForPrint.dot || '---'}</span></div>
-            </div>
-
-            <div className="ficha-main-area">
-              <div className="production-table-area">
-                <table className="prod-table">
-                  <thead>
-                    <tr>
-                      <th className="sector-name">SETOR</th>
-                      <th style={{ width: '100px' }}>ASSINATURA</th>
-                      <th style={{ width: '40px' }}>EQ.</th>
-                      <th>D E S C R I Ç Ã O</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="sector-name">EXAME PRELIMINAR</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <span>OBS:</span>
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>CONSERTO ANTERIOR</span></div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="sector-name">RASPAGEM</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <span>PERÍMETRO:</span>
-                           <span>RAIO:</span>
-                           <span>LARGURA DO PISO:</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="sector-name">ESCAREAÇÃO</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>NORMAL</span></div>
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>ABERTURA CANALETA</span></div>
-                        </div>
-                        <div className="sub-field-group">
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>EXCESSO</span></div>
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>RETIRADA 4ª CINTA</span></div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr><td className="sector-name">REEXAME / PREP. CONSERTO</td><td></td><td></td><td><span className="id-label">TIPO E QUANTIDADE</span></td></tr>
-                    <tr><td className="sector-name">APLICAÇÃO DE COLA</td><td></td><td></td><td><div style={{ textAlign: 'right', fontSize: '6pt' }}>HORAS _______</div></td></tr>
-                    <tr><td className="sector-name">CORTE DE BANDA</td><td></td><td></td><td></td></tr>
-                    <tr><td className="sector-name">PREENCHIMENTO APLIC. MANCHÃO</td><td></td><td></td><td></td></tr>
-                    <tr>
-                      <td className="sector-name">COBERTURA</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <span>PERÍMETRO ________ M.M.</span>
-                           <span>LOTE/BANDA ___________________</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="sector-name">VULCANIZAÇÃO PRENSA</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <span>INÍCIO: _________</span>
-                           <span>FINAL: _________</span>
-                           <span>HORAS: _________</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="sector-name">VULCANIZAÇÃO AUTOCLAVE</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <span>INÍCIO: _________</span>
-                           <span>FINAL: _________</span>
-                           <span style={{ marginLeft: '10px' }}>S [ ] E [ ] B [ ]</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="sector-name">EXAME FINAL ACABAMENTO</td>
-                      <td></td><td></td>
-                      <td>
-                        <div className="sub-field-group">
-                           <span>DATA: ___/___/___</span>
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>APROVADO</span></div>
-                           <div className="sub-field-item"><div className="mini-box"></div> <span>REPROVADO</span></div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="side-panel">
-                <div className="side-item"><span className="id-label">DESENHO DA REFORMA</span><span className="id-value">---</span></div>
-                <div className="side-item check"><div className="mini-box"></div> <span>RECAPAGEM</span></div>
-                <div className="side-item check"><div className="mini-box"></div> <span>RECAUCHUTAGEM</span></div>
-                <div className="side-item check"><div className="mini-box"></div> <span>VULCANIZAÇÃO</span></div>
-                <div className="side-item check"><div className="mini-box"></div> <span>RECUSADO</span></div>
-                <div className="side-item check"><div className="mini-box"></div> <span>APROVADO</span></div>
-                <div className="side-item check"><div className="mini-box"></div> <span>APROVADO S.G.</span></div>
-                <div className="side-item" style={{ flex: 1, textAlign: 'center', fontSize: '6pt', display: 'flex', alignItems: 'center' }}>CARIMBO DE GARANTIA / RECUSA</div>
-                <div className="barcode-area">
-                   <svg ref={barcodeRef1}></svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="obs-area">
-              <span className="id-label">OBSERVAÇÃO:</span>
-            </div>
-          </div>
-
-          {/* CARTÃO 2: MOTIVOS DE RECUSA / NÃO GARANTIA */}
-          <div className="ficha-card recusa-card">
-            <div className="ficha-header">
-              <div className="header-logo"><img src={logoEmpresa} alt="LOGO" /></div>
-              <div className="header-center-title" style={{ fontSize: '13pt' }}>CARTÃO DE ACOMPANHAMENTO DO PNEU</div>
-              <div className="header-id-grid" style={{ width: '200px' }}>
-                <div className="id-box"><span className="id-label">ID Pneu</span><span className="id-value">{pneuForPrint.id || '---'}</span></div>
-                <div className="id-box no-right"><span className="id-label">Usuário</span><span className="id-value">ADMIN</span></div>
-                <div className="id-box no-bottom"><span className="id-label">Região</span><span className="id-value">{(() => { const cliente = clientes.find(c => c.id === parseInt(formData.id_contato)); const reg = regioes.find(r => r.id === cliente?.id_regiao); return reg?.codigo || '---'; })()}</span></div>
-                <div className="id-box no-right no-bottom"><span className="id-label">Data</span><span className="id-value">{new Date().toLocaleDateString()}</span></div>
-              </div>
-            </div>
-
-            <div className="recusa-main-grid">
-              <div className="recusa-fields">
-                <div className="id-box" style={{ borderRight: 'none' }}><span className="id-label">Cliente</span><span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span></div>
-                <div className="technical-row" style={{ gridTemplateColumns: '1.5fr 1.5fr', borderRight: 'none' }}>
-                   <div className="id-box" style={{ borderBottom: 'none' }}><span className="id-label">Cidade</span><span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.cidade || '---'}</span></div>
-                   <div className="id-box" style={{ borderRight: 'none', borderBottom: 'none' }}><span className="id-label">Desenho da Reforma</span><span className="id-value">{desenhos.find(d => d.id === parseInt(pneuForPrint.id_desenho))?.descricao || '---'}</span></div>
-                </div>
-                <div className="id-box" style={{ borderTop: '1px solid #000', borderRight: 'none' }}><span className="id-label">Bitola / Medida</span><span className="id-value">{medidas.find(m => m.id === parseInt(pneuForPrint.id_medida))?.descricao || '---'}</span></div>
-                <div className="id-box no-bottom" style={{ borderRight: 'none' }}><span className="id-label">Série</span><span className="id-value">{pneuForPrint.numserie || '---'}</span></div>
-                <div className="obs-area" style={{ borderTop: '1px solid #000' }}>
-                  <span className="id-label">OBSERVAÇÃO:</span>
-                </div>
-              </div>
-
-              <div className="motivos-panel">
-                <div className="motivo-header">( X ) MOTIVO DA RECUSA ( ) NÃO GARANTIA</div>
-                <div className="motivos-area">
-                   {[
-                     'EXCESSO DE CONSERTOS', 'EXCESSO DE PICOTAMENTOS', 'DESLOCAMENTO ENTRE LONAS',
-                     'DESGASTE EXCESSIVO', 'RODAGEM COM BAIXA PRESSÃO', 'NUMEROSOS RACHOS RADIAIS',
-                     'DETERIORIZAÇÃO DO TALÃO', 'CONTAMINAÇÃO COM ÓLEO OU GRAXA', 'OUTROS'
-                   ].map(m => (
-                     <div key={m} className="motivo-item"><div className="mini-box"></div> <span>{m}</span></div>
-                   ))}
-                </div>
-                <div className="barcode-area" style={{ borderTop: '1px solid #000', height: '45px' }}>
-                   <svg ref={barcodeRef2}></svg>
-                </div>
-              </div>
-            </div>
-          </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={5} className="footer-label">VALOR TOTAL ACUMULADO:</td>
+              <td className="footer-value">
+                R$ {oss.reduce((acc: number, curr: any) => acc + (parseFloat(curr.vrtotal) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td className="footer-count">{oss.length} registro(s)</td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <div className="report-list-footer">
+          <span>Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString('pt-BR')}</span>
+          <span>Página 1 de 1</span>
         </div>
-      )}
+      </div>
     </div>
   );
 }

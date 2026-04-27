@@ -1,0 +1,146 @@
+/* ESTILOS DE IMPRESSÃO PARA O LAUDO DE GARANTIA */
+
+@media screen {
+  .laudo-garantia-print-container {
+    display: none !important;
+  }
+}
+
+@media print {
+  body.printing-laudogarantia-active * {
+    visibility: hidden;
+  }
+  
+  body.printing-laudogarantia-active .laudo-garantia-print-container, 
+  body.printing-laudogarantia-active .laudo-garantia-print-container * {
+    visibility: visible;
+  }
+  
+  .laudo-garantia-print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 15px;
+    background: white !important;
+    color: black !important;
+    font-family: Arial, sans-serif;
+    font-size: 8pt;
+  }
+
+  .print-header-garantia {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #000;
+    padding: 10px;
+    margin-bottom: 5px;
+  }
+
+  .print-header-garantia h1 {
+    margin: 0;
+    font-size: 14pt;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .laudo-number-garantia {
+    font-size: 12pt;
+    font-weight: bold;
+  }
+
+  .section-garantia {
+    border: 1px solid #000;
+    margin-bottom: 5px;
+  }
+
+  .section-title-garantia {
+    background: #f0f0f0 !important;
+    border-bottom: 1px solid #000;
+    margin: 0;
+    padding: 3px 5px;
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .grid-garantia {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  .grid-item-garantia {
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 3px 5px;
+    flex-grow: 1;
+    min-width: 0; /* allows text truncation if needed, but flex takes over */
+    box-sizing: border-box;
+  }
+
+  /* Remove right border on last items in a row where we can't cleanly use flex, we'll use specific classes */
+  .grid-row-garantia {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid #000;
+  }
+  .grid-row-garantia:last-child {
+    border-bottom: none;
+  }
+  .grid-row-garantia > div {
+    border-right: 1px solid #000;
+    padding: 3px 5px;
+  }
+  .grid-row-garantia > div:last-child {
+    border-right: none;
+  }
+
+  .field-label {
+    font-weight: bold;
+    display: block;
+    font-size: 7pt;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .field-value {
+    font-size: 8pt;
+    min-height: 12px;
+  }
+
+  .approval-status-garantia {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10pt;
+    font-weight: bold;
+  }
+
+  .approval-box {
+    border: 1px solid #000;
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    text-align: center;
+    line-height: 15px;
+    font-size: 10pt;
+  }
+
+  .signatures-garantia {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+    padding: 10px 0;
+  }
+
+  .signature-box {
+    width: 40%;
+    text-align: center;
+  }
+
+  .signature-line {
+    border-top: 1px solid #000;
+    margin-bottom: 5px;
+  }
+}

@@ -5,7 +5,7 @@ from backend.database import get_db
 from backend.app.models.apontamento import Apontamento
 from backend.app.models.setor import Setor
 from backend.app.models.operador import Operador
-from backend.app.schemas.apontamento import ApontamentoResponse
+from backend.app.schemas.apontamento import ApontamentoResponse, ApontamentoCreate, ApontamentoUpdate
 
 router = APIRouter()
 
@@ -42,3 +42,162 @@ def get_apontamentos(
         resp.append(data)
     
     return resp
+
+@router.get("/relatorio")
+def get_relatorio_produtividade(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    id_setor: Optional[int] = None,
+    id_operador: Optional[int] = None,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Retorna dados consolidados para o relatório de produtividade.
+    """
+    from backend.app.models.ordem_servico import OSPneu, OrdemServico
+
+    query = db.query(
+        Apontamento.id,
+        Apontamento.inicio,
+        Apontamento.termino,
+        Apontamento.tempo,
+        Setor.descricao.label("setor_nome"),
+        Operador.nome.label("operador_nome"),
+        OSPneu.numserie,
+        OSPneu.numfogo,
+        OrdemServico.numos
+    ).join(Setor, Apontamento.id_setor == Setor.id)\
+     .join(Operador, Apontamento.id_operador == Operador.id)\
+     .join(OSPneu, Apontamento.id_pneu == OSPneu.id)\
+     .join(OrdemServico, OSPneu.id_ordem == OrdemServico.id)
+
+    if start_date:
+        query = query.filter(Apontamento.datalan >= start_date)
+    if end_date:
+        query = query.filter(Apontamento.datalan <= end_date + " 23:59:59")
+    if id_setor:
+        query = query.filter(Apontamento.id_setor == id_setor)
+    if id_operador:
+        query = query.filter(Apontamento.id_operador == id_operador)
+
+    results = query.order_by(Apontamento.datalan.desc()).all()
+
+    return [
+        {
+            "id": r.id,
+            "inicio": r.inicio.isoformat() if r.inicio else None,
+            "termino": r.termino.isoformat() if r.termino else None,
+            "tempo": float(r.tempo) if r.tempo else 0,
+            "setor_nome": r.setor_nome,
+            "operador_nome": r.operador_nome,
+            "numserie": r.numserie,
+            "numfogo": r.numfogo,
+            "numos": r.numos
+        }
+        for r in results
+    ]
+
+@router.get("/pneu-by-barcode/{barcode}")
+def get_pneu_by_barcode(barcode: str, db: Session = Depends(get_db)) -> Any:
+    """
+    Busca os dados do pneu e OS através do código de barras.
+    """
+    from backend.app.models.ordem_servico import OSPneu, OrdemServico
+    from backend.app.models.cliente import Cliente
+    from backend.app.models.medida import Medida
+    from backend.app.models.desenho import Desenho
+
+    result = db.query(
+        OSPneu.id,
+        OSPneu.numserie,
+        OSPneu.numfogo,
+        OrdemServico.numos,
+        Cliente.nome.label("cliente_nome"),
+        Medida.descricao.label("medida_desc"),
+        Desenho.descricao.label("desenho_desc")
+    ).join(OrdemServico, OSPneu.id_ordem == OrdemServico.id)\
+     .join(Cliente, OrdemServico.id_cliente == Cliente.id)\
+     .outerjoin(Medida, OSPneu.id_medida == Medida.id)\
+     .outerjoin(Desenho, OSPneu.id_desenho == Desenho.id)\
+     .filter(OSPneu.codbarras == barcode).first()
+
+    if not result:
+        # Tenta buscar pelo numfogo se não achou pelo barcode (fallback comum)
+        result = db.query(
+            OSPneu.id,
+            OSPneu.numserie,
+            OSPneu.numfogo,
+            OrdemServico.numos,
+            Cliente.nome.label("cliente_nome"),
+            Medida.descricao.label("medida_desc"),
+            Desenho.descricao.label("desenho_desc")
+        ).join(OrdemServico, OSPneu.id_ordem == OrdemServico.id)\
+         .join(Cliente, OrdemServico.id_cliente == Cliente.id)\
+         .outerjoin(Medida, OSPneu.id_medida == Medida.id)\
+         .outerjoin(Desenho, OSPneu.id_desenho == Desenho.id)\
+         .filter(OSPneu.numfogo == barcode).first()
+
+    if not result:
+        return {"error": "Pneu não localizado com este código."}
+
+    return {
+        "id": result.id,
+        "numserie": result.numserie,
+        "numfogo": result.numfogo,
+        "numos": result.numos,
+        "cliente": result.cliente_nome,
+        "medida": result.medida_desc,
+        "desenho": result.desenho_desc
+    }
+
+@router.post("/", response_model=ApontamentoResponse)
+def create_apontamento(obj_in: ApontamentoCreate, db: Session = Depends(get_db)) -> Any:
+    """
+    Cria um novo registro de apontamento.
+    """
+    # Usando Any para evitar problemas de importação circular do schema se necessário
+    db_obj = Apontamento(
+        id_pneu=obj_in.id_pneu,
+        id_setor=obj_in.id_setor,
+        id_operador=obj_in.id_operador,
+        inicio=obj_in.inicio,
+        termino=obj_in.termino,
+        tempo=obj_in.tempo,
+        obs=obj_in.obs,
+        codbarra=obj_in.codbarra,
+        status=obj_in.status or 'F'
+    )
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.put("/{id}", response_model=ApontamentoResponse)
+def update_apontamento(id: int, obj_in: ApontamentoUpdate, db: Session = Depends(get_db)) -> Any:
+    """
+    Atualiza um registro de apontamento.
+    """
+    db_obj = db.query(Apontamento).filter(Apontamento.id == id).first()
+    if not db_obj:
+        return {"error": "Apontamento não localizado."}
+    
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field in update_data:
+        setattr(db_obj, field, update_data[field])
+    
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.delete("/{id}")
+def delete_apontamento(id: int, db: Session = Depends(get_db)) -> Any:
+    """
+    Remove um registro de apontamento.
+    """
+    db_obj = db.query(Apontamento).filter(Apontamento.id == id).first()
+    if not db_obj:
+        return {"error": "Apontamento não localizado."}
+    db.delete(db_obj)
+    db.commit()
+    return {"success": True}

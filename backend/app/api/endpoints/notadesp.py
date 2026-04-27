@@ -36,46 +36,53 @@ def read_nota(id: int, db: Session = Depends(deps.get_db)):
         raise HTTPException(status_code=404, detail="Nota de despesa não encontrada")
     return nota
 
+
 @router.post("/", response_model=schemas.Notadesp)
 def create_nota(
     *,
     db: Session = Depends(deps.get_db),
     nota_in: schemas.NotadespCreate
 ):
-    # Criar cabeçalho
-    db_nota = Notadesp(
-        id_contato=nota_in.id_contato,
-        dataemi=nota_in.dataemi,
-        cpfcnpj=nota_in.cpfcnpj,
-        nome=nota_in.nome,
-        vtotal=nota_in.vtotal,
-        id_vendedor=nota_in.id_vendedor,
-        status=nota_in.status
-    )
-    db.add(db_nota)
-    db.flush() # Para pegar o ID gerado
-
-    # Criar itens
-    for item in nota_in.itens:
-        db_item = NotadespItem(
-            id_notadesp=db_nota.id,
-            id_vendedor=item.id_vendedor,
-            id_veiculo=item.id_veiculo,
-            descricao=item.descricao,
-            datamov=item.datamov,
-            tipo=item.tipo,
-            qlitro=item.qlitro,
-            vlitro=item.vlitro,
-            vtotal=item.vtotal,
-            kmanter=item.kmanter,
-            kmatual=item.kmatual,
-            dados=item.dados
+    print(f"DEBUG: Criando nota de despesa: {nota_in.model_dump()}")
+    try:
+        # Criar cabeçalho
+        db_nota = Notadesp(
+            id_contato=nota_in.id_contato,
+            dataemi=nota_in.dataemi,
+            cpfcnpj=nota_in.cpfcnpj,
+            nome=nota_in.nome,
+            vtotal=nota_in.vtotal,
+            id_vendedor=nota_in.id_vendedor,
+            status=nota_in.status,
+            obs=nota_in.obs
         )
-        db.add(db_item)
-    
-    db.commit()
-    db.refresh(db_nota)
-    return db_nota
+        db.add(db_nota)
+        
+        # Criar itens usando o relacionamento
+        for item_in in nota_in.itens:
+            db_item = NotadespItem(
+                id_vendedor=item_in.id_vendedor,
+                id_veiculo=item_in.id_veiculo,
+                descricao=item_in.descricao,
+                datamov=item_in.datamov,
+                tipo=item_in.tipo,
+                qlitro=item_in.qlitro,
+                vlitro=item_in.vlitro,
+                vtotal=item_in.vtotal,
+                kmanter=item_in.kmanter,
+                kmatual=item_in.kmatual,
+                dados=item_in.dados
+            )
+            db_nota.itens.append(db_item)
+        
+        db.commit()
+        db.refresh(db_nota)
+        print(f"DEBUG: Nota criada com sucesso ID: {db_nota.id}")
+        return db_nota
+    except Exception as e:
+        db.rollback()
+        print(f"DEBUG: Erro ao criar nota: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/{id}", response_model=schemas.Notadesp)
 def update_nota(
@@ -84,38 +91,45 @@ def update_nota(
     id: int,
     nota_in: schemas.NotadespUpdate
 ):
+    print(f"DEBUG: Atualizando nota {id}")
     db_nota = db.query(Notadesp).filter(Notadesp.id == id).first()
     if not db_nota:
         raise HTTPException(status_code=404, detail="Nota não encontrada")
     
-    # Atualizar cabeçalho
-    update_data = nota_in.model_dump(exclude={"itens"})
-    for field, value in update_data.items():
-        setattr(db_nota, field, value)
-    
-    # Sincronizar itens (mais simples: remove todos e recria)
-    db.query(NotadespItem).filter(NotadespItem.id_notadesp == id).delete()
-    
-    for item in nota_in.itens:
-        db_item = NotadespItem(
-            id_notadesp=id,
-            id_vendedor=item.id_vendedor,
-            id_veiculo=item.id_veiculo,
-            descricao=item.descricao,
-            datamov=item.datamov,
-            tipo=item.tipo,
-            qlitro=item.qlitro,
-            vlitro=item.vlitro,
-            vtotal=item.vtotal,
-            kmanter=item.kmanter,
-            kmatual=item.kmatual,
-            dados=item.dados
-        )
-        db.add(db_item)
-    
-    db.commit()
-    db.refresh(db_nota)
-    return db_nota
+    try:
+        # Atualizar cabeçalho
+        update_data = nota_in.model_dump(exclude={"itens"})
+        for field, value in update_data.items():
+            setattr(db_nota, field, value)
+        
+        # Sincronizar itens
+        db.query(NotadespItem).filter(NotadespItem.id_notadesp == id).delete()
+        
+        for item_in in nota_in.itens:
+            db_item = NotadespItem(
+                id_notadesp=id,
+                id_vendedor=item_in.id_vendedor,
+                id_veiculo=item_in.id_veiculo,
+                descricao=item_in.descricao,
+                datamov=item_in.datamov,
+                tipo=item_in.tipo,
+                qlitro=item_in.qlitro,
+                vlitro=item_in.vlitro,
+                vtotal=item_in.vtotal,
+                kmanter=item_in.kmanter,
+                kmatual=item_in.kmatual,
+                dados=item_in.dados
+            )
+            db.add(db_item)
+        
+        db.commit()
+        db.refresh(db_nota)
+        print(f"DEBUG: Nota {id} atualizada")
+        return db_nota
+    except Exception as e:
+        db.rollback()
+        print(f"DEBUG: Erro ao atualizar nota {id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{id}")
 def delete_nota(id: int, db: Session = Depends(deps.get_db)):

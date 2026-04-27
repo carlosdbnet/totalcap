@@ -121,7 +121,7 @@ class PneuSearchResult(BaseModel):
     os_id: int
     numos: int
     contato_nome: Optional[str] = None
-    dataentrada: datetime
+    dataentrada: Optional[datetime] = None
     id_servico_base: Optional[int] = None
     valor_pneu: Optional[float] = 0.0
     qservico: Optional[float] = 0.0

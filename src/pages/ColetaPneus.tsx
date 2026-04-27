@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, Search, Plus, Trash2, Edit2, Eye, X, DollarSign, Shield, Info, ClipboardList, Printer, Camera, Loader2, AlertCircle, User, FilePlus, Calendar, Save } from 'lucide-react';
 import api from '../lib/api';
 import './ColetaPneus.css';
+import LogoDbnet from '../assets/images/LogoEmpresa.png';
 
 const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
   return new Promise((resolve) => {
@@ -100,6 +101,7 @@ export default function ColetaPneus() {
   const [marcas, setMarcas] = useState<any[]>([]);
   const [desenhos, setDesenhos] = useState<any[]>([]);
   const [tiposRecap, setTiposRecap] = useState<any[]>([]);
+  const [empresa, setEmpresa] = useState<any>(null);
 
   // Modal State com Recuperação Instantânea
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -334,6 +336,9 @@ export default function ColetaPneus() {
       loadResource('/marcas/', setMarcas, 'Marcas'),
       loadResource('/desenhos/', setDesenhos, 'Desenhos'),
       loadResource('/tipo-recapagem/', setTiposRecap, 'Tipos de Recapagem'),
+      api.get('/empresas/').then(res => {
+        if (res.data && res.data.length > 0) setEmpresa(res.data[0]);
+      }).catch(err => console.error("Erro ao buscar empresa:", err))
     ]);
   };
 
@@ -344,6 +349,7 @@ export default function ColetaPneus() {
     if ((mode === 'edit' || mode === 'view') && coleta) {
       setCurrentId(coleta.id);
       setFormData({
+        id: coleta.id,
         id_contato: coleta.id_contato,
         msgmob: coleta.msgmob || '',
         id_vendedor: coleta.id_vendedor || 0,
@@ -391,9 +397,52 @@ export default function ColetaPneus() {
     setIsModalOpen(true);
   };
 
+  const handleClienteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    const clienteId = parseInt(value);
+    
+    if (clienteId === 0) {
+      setFormData((prev: any) => ({ 
+        ...prev, 
+        id_contato: 0,
+        nome: '',
+        cpfcnpj: '',
+        fone: '',
+        endereco: '',
+        cidade: '',
+        uf: ''
+      }));
+      return;
+    }
+
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (cliente) {
+      setFormData((prev: any) => ({ 
+        ...prev, 
+        id_contato: clienteId,
+        nome: cliente.nome,
+        cpfcnpj: cliente.cpfcnpj || '',
+        fone: cliente.foneprincipal || '',
+        endereco: `${cliente.rua || ''}${cliente.numcasa ? ', ' + cliente.numcasa : ''}${cliente.bairro ? ' - ' + cliente.bairro : ''}`,
+        cidade: cliente.cidade || '',
+        uf: cliente.uf || '',
+        id_vendedor: cliente.id_vendedor && cliente.id_vendedor !== 0 ? cliente.id_vendedor : prev.id_vendedor
+      }));
+    } else {
+      setFormData((prev: any) => ({ ...prev, id_contato: clienteId }));
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [id]: value }));
+    const { name, id, value, type } = e.target as any;
+    const fieldName = name || id;
+    
+    let finalValue: any = value;
+    if (type === 'number') {
+      finalValue = value === '' ? null : (value.includes('.') ? parseFloat(value) : parseInt(value));
+    }
+    
+    setFormData((prev: any) => ({ ...prev, [fieldName]: finalValue }));
   };
 
   // Pneus Sub-Modal Logic
@@ -561,18 +610,28 @@ export default function ColetaPneus() {
     }
   };
 
-  const handlePrint = () => {
-    if (!selectedId) {
-      alert("Por favor, selecione uma coleta na tabela clicando sobre ela.");
-      return;
-    }
-    window.print();
-  };
+  
 
   const handleCameraClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
+  };
+
+  const handlePrintList = () => {
+    document.body.classList.add('printing-coleta-list-active');
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-coleta-list-active');
+    }, 500);
+  };
+
+  const handlePrintIndividual = () => {
+    document.body.classList.add('printing-coleta-active');
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-coleta-active');
+    }, 500);
   };
 
   // Removido handleFileChange antigo (Mock) para evitar conflitos de processamento.
@@ -679,6 +738,17 @@ export default function ColetaPneus() {
       const rodape = ocrData.rodape || {};
       const provedorNome = ocrData.provedor === 'gemini' ? 'Google Gemini' : 'OpenAI GPT-4o-mini';
 
+      // LÓGICA DE BUSCA DE CLIENTE POR CPF/CNPJ (Solicitado pelo Usuário)
+      let matchedCliente = null;
+      const rawCpfCnpjOCR = String(cabecalho.cpfcnpj || "").replace(/\D/g, "");
+      
+      if (rawCpfCnpjOCR) {
+        matchedCliente = clientes.find(c => {
+          const dbCpfCnpj = String(c.cpfcnpj || "").replace(/\D/g, "");
+          return dbCpfCnpj === rawCpfCnpjOCR;
+        });
+      }
+
       if (isModalOpen) {
         setFormData((prev: any) => ({
           ...prev,
@@ -686,24 +756,29 @@ export default function ColetaPneus() {
         }));
       } else {
         setFormData({
-          id_contato: formData.id_contato || (clientes.length > 0 ? clientes[0].id_contato : 0),
-          id_vendedor: formData.id_vendedor || (vendedores.length > 0 ? vendedores[0].id : 0),
-          msgmob: 'Coleta gerada via Leitura OCR',
+          id_contato: matchedCliente ? matchedCliente.id : (formData.id_contato || (clientes.length > 0 ? clientes[0].id : 0)),
+          id_vendedor: (matchedCliente && matchedCliente.id_vendedor && matchedCliente.id_vendedor !== 0) 
+            ? matchedCliente.id_vendedor 
+            : (formData.id_vendedor || (vendedores.length > 0 ? vendedores[0].id : 0)),
+          msgmob: matchedCliente ? `Coleta vinculada ao cliente: ${matchedCliente.nome}` : 'Coleta gerada via Leitura OCR',
           pneus: novosPneus,
           numos: cabecalho.numos || '',
-          cpfcnpj: cabecalho.cpfcnpj || '',
-          nome: cabecalho.nome || '',
-          endereco: cabecalho.endereco || '',
-          cidade: cabecalho.cidade || '',
-          uf: cabecalho.uf || '',
-          fone: cabecalho.fone || '',
+          cpfcnpj: matchedCliente ? (matchedCliente.cpfcnpj || '') : (cabecalho.cpfcnpj || ''),
+          nome: matchedCliente ? matchedCliente.nome : (cabecalho.nome || ''),
+          endereco: matchedCliente 
+            ? `${matchedCliente.rua || ''}${matchedCliente.numcasa ? ', ' + matchedCliente.numcasa : ''}${matchedCliente.bairro ? ' - ' + matchedCliente.bairro : ''}`
+            : (cabecalho.endereco || ''),
+          cidade: matchedCliente ? (matchedCliente.cidade || '') : (cabecalho.cidade || ''),
+          uf: matchedCliente ? (matchedCliente.uf || '') : (cabecalho.uf || ''),
+          fone: matchedCliente ? (matchedCliente.foneprincipal || '') : (cabecalho.fone || ''),
           veiculo: cabecalho.veiculo || '',
           formapagto: cabecalho.formapagto || '',
           vendedor_ocr: cabecalho.vendedor_ocr || '',
           servicocomgarantia: cabecalho.servicocomgarantia || '',
           tipoveiculo: cabecalho.tipoveiculo || '',
           somentesepar: cabecalho.somentesepar || '',
-          podealterardesenho: cabecalho.podealterardesenho || ''
+          podealterardesenho: cabecalho.podealterardesenho || '',
+          status: ''
         });
         setModalMode('create');
         // Mantemos o modal OCR aberto para o usuário ver o resultado no Memo
@@ -790,6 +865,25 @@ export default function ColetaPneus() {
 
   return (
     <div className="coleta-container fade-in">
+      {/* Cabeçalho de Impressão Padrão */}
+      <div className="report-print-header only-print">
+        <div className="print-header-top">
+          <div className="print-logo">
+            <img src={LogoDbnet} alt="Logo" />
+          </div>
+          <div className="print-main-row">
+            <div className="print-company-name">{empresa?.razaosocial || 'TOTALCAP GESTÃO DE PNEUS'}</div>
+            <div className="print-date"><strong>Data Impressão:</strong> {new Date().toLocaleDateString('pt-BR')}</div>
+          </div>
+        </div>
+        <div className="print-header-bottom">
+          <div className="print-report-title">RELATÓRIO DE COLETA DE PNEUS</div>
+          <div className="print-meta-info">
+            <span><strong>Período:</strong> {startDate ? new Date(startDate).toLocaleDateString('pt-BR') : 'Início'} à {endDate ? new Date(endDate).toLocaleDateString('pt-BR') : 'Hoje'}</span>
+          </div>
+        </div>
+      </div>
+
       {isScanning && (
         <div className="scanning-overlay">
           <div className="scanning-card">
@@ -807,7 +901,7 @@ export default function ColetaPneus() {
           </div>
           <p className="page-subtitle">Gestao de coleta externa de pneus</p>
         </div>
-        <div className="header-actions">
+        <div className="header-actions no-print">
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -819,8 +913,8 @@ export default function ColetaPneus() {
           <button className="btn-accent" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }} onClick={() => setIsOCRModalOpen(true)} title="Leitura OCR de Imagem">
             <Search size={20} /> LeituraOCR
           </button>
-          <button className="btn-secondary" onClick={handlePrint} disabled={!selectedId} style={{ opacity: selectedId ? 1 : 0.6 }}>
-            <Printer size={20} /> Imprimir Selecionada
+          <button className="btn-print" onClick={handlePrintList} title="Imprimir Lista de Coletas">
+            <Printer size={20} /> Imprimir Lista
           </button>
           <button className="btn-primary" onClick={() => openModal('create')}>
             <Plus size={20} /> Nova Coleta
@@ -828,46 +922,143 @@ export default function ColetaPneus() {
         </div>
       </div>
 
-      <div className="data-toolbar glass-panel">
-        <div className="search-box">
-          <Search size={20} className="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Buscar por ID ou nome do cliente..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
-        <div className="date-filters">
-          <div className="date-input-group">
-            <Calendar size={16} className="date-icon" />
+      <div className="glass-panel table-container overflow-hidden" style={{ margin: '0 2rem 2rem 2rem' }}>
+        <div className="table-toolbar no-print" style={{ padding: '1.25rem 2rem' }}>
+          <div className="search-box">
+            <Search size={18} className="search-icon" />
             <input 
-              type="date" 
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              title="Data Inicial"
+              type="text" 
+              placeholder="Buscar por ID, cliente, vendedor ou OS..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <span className="date-separator">até</span>
-          <div className="date-input-group">
-            <Calendar size={16} className="date-icon" />
-            <input 
-              type="date" 
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              title="Data Final"
-            />
+          
+          <div className="date-filters">
+            <div className="date-input-group">
+              <Calendar size={16} className="date-icon" />
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                title="Data Inicial"
+              />
+            </div>
+            <span className="date-separator">até</span>
+            <div className="date-input-group">
+              <Calendar size={16} className="date-icon" />
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                title="Data Final"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {fetchError && (
-        <div className="error-banner" style={{ margin: '0 2rem 1rem 2rem', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <AlertCircle size={20} />
-          <span>Erro ao carregar dados: {fetchError}. Verifique se o servidor está rodando.</span>
-        </div>
-      )}
+        {fetchError && (
+          <div className="error-banner" style={{ margin: '0 2rem 1rem 2rem', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <AlertCircle size={20} />
+            <span>Erro ao carregar dados: {fetchError}. Verifique se o servidor está rodando.</span>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="loading-container p-12 text-center text-slate-400">
+            <Loader2 className="spinning mb-2" size={32} />
+            <p>Carregando coletas...</p>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="data-table print-list-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>OS Gerada</th>
+                  <th>Data</th>
+                  <th>Cliente</th>
+                  <th>Vendedor</th>
+                  <th>Volume</th>
+                  <th>Vrt. Total</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'center' }} className="no-print">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredColetas.length === 0 ? (
+                  <tr><td colSpan={9} className="empty-state text-center p-8 text-slate-400">Nenhum registro encontrado.</td></tr>
+                ) : (
+                  filteredColetas.map(coleta => (
+                    <tr 
+                      key={coleta.id} 
+                      className={selectedId === coleta.id ? 'row-selected' : ''} 
+                      onClick={() => setSelectedId(selectedId === coleta.id ? null : coleta.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td><span className="os-number">#{coleta.id}</span></td>
+                      <td>{coleta.numos ? <span className="os-number os-generated">#{coleta.numos}</span> : '---'}</td>
+                      <td>{coleta.dataos ? new Date(coleta.dataos).toLocaleDateString('pt-BR') : '---'}</td>
+                      <td>{coleta.contato?.nome || 'Cliente não encontrado'}</td>
+                      <td>{coleta.vendedor?.nome || '---'}</td>
+                      <td><span className="badge-info highlight">{(coleta.pneus?.length || 0)} pneu(s)</span></td>
+                      <td className="valor-cell-readonly">R$ {parseFloat((coleta.vtotal || 0).toString()).toFixed(2)}</td>
+                      <td>
+                        <span className={`status-badge-item status-${
+                          coleta.status === 'Ok' ? 'pronto' : 
+                          coleta.status === 'GOS' ? 'accent' : 'aguardando'
+                        }`}>
+                          {coleta.status || 'Pendente'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }} className="no-print">
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
+                          <button 
+                            className={`icon-btn warning ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
+                            onClick={(e) => { e.stopPropagation(); handleGenerateOS(coleta.id); }} 
+                            title="Gerar Ordem de Serviço" 
+                            disabled={coleta.status === 'GOS'}
+                            style={{ minWidth: '95px', background: '#f59e0b' }}
+                          >
+                            <FilePlus size={18} />
+                            <span>Gera OS</span>
+                          </button>
+                          <button 
+                            className="icon-btn success" 
+                            onClick={(e) => { e.stopPropagation(); openModal('view', coleta); }} 
+                            title="Visualizar Detalhes"
+                            style={{ background: '#10b981' }}
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button 
+                            className={`icon-btn edit ${coleta.status === 'GOS' ? 'disabled' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); openModal('edit', coleta); }} 
+                            title="Editar Coleta"
+                            disabled={coleta.status === 'GOS'}
+                            style={{ background: '#3b82f6' }}
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            className={`icon-btn delete ${coleta.status === 'GOS' ? 'disabled' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(coleta.id); }} 
+                            title="Excluir Coleta"
+                            disabled={coleta.status === 'GOS'}
+                            style={{ background: '#ef4444' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* BANNER DE RECUPERAÇÃO OCR (Caso o modal feche sozinho no mobile) */}
       {!isOCRModalOpen && ocrPreview && (
@@ -897,237 +1088,162 @@ export default function ColetaPneus() {
           </div>
         </div>
       )}
-
-      {loading ? (
-        <div className="loading-container p-12 text-center text-slate-400">
-          <Loader2 className="spinning mb-2" size={32} />
-          <p>Carregando coletas...</p>
-        </div>
-      ) : (
-        <div className="glass-panel overflow-hidden p-0" style={{ margin: '0 2rem 2rem 2rem' }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>OS Gerada</th>
-                <th>Data</th>
-                <th>Cliente</th>
-                <th>Vendedor</th>
-                <th>Volume</th>
-                <th>Vrt. Total</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'center' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredColetas.length === 0 ? (
-                <tr><td colSpan={9} className="empty-state text-center p-8 text-slate-400">Nenhum registro encontrado.</td></tr>
-              ) : (
-                filteredColetas.map(coleta => (
-                    <tr 
-                      key={coleta.id} 
-                      className={selectedId === coleta.id ? 'row-selected' : ''} 
-                      onClick={() => setSelectedId(selectedId === coleta.id ? null : coleta.id)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <td><span className="os-number">#{coleta.id}</span></td>
-                      <td>{coleta.numos ? <span className="os-number" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>#{coleta.numos}</span> : '---'}</td>
-                      <td>{coleta.dataos ? new Date(coleta.dataos).toLocaleDateString('pt-BR') : '---'}</td>
-                      <td>{coleta.contato?.nome || 'Cliente não encontrado'}</td>
-                      <td>{coleta.vendedor?.nome || '---'}</td>
-                      <td><span className="badge-info highlight">{(coleta.pneus?.length || 0)} pneu(s)</span></td>
-                      <td className="valor-cell-readonly">R$ {parseFloat((coleta.vtotal || 0).toString()).toFixed(2)}</td>
-                      <td>
-                        <span className={`status-badge-item status-${
-                          coleta.status === 'Ok' ? 'pronto' : 
-                          coleta.status === 'GOS' ? 'accent' : 'aguardando'
-                        }`}>
-                          {coleta.status || 'Pendente'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
-                        <button 
-                          className={`icon-btn warning ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
-                          onClick={(e) => { e.stopPropagation(); handleGenerateOS(coleta.id); }} 
-                          title="Gerar Ordem de Serviço" 
-                          disabled={coleta.status === 'GOS'}
-                          style={{ minWidth: '95px', background: '#f59e0b' }}
-                        >
-                          <FilePlus size={18} />
-                          <span>Gera OS</span>
-                        </button>
-                        <button 
-                          className="icon-btn success" 
-                          onClick={(e) => { e.stopPropagation(); openModal('view', coleta); }} 
-                          title="Visualizar Detalhes"
-                          style={{ background: '#10b981' }}
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button 
-                          className={`icon-btn edit ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
-                          onClick={(e) => { e.stopPropagation(); if (coleta.status !== 'GOS') openModal('edit', coleta); }} 
-                          title={coleta.status === 'GOS' ? "Coleta exportada não pode ser editada" : "Editar"}
-                          disabled={coleta.status === 'GOS'}
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button 
-                          className={`icon-btn delete ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
-                          onClick={(e) => { e.stopPropagation(); if (coleta.status !== 'GOS') handleDelete(coleta.id); }} 
-                          title={coleta.status === 'GOS' ? "Coleta exportada não pode ser excluída" : "Excluir"}
-                          disabled={coleta.status === 'GOS'}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
       
       {isModalOpen && (
         <div className="coleta-modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="coleta-modal-content full-screen" onClick={e => e.stopPropagation()}>
-            <div className="coleta-modal-header">
+          <div className="premium-modal-content full-screen" onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Nova Coleta de Pneus' : (modalMode === 'view' ? 'Visualizar Coleta de Pneus' : 'Editar Coleta de Pneus')}</h2>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {modalMode !== 'create' && (
+                  <button 
+                    type="button" 
+                    className="btn-print-modal" 
+                    onClick={handlePrintIndividual}
+                    title="Imprimir Coleta"
+                  >
+                    <Printer size={18} />
+                    Imprimir Coleta
+                  </button>
+                )}
+                <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+              </div>
+
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="coleta-modal-body scrollable">
+              <div className="modal-body scrollable">
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="section-title"><User size={18} /> Dados do Cliente</div>
-                <div className="grid-4">
-                  <div className="form-group span-2">
-                    <label>Cliente</label>
-                    <select className="form-input" id="id_contato" value={formData.id_contato} onChange={handleChange} disabled={modalMode === 'view'}>
-                      <option value={0}>Selecione...</option>
-                      {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>CPF/CNPJ</label>
-                    <input className="form-input" type="text" id="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>Fone</label>
-                    <input className="form-input" type="text" id="fone" value={formData.fone} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group span-3">
-                    <label>Endereço</label>
-                    <input className="form-input" type="text" id="endereco" value={formData.endereco} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>Cidade</label>
-                    <input className="form-input" type="text" id="cidade" value={formData.cidade} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>UF</label>
-                    <input className="form-input" type="text" id="uf" value={formData.uf} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                </div>
-
-                <div className="section-title"><DollarSign size={18} /> Dados da OS</div>
-                <div className="grid-4">
-                  <div className="form-group">
-                    <label>Nº OS</label>
-                    <input className="form-input" type="text" id="numos" value={formData.numos} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>Vendedor</label>
-                    <select className="form-input" id="id_vendedor" value={formData.id_vendedor} onChange={handleChange} disabled={modalMode === 'view'}>
-                      <option value={0}>Selecione...</option>
-                      {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Forma Pagto</label>
-                    <input className="form-input" type="text" id="formapagto" value={formData.formapagto} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>Veículo</label>
-                    <input className="form-input" type="text" id="veiculo" value={formData.veiculo} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>Tipo Veículo</label>
-                    <input className="form-input" type="text" id="tipoveiculo" value={formData.tipoveiculo} onChange={handleChange} disabled={modalMode === 'view'} />
-                  </div>
-                  <div className="form-group">
-                    <label>Status</label>
-                    <input className="form-input" type="text" id="status" value={formData.status} onChange={handleChange} disabled={modalMode === 'edit' || modalMode === 'view'} />
+                <div className="premium-master-panel">
+                  <div className="premium-section-title"><User size={18} /> Dados do Cliente</div>
+                  <div className="grid-4">
+                    <div className="form-group span-2">
+                      <label>Cliente</label>
+                      <select className="form-input" id="id_contato" name="id_contato" value={formData.id_contato} onChange={handleClienteChange} disabled={modalMode === 'view'}>
+                        <option value={0}>Selecione...</option>
+                        {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>CPF/CNPJ</label>
+                      <input className="form-input" type="text" id="cpfcnpj" name="cpfcnpj" value={formData.cpfcnpj} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>Fone</label>
+                      <input className="form-input" type="text" id="fone" name="fone" value={formData.fone} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group span-3">
+                      <label>Endereço</label>
+                      <input className="form-input" type="text" id="endereco" name="endereco" value={formData.endereco} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>Cidade</label>
+                      <input className="form-input" type="text" id="cidade" name="cidade" value={formData.cidade} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>UF</label>
+                      <input className="form-input" type="text" id="uf" name="uf" value={formData.uf} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
                   </div>
                 </div>
 
-                <div className="section-title"><ClipboardList size={18} /> Observações</div>
-                <div className="form-group">
-                  <textarea className="form-input" id="msgmob" value={formData.msgmob} onChange={handleChange} rows={3} disabled={modalMode === 'view'} />
+                <div className="premium-master-panel">
+                  <div className="premium-section-title"><DollarSign size={18} /> Dados da OS</div>
+                  <div className="grid-4">
+                    <div className="form-group">
+                      <label>Nº OS</label>
+                      <input className="form-input" type="number" id="numos" name="numos" value={formData.numos} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>Vendedor</label>
+                      <select className="form-input" id="id_vendedor" name="id_vendedor" value={formData.id_vendedor} onChange={handleChange} disabled={modalMode === 'view'}>
+                        <option value={0}>Selecione...</option>
+                        {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Forma Pagto</label>
+                      <input className="form-input" type="text" id="formapagto" name="formapagto" value={formData.formapagto} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>Veículo</label>
+                      <input className="form-input" type="text" id="veiculo" name="veiculo" value={formData.veiculo} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>Tipo Veículo</label>
+                      <input className="form-input" type="text" id="tipoveiculo" name="tipoveiculo" value={formData.tipoveiculo} onChange={handleChange} disabled={modalMode === 'view'} />
+                    </div>
+                    <div className="form-group">
+                      <label>Status</label>
+                      <input className="form-input" type="text" id="status" name="status" value={formData.status} onChange={handleChange} disabled={modalMode === 'edit' || modalMode === 'view'} />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="section-title"><Package size={18} /> Pneus ({formData.pneus?.length || 0})</div>
-                <div className="pneus-grid-container">
-                  <table className="pneus-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '180px' }}>Medida</th>
-                        <th style={{ width: '150px' }}>Marca</th>
-                        <th>Desenho</th>
-                        <th>Recap</th>
-                        <th>Série</th>
-                        <th>Nº Fogo</th>
-                        <th>DOT</th>
-                        <th>Valor</th>
-                        <th style={{ width: '90px' }}>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(!formData.pneus || formData.pneus.length === 0) ? (
-                        <tr><td colSpan={9} className="empty-pneus">Nenhum pneu adicionado.</td></tr>
-                      ) : (
-                        formData.pneus.map((p: any, idx: number) => (
-                          <tr key={idx}>
-                            <td>{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</td>
-                            <td>{marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || '---'}</td>
-                            <td>{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</td>
-                            <td>{tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</td>
-                            <td>{p.numserie || '-'}</td>
-                            <td>{p.numfogo || '-'}</td>
-                            <td>{p.dot || '-'}</td>
-                            <td>R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
-                            <td>
-                              {modalMode !== 'view' && (
-                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <div className="premium-master-panel">
+                  <div className="premium-section-title"><ClipboardList size={18} /> Observações</div>
+                  <textarea className="form-input" id="msgmob" name="msgmob" value={formData.msgmob} onChange={handleChange} rows={3} disabled={modalMode === 'view'} />
+                </div>
+
+                <div className="premium-master-panel">
+                  <div className="premium-section-title"><Package size={18} /> Pneus ({formData.pneus?.length || 0})</div>
+                  <div className="pneus-grid-container">
+                    <table className="pneus-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '180px' }}>Medida</th>
+                          <th style={{ width: '150px' }}>Marca</th>
+                          <th>Desenho</th>
+                          <th>Recap</th>
+                          <th style={{ width: '100px' }}>Valor</th>
+                          <th style={{ width: '120px' }}>Série/Fogo</th>
+                          <th style={{ width: '80px' }}>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.pneus?.length === 0 ? (
+                          <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Nenhum pneu adicionado.</td></tr>
+                        ) : (
+                          formData.pneus.map((p: any, idx: number) => (
+                            <tr key={idx}>
+                              <td>{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || p.medidanova || '---'}</td>
+                              <td>{marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || p.marcanova || '---'}</td>
+                              <td>{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || p.desenhonovo || '---'}</td>
+                              <td>{tiposRecap.find(t => t.id === parseInt(p.id_recap))?.descricao || '---'}</td>
+                              <td>R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
+                              <td>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                  S: {p.numserie || '-'} / F: {p.numfogo || '-'}
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '5px' }}>
                                   <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)}><Edit2 size={16} /></button>
                                   <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)}><Trash2 size={16} /></button>
                                 </div>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                  {modalMode !== 'view' && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                      <button type="button" className="btn-add-item" onClick={() => openPneuModal(null)}>
-                        <Plus size={16} /> Adicionar Pneu
-                      </button>
-                    </div>
-                  )}
-                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
 
-                <div className="total-row">
-                  <span>Total:</span>
-                  <span className="total-value">R$ {calculateTotal().toFixed(2)}</span>
+                  <div className="grid-summary-bar">
+                    <div className="os-summary">
+                      <div className="summary-item">
+                        <span className="label">Total Itens</span>
+                        <span className="value">{formData.pneus.length} pneu(s)</span>
+                      </div>
+                      <div className="summary-item highlight">
+                        <span>Total:</span>
+                        <span className="total-value">R$ {calculateTotal().toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="modal-footer-coleta">
+              <div className="premium-modal-footer">
                 {modalMode !== 'view' && (
                   <button type="button" className="btn-accent" onClick={handleValidate} style={{ background: '#10b981', color: 'white', marginRight: 'auto' }}>
                     <Shield size={18} /> Validar Dados
@@ -1140,7 +1256,7 @@ export default function ColetaPneus() {
 
                 {modalMode !== 'view' && (
                   <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="spinning" size={18} /> : (modalMode === 'create' ? 'Cadastrar' : 'Salvar Alterações')}
+                    {isSubmitting ? <Loader2 className="spinning" size={18} /> : (modalMode === 'create' ? 'Salvar Coleta' : 'Salvar Alterações')}
                   </button>
                 )}
               </div>
@@ -1307,6 +1423,186 @@ export default function ColetaPneus() {
         accept="image/*" 
         onChange={handleOCRFileChange} 
       />
+      {/* TEMPLATE DE IMPRESSÃO INDIVIDUAL - Só aparece no papel */}
+      <div className="print-template only-print">
+        <div className="print-header">
+          <div className="print-logo-section">
+            <img src={LogoDbnet} alt="Logo" style={{ height: '60px' }} />
+            <div>
+              <h2>{empresa?.razaosocial || 'TOTALCAP GESTÃO DE PNEUS'}</h2>
+              <p>Comprovante de Coleta de Pneus</p>
+            </div>
+          </div>
+          <div className="print-id-section">
+            <span className="print-id-label">COLETA Nº</span>
+            <span className="print-id-value">#{formData.id || '---'}</span>
+          </div>
+        </div>
+
+        <div className="print-info-grid">
+          <div className="info-block">
+            <span className="info-label">Cliente</span>
+            <span className="info-value">{formData.nome || clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span>
+          </div>
+          <div className="info-block">
+            <span className="info-label">CPF/CNPJ</span>
+            <span className="info-value">{formData.cpfcnpj || '---'}</span>
+          </div>
+          <div className="info-block">
+            <span className="info-label">Data Coleta</span>
+            <span className="info-value">{new Date().toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div className="info-block" style={{ gridColumn: 'span 2' }}>
+            <span className="info-label">Endereço</span>
+            <span className="info-value">{formData.endereco || '---'}</span>
+          </div>
+          <div className="info-block">
+            <span className="info-label">Cidade/UF</span>
+            <span className="info-value">{formData.cidade || '---'} / {formData.uf || '--'}</span>
+          </div>
+          <div className="info-block">
+            <span className="info-label">Vendedor</span>
+            <span className="info-value">{vendedores.find(v => v.id === parseInt(formData.id_vendedor))?.nome || '---'}</span>
+          </div>
+          <div className="info-block">
+            <span className="info-label">Nº OS Relacionada</span>
+            <span className="info-value">#{formData.numos || '---'}</span>
+          </div>
+          <div className="info-block">
+            <span className="info-label">Status</span>
+            <span className="info-value">{formData.status || 'Pendente'}</span>
+          </div>
+        </div>
+
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th>Medida</th>
+              <th>Marca</th>
+              <th>Desenho</th>
+              <th>Série</th>
+              <th>Fogo</th>
+              <th>Recap</th>
+              <th style={{ textAlign: 'right' }}>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(formData.pneus || []).map((p: any, idx: number) => (
+              <tr key={idx}>
+                <td>{medidas.find(m => String(m.id) === String(p.id_medida))?.descricao || p.medidanova || '---'}</td>
+                <td>{marcas.find(m => String(m.id) === String(p.id_marca))?.descricao || p.marcanova || '---'}</td>
+                <td>{desenhos.find(d => String(d.id) === String(p.id_desenho))?.descricao || p.desenhonovo || '---'}</td>
+                <td>{p.numserie || '---'}</td>
+                <td>{p.numfogo || '---'}</td>
+                <td>{tiposRecap.find(tr => String(tr.id) === String(p.id_recap))?.descricao || '---'}</td>
+                <td style={{ textAlign: 'right' }}>R$ {parseFloat(p.valor || 0).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'right', fontWeight: 'bold' }}>VALOR TOTAL:</td>
+              <td style={{ textAlign: 'right', fontWeight: 'bold' }}>R$ {calculateTotal().toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        {formData.msgmob && (
+          <div style={{ marginBottom: '40px' }}>
+            <span className="info-label">Observações</span>
+            <div style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginTop: '5px', fontSize: '0.9rem' }}>
+              {formData.msgmob}
+            </div>
+          </div>
+        )}
+
+        <div className="print-signatures">
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <span>Assinatura do Cliente</span>
+          </div>
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <span>Assinatura do Conferente</span>
+          </div>
+        </div>
+
+        <div className="print-footer">
+          Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString('pt-BR')}
+        </div>
+      </div>
+
+      {/* RELATÓRIO DE LISTA - Layout de Qualidade */}
+      <div className="report-list-container only-print">
+        <div className="report-list-header">
+          <div className="report-header-main">
+            <div className="report-logo-box">
+              <img src={LogoDbnet} alt="Logo" />
+            </div>
+            <div className="report-company-info">
+              <h2>{empresa?.razaosocial || 'TOTALCAP GESTÃO DE PNEUS'}</h2>
+              <p className="company-subtitle">Sistema de Gestão de Recapagem de Pneus</p>
+            </div>
+            <div className="report-meta-info">
+              <div className="meta-item">
+                <span className="meta-label">Data:</span>
+                <span className="meta-value">{new Date().toLocaleDateString('pt-BR')}</span>
+              </div>
+              <div className="meta-item">
+                <span className="meta-label">Hora:</span>
+                <span className="meta-value">{new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="report-title-bar">
+            <h1>RELATÓRIO DE COLETA DE PNEUS</h1>
+            <div className="report-filter-info">
+              {searchTerm ? `Filtro: "${searchTerm}"` : 'Filtro: Todos os registros'}
+            </div>
+          </div>
+        </div>
+
+        <table className="report-modern-table">
+          <thead>
+            <tr>
+              <th style={{ width: '80px' }}>ID</th>
+              <th style={{ width: '120px' }}>Número OS</th>
+              <th style={{ width: '120px' }}>Data</th>
+              <th>Cliente</th>
+              <th style={{ width: '150px', textAlign: 'right' }}>Valor Total</th>
+              <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredColetas.map((coleta: any) => (
+              <tr key={coleta.id}>
+                <td className="cell-id">#{coleta.id}</td>
+                <td className="cell-os">{coleta.numos ? `#${coleta.numos}` : '---'}</td>
+                <td>{coleta.dataos ? new Date(coleta.dataos).toLocaleDateString('pt-BR') : '---'}</td>
+                <td className="cell-client">{coleta.contato?.nome || '---'}</td>
+                <td className="cell-value">R$ {parseFloat(coleta.vtotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="cell-status"><span className={`status-pill ${String(coleta.status || '').toLowerCase()}`}>{coleta.status || 'PENDENTE'}</span></td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={4} className="footer-label">VALOR TOTAL ACUMULADO:</td>
+              <td className="footer-value">
+                R$ {filteredColetas.reduce((acc: number, curr: any) => acc + (parseFloat(curr.vtotal) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td className="footer-count">{filteredColetas.length} registro(s)</td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <div className="report-list-footer">
+          <p>Documento gerado eletronicamente pelo Sistema Totalcap</p>
+          <p>Página 1 de 1</p>
+        </div>
+      </div>
     </div>
+
   );
 }

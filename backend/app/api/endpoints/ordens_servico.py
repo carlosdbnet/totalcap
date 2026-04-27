@@ -80,6 +80,53 @@ def read_ordens_servico(
         
     return [map_os_to_response(os) for os in oss]
 
+@router.get("/relatorio")
+def get_relatorio_oss(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    status_os: Optional[str] = None,
+    id_contato: Optional[int] = None,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Retorna dados consolidados para o relatório de ordens de serviço.
+    """
+    query = db.query(
+        OSModel.id,
+        OSModel.numos,
+        OSModel.dataentrada,
+        OSModel.dataprevisao,
+        OSModel.status,
+        OSModel.vrtotal,
+        Contato.nome.label("cliente_nome")
+    ).outerjoin(Contato, OSModel.id_contato == Contato.id)
+
+    if start_date:
+        query = query.filter(OSModel.dataentrada >= start_date)
+    if end_date:
+        query = query.filter(OSModel.dataentrada <= end_date + " 23:59:59")
+    if status_os:
+        # Converte de amigável para banco
+        status_code = STATUS_MAP_STORE.get(status_os, status_os)
+        query = query.filter(OSModel.status == status_code)
+    if id_contato:
+        query = query.filter(OSModel.id_contato == id_contato)
+
+    results = query.order_by(OSModel.dataentrada.desc()).all()
+
+    return [
+        {
+            "id": r.id,
+            "numos": r.numos,
+            "dataentrada": r.dataentrada.isoformat() if r.dataentrada else None,
+            "dataprevisao": r.dataprevisao.isoformat() if r.dataprevisao else None,
+            "status": STATUS_MAP_READ.get(r.status, r.status),
+            "vrtotal": float(r.vrtotal) if r.vrtotal else 0,
+            "cliente_nome": r.cliente_nome
+        }
+        for r in results
+    ]
+
 @router.get("/pneu-search/", response_model=List[PneuSearchResult])
 def search_pneu(
     q: str,
@@ -162,6 +209,8 @@ def search_pneu(
 def get_pneus_pendentes_faturamento(
     pneu_id: Optional[int] = None,
     numos: Optional[int] = None,
+    os_id: Optional[int] = None,
+    id_contato: Optional[int] = None,
     cliente: Optional[str] = None,
     db: Session = Depends(get_db)
 ) -> Any:
@@ -182,6 +231,10 @@ def get_pneus_pendentes_faturamento(
         query = query.filter(PneuModel.id == pneu_id)
     if numos:
         query = query.filter(OSModel.numos == numos)
+    if os_id:
+        query = query.filter(OSModel.id == os_id)
+    if id_contato:
+        query = query.filter(OSModel.id_contato == id_contato)
     if cliente:
         query = query.filter(Contato.nome.ilike(f"%{cliente}%"))
         
@@ -216,7 +269,7 @@ def get_pneus_pendentes_faturamento(
                 os_id=os.id if os else 0,
                 numos=os.numos if os else 0,
                 contato_nome=contato.nome if contato else "CLIENTE NÃO VINCULADO",
-                dataentrada=dt_entrada.isoformat() if dt_entrada else None,
+                dataentrada=dt_entrada,
                 id_servico_base=pneu.id_servico,
                 valor_pneu=pneu.valor or 0,
                 qservico=pneu.qservico or 0,
@@ -227,6 +280,95 @@ def get_pneus_pendentes_faturamento(
         )
     
     return mapped_results
+
+@router.get("/pneus-debug/")
+def debug_pneus(db: Session = Depends(get_db)):
+    """Lista os últimos 5 pneus para diagnóstico."""
+    pneus = db.query(PneuModel).order_by(PneuModel.id.desc()).limit(5).all()
+    return [{"id": p.id, "numserie": p.numserie, "numfogo": p.numfogo} for p in pneus]
+
+@router.get("/pneu-completo/{search_term}")
+def get_pneu_detalhes(
+    search_term: str,
+    db: Session = Depends(get_db)
+) -> Any:
+    """Busca um pneu por ID, Série ou Fogo para preenchimento de laudo."""
+    from backend.app.models.contato import Contato
+    from backend.app.models.medida import Medida
+    from backend.app.models.produto import Produto
+    from backend.app.models.desenho import Desenho
+    
+    print(f"DEBUG: get_pneu_detalhes - Termo recebido: '{search_term}'")
+    
+    # Tenta busca por ID primeiro
+    pneu = None
+    if search_term.isdigit():
+        p_id = int(search_term)
+        print(f"DEBUG: Tentando busca por ID: {p_id}")
+        pneu = db.query(PneuModel).filter(PneuModel.id == p_id).first()
+    
+    # Se não achou por ID, tenta Série, Fogo ou Código de Barras
+    if not pneu:
+        print(f"DEBUG: Tentando busca por Série/Fogo/CodBarra: {search_term}")
+        pneu = db.query(PneuModel).filter(
+            (PneuModel.numserie.ilike(f"%{search_term}%")) | 
+            (PneuModel.numfogo.ilike(f"%{search_term}%")) |
+            (PneuModel.codbarra == search_term)
+        ).first()
+        
+    # Fallback: Se ainda não achou e é número, tenta buscar o primeiro pneu de uma OS com esse número
+    if not pneu and search_term.isdigit():
+        print(f"DEBUG: Tentando busca pelo primeiro pneu da OS: {search_term}")
+        os_ref = db.query(OSModel).filter(OSModel.numos == int(search_term)).first()
+        if os_ref:
+            pneu = db.query(PneuModel).filter(PneuModel.id_ordem == os_ref.id).first()
+            if pneu:
+                print(f"DEBUG: Pneu encontrado via OS: ID {pneu.id}")
+
+    if not pneu:
+        print(f"DEBUG: Pneu não encontrado após todas as tentativas.")
+        raise HTTPException(status_code=404, detail=f"Pneu não encontrado com termo '{search_term}'")
+        
+    print(f"DEBUG: Pneu localizado com sucesso! ID: {pneu.id}, OS: {pneu.id_ordem}")
+        
+    os = db.query(OSModel).filter(OSModel.id == pneu.id_ordem).first()
+    cliente = db.query(Contato).filter(Contato.id == pneu.id_contato).first()
+    medida = db.query(Medida).filter(Medida.id == pneu.id_medida).first()
+    marca = db.query(Produto).filter(Produto.id == pneu.id_marca).first()
+    desenho = db.query(Desenho).filter(Desenho.id == pneu.id_desenho).first()
+    
+    # Busca o serviço para pegar o código
+    from backend.app.models.servico import Servico
+    servico = db.query(Servico).filter(Servico.id == pneu.id_servico).first()
+    
+    # Calcula seqos baseado na ordem do pneu na OS (1-indexed)
+    all_pneus = db.query(PneuModel.id).filter(PneuModel.id_ordem == pneu.id_ordem).order_by(PneuModel.id).all()
+    pneu_ids = [r[0] for r in all_pneus]
+    seqos = pneu_ids.index(pneu.id) + 1 if pneu.id in pneu_ids else 1
+    
+    return {
+        "id": pneu.id,
+        "id_pneu": pneu.id,
+        "numos": os.numos if os else 0,
+        "seqos": seqos,
+        "medida": medida.descricao if medida else "",
+        "marca": marca.descricao if marca else "",
+        "desenho": desenho.descricao if desenho else "",
+        "codservico": servico.codigo if servico else "",
+        "numserie": pneu.numserie or "",
+        "numfogo": pneu.numfogo or "",
+        "dot": pneu.dot or "",
+        "desenhoriginal": pneu.desenhoriginal or "",
+        "vrservico": float(pneu.vrservico or 0),
+        "qreforma": pneu.qreforma or 0,
+        "cpfcnpj": cliente.cpfcnpj if cliente else "",
+        "placa": pneu.placa or "",
+        "id_contato": pneu.id_contato,
+        "id_medida": pneu.id_medida or 0,
+        "id_desenho": pneu.id_desenho or 0,
+        "id_recap": pneu.id_recap or 0,
+        "id_empresa": pneu.id_empresa
+    }
 
 @router.get("/{id}", response_model=OrdemServicoResponse)
 def read_ordem_servico(

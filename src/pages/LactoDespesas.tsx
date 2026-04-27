@@ -4,7 +4,7 @@ import {
   User, Calendar, Truck, FileText, Printer, 
   Loader2, AlertCircle, Save, ChevronRight, Camera
 } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './LactoDespesas.css';
 
 const compressImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
@@ -175,28 +175,39 @@ export default function LactoDespesas() {
         dataemi: new Date().toISOString().split('T')[0],
         cpfcnpj: '',
         nome: '',
+
         vtotal: 0,
         status: '',
+        obs: '',
         itens: []
       });
     }
     setIsModalOpen(true);
   };
 
+
   const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
     
-    if (name === 'id_contato' && value !== "0") {
-      const selected = contatos.find(c => c.id === parseInt(value));
-      if (selected) {
-        setFormData((prev: any) => ({
-          ...prev,
-          nome: selected.nome,
-          cpfcnpj: selected.cpfcnpj || ''
-        }));
+    // Parse integer for ID fields
+    if (name.startsWith('id_')) {
+      const intVal = parseInt(value) || 0;
+      setFormData((prev: any) => ({ ...prev, [name]: intVal }));
+      
+      if (name === 'id_contato' && intVal !== 0) {
+        const selected = contatos.find(c => c.id === intVal);
+        if (selected) {
+          setFormData((prev: any) => ({
+            ...prev,
+            nome: selected.nome,
+            cpfcnpj: selected.cpfcnpj || ''
+          }));
+        }
       }
+      return;
     }
+
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const openItemModal = (index: number | null) => {
@@ -249,24 +260,63 @@ export default function LactoDespesas() {
     }));
   };
 
+
+
+  const modalBodyRef = React.useRef<HTMLDivElement>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
+    
     if (!formData.id_vendedor || formData.id_vendedor === 0) {
       setFormError("Selecione um Vendedor.");
+      modalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
+    if (formData.itens.length === 0) {
+      setFormError("Adicione pelo menos um item à despesa.");
+      modalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Preparar dados para envio, garantindo tipos corretos
+    const payload = {
+      ...formData,
+      id_contato: (!formData.id_contato || formData.id_contato === 0 || formData.id_contato === "0") ? null : Number(formData.id_contato),
+      id_vendedor: Number(formData.id_vendedor),
+      vtotal: Number(formData.vtotal),
+      itens: formData.itens.map((item: any) => ({
+        ...item,
+        id_veiculo: (!item.id_veiculo || item.id_veiculo === 0 || item.id_veiculo === "0") ? null : Number(item.id_veiculo),
+        id_vendedor: (!item.id_vendedor || item.id_vendedor === 0 || item.id_vendedor === "0") ? null : Number(item.id_vendedor),
+        qlitro: Number(item.qlitro || 0),
+        vlitro: Number(item.vlitro || 0),
+        vtotal: Number(item.vtotal || 0),
+        kmanter: item.kmanter ? Number(item.kmanter) : null,
+        kmatual: item.kmatual ? Number(item.kmatual) : null
+      }))
+    };
+
     try {
       setIsSubmitting(true);
+      console.log("Enviando payload despesa:", payload);
+      
+      let response;
       if (modalMode === 'create') {
-        await api.post('/notadesp/', formData);
+        response = await api.post('/notadesp/', payload);
       } else {
-        await api.put(`/notadesp/${currentId}`, formData);
+        response = await api.put(`/notadesp/${currentId}`, payload);
       }
+      
+      console.log("Resposta salvamento:", response.data);
       setIsModalOpen(false);
       fetchData();
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || "Erro ao salvar nota.");
+      console.error("Erro ao salvar:", err);
+      const msg = getErrorMessage(err, "Erro ao salvar nota.");
+      setFormError(msg);
+      modalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);
     }
@@ -298,7 +348,11 @@ export default function LactoDespesas() {
       alert("Selecione uma despesa na tabela para imprimir.");
       return;
     }
+    document.body.classList.add('printing-notadesp-active');
     window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-notadesp-active');
+    }, 500);
   };
 
   const cleanString = (str: string) => String(str || "").toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
@@ -499,8 +553,9 @@ export default function LactoDespesas() {
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
             </div>
             
+
             <form onSubmit={handleSubmit} className="despesas-modal-form">
-              <div className="despesas-modal-body scrollable">
+              <div className="despesas-modal-body scrollable" ref={modalBodyRef}>
                 {formError && <div className="error-alert"><AlertCircle size={18} /> {formError}</div>}
                 
                 <section className="modal-section mb-4">
@@ -511,18 +566,29 @@ export default function LactoDespesas() {
                       <input type="date" name="dataemi" value={formData.dataemi} onChange={handleHeaderChange} required />
                     </div>
                     <div className="input-group span-2">
-                      <label>Cliente / Contato</label>
+                      <label>Fornecedor/Contato</label>
                       <select name="id_contato" value={formData.id_contato} onChange={handleHeaderChange}>
-                        <option value="0">Selecione o Cliente</option>
+                        <option value="0">Selecione o Fornecedor</option>
                         {contatos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                       </select>
                     </div>
                     <div className="input-group">
                       <label>Vendedor</label>
+
                       <select name="id_vendedor" value={formData.id_vendedor} onChange={handleHeaderChange} required>
                         <option value="0">Selecione...</option>
                         {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
                       </select>
+                    </div>
+                    <div className="input-group span-4" style={{ marginTop: '0.5rem' }}>
+                      <label>Observações</label>
+                      <input 
+                        type="text"
+                        name="obs" 
+                        value={formData.obs || ''} 
+                        onChange={handleHeaderChange}
+                        placeholder="Observações gerais da nota de despesa..."
+                      />
                     </div>
                   </div>
                 </section>
@@ -763,86 +829,88 @@ export default function LactoDespesas() {
       )}
 
       {/* TEMPLATE DE IMPRESSÃO (Oculto na tela, visível apenas no @media print) */}
-      {selectedId && (
-        <div className="print-template">
-          <div className="print-header">
-            <div className="print-logo-section">
-              <DollarSign size={40} className="text-primary" />
-              <div>
-                <h2>TOTALCAP</h2>
-                <p>Nota de Despesa / Reembolso</p>
+      <div id="print-notadesp-section">
+        {selectedId && (
+          <div className="print-template">
+            <div className="print-header">
+              <div className="print-logo-section">
+                <DollarSign size={40} className="text-primary" />
+                <div>
+                  <h2>TOTALCAP</h2>
+                  <p>Nota de Despesa / Reembolso</p>
+                </div>
+              </div>
+              <div className="print-id-section">
+                <span className="print-id-label">NÚMERO</span>
+                <span className="print-id-value">#{selectedId}</span>
               </div>
             </div>
-            <div className="print-id-section">
-              <span className="print-id-label">NÚMERO</span>
-              <span className="print-id-value">#{selectedId}</span>
-            </div>
-          </div>
 
-          <div className="print-info-grid">
-            <div className="info-block">
-              <span className="info-label">Cliente / Contato</span>
-              <span className="info-value">{notas.find(n => n.id === selectedId)?.nome || 'N/A'}</span>
+            <div className="print-info-grid">
+              <div className="info-block">
+                <span className="info-label">Cliente / Contato</span>
+                <span className="info-value">{notas.find(n => n.id === selectedId)?.nome || 'N/A'}</span>
+              </div>
+              <div className="info-block">
+                <span className="info-label">Data Emissão</span>
+                <span className="info-value">{new Date(notas.find(n => n.id === selectedId)?.dataemi || '').toLocaleDateString('pt-BR')}</span>
+              </div>
+              <div className="info-block">
+                <span className="info-label">Vendedor</span>
+                <span className="info-value">{notas.find(n => n.id === selectedId)?.vendedor_nome || 'N/A'}</span>
+              </div>
             </div>
-            <div className="info-block">
-              <span className="info-label">Data Emissão</span>
-              <span className="info-value">{new Date(notas.find(n => n.id === selectedId)?.dataemi || '').toLocaleDateString('pt-BR')}</span>
-            </div>
-            <div className="info-block">
-              <span className="info-label">Vendedor</span>
-              <span className="info-value">{notas.find(n => n.id === selectedId)?.vendedor_nome || 'N/A'}</span>
-            </div>
-          </div>
 
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Veículo</th>
-                <th>Descrição / Tipo</th>
-                <th>Qtde</th>
-                <th style={{ textAlign: 'right' }}>Vl. Unit.</th>
-                <th style={{ textAlign: 'right' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {notas.find(n => n.id === selectedId)?.itens.map((item, idx) => (
-                <tr key={idx}>
-                  <td>{new Date(item.datamov || '').toLocaleDateString('pt-BR')}</td>
-                  <td>{veiculos.find(v => v.id === item.id_veiculo)?.placa || '-'}</td>
-                  <td>{item.descricao} ({item.tipo})</td>
-                  <td>{item.qlitro}</td>
-                  <td style={{ textAlign: 'right' }}>R$ {Number(item.vlitro).toFixed(2)}</td>
-                  <td style={{ textAlign: 'right' }}>R$ {Number(item.vtotal).toFixed(2)}</td>
+            <table className="print-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Veículo</th>
+                  <th>Descrição / Tipo</th>
+                  <th>Qtde</th>
+                  <th style={{ textAlign: 'right' }}>Vl. Unit.</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={5} style={{ textAlign: 'right', fontWeight: 'bold' }}>VALOR TOTAL FINAL:</td>
-                <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                  R$ {Number(notas.find(n => n.id === selectedId)?.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                {notas.find(n => n.id === selectedId)?.itens.map((item, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(item.datamov || '').toLocaleDateString('pt-BR')}</td>
+                    <td>{veiculos.find(v => v.id === item.id_veiculo)?.placa || '-'}</td>
+                    <td>{item.descricao} ({item.tipo})</td>
+                    <td>{item.qlitro}</td>
+                    <td style={{ textAlign: 'right' }}>R$ {Number(item.vlitro).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>R$ {Number(item.vtotal).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'right', fontWeight: 'bold' }}>VALOR TOTAL FINAL:</td>
+                  <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
+                    R$ {Number(notas.find(n => n.id === selectedId)?.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
 
-          <div className="print-signatures">
-            <div className="signature-box">
-              <div className="signature-line"></div>
-              <span>ASSINATURA DO VENDEDOR</span>
+            <div className="print-signatures">
+              <div className="signature-box">
+                <div className="signature-line"></div>
+                <span>ASSINATURA DO VENDEDOR</span>
+              </div>
+              <div className="signature-box">
+                <div className="signature-line"></div>
+                <span>ASSINATURA DO CLIENTE</span>
+              </div>
             </div>
-            <div className="signature-box">
-              <div className="signature-line"></div>
-              <span>ASSINATURA DO CLIENTE</span>
+            
+            <div className="print-footer">
+              Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString()}
             </div>
           </div>
-          
-          <div className="print-footer">
-            Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString()}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

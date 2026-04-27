@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
-import { Plug2, Upload, FileSpreadsheet, Database, MapPin, Ruler, PenTool, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plug2, Upload, FileSpreadsheet, Database, MapPin, Ruler, PenTool, Loader2, CheckCircle, AlertCircle, Download, Search, Info } from 'lucide-react';
+import api from '../lib/api';
 import * as XLSX from 'xlsx';
 import './Integracao.css';
 
@@ -15,24 +16,20 @@ type StatusImportacao = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Integracao() {
   const [tabelaSelecionada, setTabelaSelecionada] = useState('');
+  const [tabelaExportar, setTabelaExportar] = useState('');
+  const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
   const [statusImportacao, setStatusImportacao] = useState<StatusImportacao>('idle');
+  const [statusExportacao, setStatusExportacao] = useState<StatusImportacao>('idle');
   const [mensagem, setMensagem] = useState('');
+  const [mensagemExport, setMensagemExport] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const salvarDados = async (endpoint: string, dados: any): Promise<boolean> => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Erro API:', response.status, errorText);
-      }
-      return response.ok;
+      const response = await api.post(endpoint, dados);
+      return response.status >= 200 && response.status < 300;
     } catch (error) {
-      console.error('Erro fetch:', error);
+      console.error('Erro ao salvar:', error);
       return false;
     }
   };
@@ -64,6 +61,24 @@ export default function Integracao() {
     };
 
     const campoPrincipal = encontrarCampo(campos);
+    
+    // Se não encontrou campo pré-definido, tenta mapear as chaves originais para chaves amigáveis ao banco
+    if (!mapeamentos[tabela]) {
+      return dados.map(row => {
+        const item: any = { ativo: true };
+        Object.keys(row).forEach(key => {
+          const keyLimpa = normalizarNome(key);
+          // Mapeamento dinâmico básico
+          if (keyLimpa === 'descricao' || keyLimpa === 'desc' || keyLimpa === 'nome') item.descricao = row[key];
+          else if (keyLimpa === 'medida') item.medida = row[key];
+          else if (keyLimpa === 'banda') item.banda = row[key];
+          else if (keyLimpa === 'valor' || keyLimpa === 'preco') item.valor = row[key];
+          else item[keyLimpa] = row[key]; // Tenta usar o nome da coluna original em minúsculo
+        });
+        return item;
+      });
+    }
+
     if (!campoPrincipal) return [];
 
     return dados.map((row) => {
@@ -146,9 +161,23 @@ export default function Integracao() {
     }).filter(Boolean);
   };
 
-  const handleImportarExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleArquivoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const arquivo = e.target.files?.[0];
-    if (!arquivo || !tabelaSelecionada) return;
+    if (arquivo) {
+      setArquivoSelecionado(arquivo);
+      setStatusImportacao('idle');
+      setMensagem('');
+    }
+  };
+
+  const handleImportarExcel = async () => {
+    if (!arquivoSelecionado || !tabelaSelecionada.trim()) {
+      setMensagem('Informe a tabela e selecione um arquivo');
+      setStatusImportacao('error');
+      return;
+    }
+
+    const arquivo = arquivoSelecionado;
 
     setStatusImportacao('loading');
     setMensagem('Processando arquivo Excel...');
@@ -197,6 +226,7 @@ export default function Integracao() {
       setMensagem(error instanceof Error ? error.message : 'Erro ao importar arquivo');
     }
 
+    setArquivoSelecionado(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -211,74 +241,165 @@ export default function Integracao() {
     fileInputRef.current?.click();
   };
 
-  return (
-    <div className="integracao-container">
-      <header className="page-header">
-        <h1 className="title">
-          <Plug2 size={28} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-          Integração
-        </h1>
-        <p className="text-muted">Gerencie as integrações do sistema com fontes externas.</p>
-      </header>
+  const handleExportarDinamico = async () => {
+    if (!tabelaExportar.trim()) {
+      setMensagemExport('Informe o nome da tabela');
+      setStatusExportacao('error');
+      return;
+    }
 
-      <div className="integracao-grid">
-        <div className="glass-panel integracao-card importacao-panel">
-          <div className="importacao-header">
-            <Upload size={24} />
-            <h3>Importação</h3>
+    setStatusExportacao('loading');
+    setMensagemExport('Preparando exportação Excel...');
+
+    try {
+      // Solicita formato JSON do backend
+      const response = await api.get(`/exportacao/dinamica/${tabelaExportar.trim()}?format=json`);
+      const dados = response.data;
+
+      if (!Array.isArray(dados) || dados.length === 0) {
+        throw new Error('Nenhum dado encontrado para esta tabela');
+      }
+
+      // Converte JSON para WorkSheet usando a biblioteca XLSX
+      const worksheet = XLSX.utils.json_to_sheet(dados);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, tabelaExportar.trim());
+
+      // Gera o arquivo e inicia o download
+      XLSX.writeFile(workbook, `export_${tabelaExportar.trim()}_${new Date().getTime()}.xlsx`);
+
+      setStatusExportacao('success');
+      setMensagemExport('Exportação XLSX concluída!');
+    } catch (error: any) {
+      console.error('Erro ao exportar:', error);
+      setStatusExportacao('error');
+      setMensagemExport(error.response?.data?.detail || error.message || 'Erro ao exportar para Excel.');
+    }
+  };
+
+  return (
+    <div className="page-container" style={{ background: '#E5E5E5', minHeight: '100vh' }}>
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
+        <div className="header-title-group">
+          <Plug2 size={32} className="header-icon" style={{ color: '#3b82f6' }} />
+          <div>
+            <h1>Integração</h1>
+            <p>Gerencie as integrações do sistema com fontes externas</p>
+          </div>
+        </div>
+      </header>
+ 
+      <div className="integracao-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+        {/* Card de Importação */}
+        <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <div className="importacao-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', color: '#3b82f6' }}>
+            <Upload size={28} />
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Importação de Dados</h3>
           </div>
           
-          <div className="importacao-form">
-            <label htmlFor="tabela">Selecione a tabela para importação:</label>
-            <select
-              id="tabela"
-              className="form-select"
-              value={tabelaSelecionada}
-              onChange={(e) => {
-                setTabelaSelecionada(e.target.value);
-                setStatusImportacao('idle');
-                setMensagem('');
-              }}
-            >
-              <option value="">Selecione...</option>
-              {TABELAS.map((tab) => (
-                <option key={tab.value} value={tab.value}>
-                  {tab.label}
-                </option>
-              ))}
-            </select>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleImportarExcel}
-              style={{ display: 'none' }}
-            />
-
+          <div className="importacao-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="form-group">
+              <label style={{ fontWeight: '600', color: '#475569', marginBottom: '0.5rem', display: 'block' }}>Tabela de Destino</label>
+              <div className="input-with-icon" style={{ position: 'relative' }}>
+                <Database size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="Ex: medidas, desenhos, produtos..." 
+                  style={{ width: '100%', padding: '0.875rem 1rem 0.875rem 3rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc' }}
+                  value={tabelaSelecionada}
+                  onChange={(e) => setTabelaSelecionada(e.target.value)}
+                />
+              </div>
+            </div>
+ 
+            <div className="file-selection-group">
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleArquivoChange} style={{ display: 'none' }} />
+              <button 
+                className="btn-secondary" 
+                onClick={() => fileInputRef.current?.click()}
+                style={{ width: '100%', padding: '2rem', borderRadius: '12px', border: '2px dashed #cbd5e1', background: '#f8fafc', color: '#64748b', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', transition: 'all 0.2s' }}
+              >
+                <Upload size={32} />
+                <span style={{ fontWeight: 600 }}>{arquivoSelecionado ? 'Trocar Arquivo Excel' : 'Clique para selecionar arquivo .xlsx'}</span>
+              </button>
+ 
+              {arquivoSelecionado && (
+                <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: '8px', background: '#eff6ff', color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem' }}>
+                  <FileSpreadsheet size={18} />
+                  <strong>Arquivo:</strong> {arquivoSelecionado.name}
+                </div>
+              )}
+            </div>
+ 
             <button 
               className="btn-primary" 
-              onClick={handleBotaoClick}
-              disabled={statusImportacao === 'loading'}
+              onClick={handleImportarExcel}
+              disabled={statusImportacao === 'loading' || !arquivoSelecionado}
+              style={{ width: '100%', padding: '1rem', borderRadius: '10px', background: '#3b82f6', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
             >
               {statusImportacao === 'loading' ? (
-                <>
-                  <Loader2 size={18} className="spin" />
-                  Importando...
-                </>
+                <><Loader2 size={20} className="spinning" /> Importando...</>
               ) : (
-                <>
-                  <FileSpreadsheet size={18} />
-                  Importar Excel
-                </>
+                <><CheckCircle size={20} /> Iniciar Processamento</>
               )}
             </button>
-
+ 
             {mensagem && (
-              <div className={`mensagem-importacao ${statusImportacao}`}>
-                {statusImportacao === 'success' && <CheckCircle size={18} />}
-                {statusImportacao === 'error' && <AlertCircle size={18} />}
-                <span>{mensagem}</span>
+              <div style={{ padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', background: statusImportacao === 'error' ? '#fef2f2' : '#f0fdf4', color: statusImportacao === 'error' ? '#ef4444' : '#22c55e', fontSize: '0.9rem', fontWeight: 500 }}>
+                {statusImportacao === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                {mensagem}
+              </div>
+            )}
+          </div>
+        </div>
+ 
+        {/* Card de Exportação */}
+        <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <div className="importacao-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', color: '#8b5cf6' }}>
+            <Download size={28} />
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Exportação de Dados</h3>
+          </div>
+          
+          <div className="importacao-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="form-group">
+              <label style={{ fontWeight: '600', color: '#475569', marginBottom: '0.5rem', display: 'block' }}>Tabela de Origem</label>
+              <div className="input-with-icon" style={{ position: 'relative' }}>
+                <Database size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="Ex: produtos, marcas, clientes..." 
+                  style={{ width: '100%', padding: '0.875rem 1rem 0.875rem 3rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc' }}
+                  value={tabelaExportar}
+                  onChange={(e) => setTabelaExportar(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleExportarDinamico()}
+                />
+              </div>
+            </div>
+ 
+            <div style={{ padding: '1rem', borderRadius: '12px', background: '#f1f5f9', color: '#64748b', fontSize: '0.85rem', lineHeight: '1.5', display: 'flex', gap: '0.75rem' }}>
+              <Info size={20} style={{ flexShrink: 0, color: '#3b82f6' }} />
+              Esta ferramenta permite extrair todos os dados de qualquer tabela do banco diretamente para um arquivo Excel (.xlsx).
+            </div>
+ 
+            <button 
+              className="btn-primary" 
+              onClick={handleExportarDinamico}
+              disabled={statusExportacao === 'loading' || !tabelaExportar}
+              style={{ width: '100%', padding: '1rem', borderRadius: '10px', background: '#8b5cf6', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+            >
+              {statusExportacao === 'loading' ? (
+                <><Loader2 size={20} className="spinning" /> Gerando Arquivo...</>
+              ) : (
+                <><Download size={20} /> Exportar para Excel</>
+              )}
+            </button>
+ 
+            {mensagemExport && (
+              <div style={{ padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', background: statusExportacao === 'error' ? '#fef2f2' : '#f0fdf4', color: statusExportacao === 'error' ? '#ef4444' : '#22c55e', fontSize: '0.9rem', fontWeight: 500 }}>
+                {statusExportacao === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                {mensagemExport}
               </div>
             )}
           </div>

@@ -8,7 +8,7 @@ class Veiculo(Base):
     id = Column(Integer, primary_key=True, index=True)
     placa = Column(String(10), nullable=False)
     descricao = Column(String(50), nullable=True)
-    codven = Column(String(10), nullable=True)
+    codven = Column("id_vendedor", String(10), nullable=True)
     tipo = Column(String(1), nullable=True)
     comb = Column(String(10), nullable=True)
     plaqueta = Column(Integer, nullable=True)

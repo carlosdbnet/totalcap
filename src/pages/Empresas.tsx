@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, ExternalLink, Printer, Building2, Mail, Phone, Globe, ShieldCheck } from 'lucide-react';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import './Empresas.css';
 import logoEmpresa from '../assets/images/LogoEmpresa.png';
 
@@ -192,7 +192,7 @@ export default function Empresas() {
       await fetchData();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erro ao salvar empresa.');
+      setFormError(getErrorMessage(err, 'Erro ao salvar empresa.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -296,145 +296,149 @@ export default function Empresas() {
         </div>
       </div>
 
-      {isModalOpen && (
+           {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content large" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="premium-modal-content large" style={{ maxWidth: '900px' }} onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{modalMode === 'create' ? 'Configurar Nova Empresa' : 'Editar Dados da Empresa'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ background: '#E5E5E5', padding: '1.5rem' }}>
                 {formError && <div className="form-error">{formError}</div>}
                 
-                <div className="form-grid">
-                  <div className="section-header full-width">
-                    <Building2 size={18} />
-                    <h3>Identificação</h3>
-                  </div>
-                  
-                  <div className="form-group span-2">
-                    <label htmlFor="nome">Nome Fantasia *</label>
-                    <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required />
-                  </div>
-                  
-                  <div className="form-group span-2">
-                    <label htmlFor="razaosocial">Razão Social</label>
-                    <input className="form-input" id="razaosocial" value={formData.razaosocial} onChange={handleChange} />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="cnpj">CNPJ</label>
-                    <input className="form-input" id="cnpj" value={formData.cnpj} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="inscestadual">Insc. Estadual</label>
-                    <input className="form-input" id="inscestadual" value={formData.inscestadual} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="inscmunicipio">Insc. Municipal</label>
-                    <input className="form-input" id="inscmunicipio" value={formData.inscmunicipio} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="token">Token API/Nota</label>
-                    <div className="input-with-icon">
-                      <input className="form-input" id="token" value={formData.token} onChange={handleChange} />
-                      <ShieldCheck size={16} className="input-icon-right" />
+                <div className="premium-master-panel" style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                  <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.2rem' }}>
+                    <div className="section-header full-width" style={{ gridColumn: 'span 4', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Building2 size={18} color="var(--primary-color)" />
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e293b' }}>Identificação</h3>
                     </div>
-                  </div>
-
-                  <div className="section-header full-width">
-                    <Globe size={18} />
-                    <h3>Localização</h3>
-                  </div>
-
-                  <div className="form-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label htmlFor="cep">CEP</label>
-                      <a 
-                        href="https://buscacepinter.correios.com.br/app/endereco/index.php" 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="cep-link"
-                        style={{ fontSize: '0.75rem', color: 'var(--primary-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <ExternalLink size={12} />
-                        Correios
-                      </a>
+                    
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label htmlFor="nome" style={{ fontWeight: '600', color: '#475569' }}>Nome Fantasia *</label>
+                      <input className="form-input" id="nome" value={formData.nome} onChange={handleChange} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     </div>
-                    <div className="input-with-button">
-                      <input 
-                        className="form-input" 
-                        id="cep" 
-                        value={formData.cep} 
-                        onChange={handleChange} 
-                        placeholder="00000-000"
-                      />
-                      <button 
-                        type="button" 
-                        className="btn-search-premium" 
-                        onClick={handleCepSearch}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? '...' : <Search size={16} />}
-                      </button>
+                    
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label htmlFor="razaosocial" style={{ fontWeight: '600', color: '#475569' }}>Razão Social</label>
+                      <input className="form-input" id="razaosocial" value={formData.razaosocial} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     </div>
-                  </div>
 
-                  <div className="form-group span-2">
-                    <label htmlFor="endereco">Endereço (Rua/Av)</label>
-                    <input className="form-input" id="endereco" value={formData.endereco} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="numcasa">Número</label>
-                    <input className="form-input" id="numcasa" value={formData.numcasa} onChange={handleChange} />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="bairro">Bairro</label>
-                    <input className="form-input" id="bairro" value={formData.bairro} onChange={handleChange} />
-                  </div>
-                  <div className="form-group span-2">
-                    <label htmlFor="cidade">Cidade</label>
-                    <input className="form-input" id="cidade" value={formData.cidade} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="uf">UF</label>
-                    <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} />
-                  </div>
-
-                  <div className="section-header full-width">
-                    <Phone size={18} />
-                    <h3>Contato e Adicionais</h3>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="telefone">Telefone</label>
-                    <input className="form-input" id="telefone" value={formData.telefone} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="cxpostal">Caixa Postal</label>
-                    <input className="form-input" id="cxpostal" value={formData.cxpostal} onChange={handleChange} />
-                  </div>
-                  <div className="form-group span-2">
-                    <label htmlFor="email">Email Corporativo</label>
-                    <div className="input-with-icon">
-                      <input className="form-input" id="email" type="email" value={formData.email} onChange={handleChange} />
-                      <Mail size={16} className="input-icon-right" />
+                    <div className="form-group">
+                      <label htmlFor="cnpj" style={{ fontWeight: '600', color: '#475569' }}>CNPJ</label>
+                      <input className="form-input" id="cnpj" value={formData.cnpj} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                     </div>
-                  </div>
+                    <div className="form-group">
+                      <label htmlFor="inscestadual" style={{ fontWeight: '600', color: '#475569' }}>Insc. Estadual</label>
+                      <input className="form-input" id="inscestadual" value={formData.inscestadual} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="inscmunicipio" style={{ fontWeight: '600', color: '#475569' }}>Insc. Municipal</label>
+                      <input className="form-input" id="inscmunicipio" value={formData.inscmunicipio} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="token" style={{ fontWeight: '600', color: '#475569' }}>Token API/Nota</label>
+                      <div className="input-with-icon" style={{ position: 'relative' }}>
+                        <input className="form-input" id="token" value={formData.token} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                        <ShieldCheck size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      </div>
+                    </div>
 
-                  <div className="form-group full-width">
-                    <div className="checkbox-group premium-switch">
-                      <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} />
-                      <label htmlFor="ativo">Empresa Ativa no Sistema</label>
+                    <div className="section-header full-width" style={{ gridColumn: 'span 4', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
+                      <Globe size={18} color="var(--primary-color)" />
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e293b' }}>Localização</h3>
+                    </div>
+
+                    <div className="form-group">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label htmlFor="cep" style={{ fontWeight: '600', color: '#475569' }}>CEP</label>
+                        <a 
+                          href="https://buscacepinter.correios.com.br/app/endereco/index.php" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="cep-link"
+                          style={{ fontSize: '0.75rem', color: 'var(--primary-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <ExternalLink size={12} />
+                          Correios
+                        </a>
+                      </div>
+                      <div className="input-with-button" style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input 
+                          className="form-input" 
+                          id="cep" 
+                          value={formData.cep} 
+                          onChange={handleChange} 
+                          placeholder="00000-000"
+                          style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                        />
+                        <button 
+                          type="button" 
+                          className="btn-search-premium" 
+                          onClick={handleCepSearch}
+                          disabled={isSubmitting}
+                          style={{ padding: '0 1rem', borderRadius: '8px', background: 'var(--primary-color)', color: '#fff', border: 'none', cursor: 'pointer' }}
+                        >
+                          {isSubmitting ? '...' : <Search size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label htmlFor="endereco" style={{ fontWeight: '600', color: '#475569' }}>Endereço (Rua/Av)</label>
+                      <input className="form-input" id="endereco" value={formData.endereco} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="numcasa" style={{ fontWeight: '600', color: '#475569' }}>Número</label>
+                      <input className="form-input" id="numcasa" value={formData.numcasa} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="bairro" style={{ fontWeight: '600', color: '#475569' }}>Bairro</label>
+                      <input className="form-input" id="bairro" value={formData.bairro} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label htmlFor="cidade" style={{ fontWeight: '600', color: '#475569' }}>Cidade</label>
+                      <input className="form-input" id="cidade" value={formData.cidade} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="uf" style={{ fontWeight: '600', color: '#475569' }}>UF</label>
+                      <input className="form-input" id="uf" value={formData.uf} onChange={handleChange} maxLength={2} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+
+                    <div className="section-header full-width" style={{ gridColumn: 'span 4', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
+                      <Phone size={18} color="var(--primary-color)" />
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e293b' }}>Contato e Adicionais</h3>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="telefone" style={{ fontWeight: '600', color: '#475569' }}>Telefone</label>
+                      <input className="form-input" id="telefone" value={formData.telefone} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="cxpostal" style={{ fontWeight: '600', color: '#475569' }}>Caixa Postal</label>
+                      <input className="form-input" id="cxpostal" value={formData.cxpostal} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label htmlFor="email" style={{ fontWeight: '600', color: '#475569' }}>Email Corporativo</label>
+                      <div className="input-with-icon" style={{ position: 'relative' }}>
+                        <input className="form-input" id="email" type="email" value={formData.email} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                        <Mail size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ gridColumn: 'span 4', marginTop: '0.5rem' }}>
+                      <div className="checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input type="checkbox" id="ativo" checked={formData.ativo} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                        <label htmlFor="ativo" style={{ fontSize: '0.95rem', color: '#475569', fontWeight: '500' }}>Empresa Ativa no Sistema</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="modal-footer">
+              <div className="premium-modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>
                   {modalMode === 'create' ? 'Concluir Cadastro' : 'Salvar Alterações'}

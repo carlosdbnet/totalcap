@@ -9,14 +9,22 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 5mm;
+    margin: 3mm;
   }
 
-  body * {
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.printing-os-active * {
     visibility: hidden;
   }
 
-  .printable-ficha-container, .printable-ficha-container * {
+  body.printing-os-active .printable-ficha-container, 
+  body.printing-os-active .printable-ficha-container *,
+  body.printing-os-active #print-os-section, 
+  body.printing-os-active #print-os-section * {
     visibility: visible;
   }
 
@@ -28,6 +36,10 @@
     background: white;
     color: black;
     font-family: Arial, sans-serif;
+  }
+
+  .printable-ficha-page {
+    page-break-after: always;
   }
 }
 
@@ -205,6 +217,8 @@
   max-width: 100%;
   height: auto;
 }
+
+.id-value {
   font-weight: bold;
   font-size: 10pt;
 }
