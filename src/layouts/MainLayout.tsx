@@ -85,20 +85,19 @@ const menuItems = [
         label: 'Auxiliares',
         path: '#',
         isGroup: true,
-
-          subItems: [
-            { label: 'Áreas', path: '/areas' },
-            { label: 'Regiões', path: '/regioes' },
-            { label: 'Atividades', path: '/atividades' },
-            { label: 'Vendedores', path: '/vendedores' },
-            { label: 'Transportadoras', path: '/transportadoras' },
-            { label: 'Cidades', path: '/cidades' },
-            { label: 'Estados', path: '/estados' },
-            { label: 'Veículos', path: '/veiculos' },
-            { label: 'Bancos', path: '/bancos' },
-            { label: 'Tipo de Docto', path: '/tipos-docto' },
-            { label: 'Tipos de Falha', path: '/cad-falhas' },
-          ]
+        subItems: [
+          { label: 'Áreas', path: '/areas' },
+          { label: 'Regiões', path: '/regioes' },
+          { label: 'Atividades', path: '/atividades' },
+          { label: 'Vendedores', path: '/vendedores' },
+          { label: 'Transportadoras', path: '/transportadoras' },
+          { label: 'Cidades', path: '/cidades' },
+          { label: 'Estados', path: '/estados' },
+          { label: 'Veículos', path: '/veiculos' },
+          { label: 'Bancos', path: '/bancos' },
+          { label: 'Tipo de Docto', path: '/tipos-docto' },
+          { label: 'Tipos de Falha', path: '/cad-falhas' },
+        ]
       },
       {
         label: 'Produção',

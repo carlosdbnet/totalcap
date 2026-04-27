@@ -610,7 +610,7 @@ export default function ColetaPneus() {
     }
   };
 
-  
+
 
   const handleCameraClick = () => {
     if (fileInputRef.current) {
@@ -1108,7 +1108,6 @@ export default function ColetaPneus() {
                 )}
                 <button type="button" className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
               </div>
-
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body scrollable">
@@ -1527,7 +1526,7 @@ export default function ColetaPneus() {
           </div>
         </div>
 
-        <div className="print-footer">
+        <div className="print-footer-info">
           Documento gerado pelo Sistema Totalcap em {new Date().toLocaleString('pt-BR')}
         </div>
       </div>
@@ -1602,6 +1601,7 @@ export default function ColetaPneus() {
           <p>Página 1 de 1</p>
         </div>
       </div>
+
     </div>
 
   );
