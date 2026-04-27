@@ -578,7 +578,7 @@ export default function LactoDespesas() {
                   R$ {Number(n.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="actions-cell">
-                  <button className="icon-btn" style={{ background: '#64748b' }} onClick={(e) => { e.stopPropagation(); openModal('view', n); }} title="Visualizar"><Eye size={16} /></button>
+                  <button className="icon-btn" style={{ background: '#10b981' }} onClick={(e) => { e.stopPropagation(); openModal('view', n); }} title="Visualizar"><Eye size={16} /></button>
                   <button className="icon-btn" onClick={(e) => { e.stopPropagation(); openModal('edit', n); }} title="Editar"><Edit2 size={16} /></button>
                   <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); deleteNota(n.id); }} title="Excluir"><Trash2 size={16} /></button>
                 </td>
@@ -679,7 +679,7 @@ export default function LactoDespesas() {
                             <td style={{ textAlign: 'right', fontWeight: '600' }}>R$ {Number(item.vtotal || 0).toFixed(2)}</td>
                             <td className="actions-cell">
                               {modalMode === 'view' ? (
-                                <button type="button" className="icon-btn" onClick={() => openItemModal(idx)} title="Ver Detalhes"><Eye size={16} /></button>
+                                <button type="button" className="icon-btn" style={{ background: '#10b981' }} onClick={() => openItemModal(idx)} title="Ver Detalhes"><Eye size={16} /></button>
                               ) : (
                                 <>
                                   <button type="button" className="icon-btn" onClick={() => openItemModal(idx)} title="Editar"><Edit2 size={16} /></button>
