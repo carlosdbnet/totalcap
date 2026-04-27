@@ -1381,7 +1381,7 @@ export default function ColetaPneus() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                   {isScanning ? <Loader2 className="spinning" size={20} /> : <Save size={20} />} 
-                  <span>{isScanning ? 'Enviando p/ IA...' : 'Enviar Para IA'}</span>
+                  <span>{isScanning ? 'Enviando p/ IA...' : 'Envia p/ IA'}</span>
                 </div>
               </button>
 
