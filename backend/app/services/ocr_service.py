@@ -44,7 +44,7 @@ def analyze_tire_image(base64_image: str, custom_instructions: str = None, tipo_
             "Analise a imagem e transcreva os dados ESTRITAMENTE para o formato JSON abaixo.\n\n"
             
             "O que você precisa encontrar (fique muito atento a números e códigos):\n"
-            "1. CABEÇALHO: 'numos', 'cpfcnpj', 'nome' (do cliente), 'endereco', 'cidade', 'uf', 'fone', 'veiculo' (Placa), 'formapagto', 'vendedor_ocr', 'servicocomgarantia' (Sim/Não), 'tipoveiculo' (Caminhão, Carro, etc).\n"
+            "1. CABEÇALHO: 'numos' (O NÚMERO DA OS ESTÁ SEMPRE NO CANTO SUPERIOR DIREITO), 'cpfcnpj', 'nome' (do cliente), 'endereco', 'cidade', 'uf', 'fone', 'veiculo' (Placa), 'formapagto', 'vendedor_ocr', 'servicocomgarantia' (Sim/Não), 'tipoveiculo' (Caminhão, Carro, etc).\n"
             "   - Fique atento a etiquetas como 'somentesepar' ou 'podealterardesenho' and marque se presentes.\n"
             "2. ITENS (Pneus): Para cada linha de pneu, extraia: 'medida', 'marca', 'numserie', 'numfogo', 'desenho'.\n"
             "   - IMPORTANTE: Se o conteúdo de uma célula for um sinal de aspas duplas (\"), repita o valor da linha superior!!\n"
