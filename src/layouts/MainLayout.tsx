@@ -35,7 +35,7 @@ const menuItems = [
   { icon: Calculator, label: 'Orçamento', path: '/orcamento' },
   {
     icon: Factory,
-    label: 'Produção',
+    label: 'Chão de Fábrica',
     path: '#',
     subItems: [
       { label: 'Localização', path: '/localizacao' },
