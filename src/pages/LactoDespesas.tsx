@@ -159,7 +159,7 @@ export default function LactoDespesas() {
       });
   };
 
-  const openModal = (mode: 'create' | 'edit', nota?: NotaDespesa) => {
+  const openModal = (mode: 'create' | 'edit' | 'view', nota?: NotaDespesa) => {
     setModalMode(mode);
     setFormError('');
     if (mode === 'edit' && nota) {
@@ -578,8 +578,9 @@ export default function LactoDespesas() {
                   R$ {Number(n.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="actions-cell">
-                  <button className="icon-btn" onClick={() => openModal('edit', n)}><Edit2 size={16} /></button>
-                  <button className="icon-btn delete" onClick={() => deleteNota(n.id)}><Trash2 size={16} /></button>
+                  <button className="icon-btn" style={{ background: '#64748b' }} onClick={(e) => { e.stopPropagation(); openModal('view', n); }} title="Visualizar"><Eye size={16} /></button>
+                  <button className="icon-btn" onClick={(e) => { e.stopPropagation(); openModal('edit', n); }} title="Editar"><Edit2 size={16} /></button>
+                  <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); deleteNota(n.id); }} title="Excluir"><Trash2 size={16} /></button>
                 </td>
               </tr>
             ))}
@@ -592,7 +593,11 @@ export default function LactoDespesas() {
         <div className="despesas-modal-overlay">
           <div className="despesas-modal-content">
             <div className="despesas-modal-header">
-              <h2>{modalMode === 'create' ? 'Novo Lançamento de Despesa' : `Editando Despesa #${currentId}`}</h2>
+              <h2>
+                {modalMode === 'create' ? 'Novo Lançamento de Despesa' : 
+                 modalMode === 'view' ? `Visualizando Despesa #${currentId}` : 
+                 `Editando Despesa #${currentId}`}
+              </h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
             </div>
             
@@ -610,7 +615,7 @@ export default function LactoDespesas() {
                     </div>
                     <div className="input-group span-2">
                       <label>Fornecedor/Contato</label>
-                      <select name="id_contato" value={formData.id_contato} onChange={handleHeaderChange}>
+                      <select name="id_contato" value={formData.id_contato} onChange={handleHeaderChange} disabled={modalMode === 'view'}>
                         <option value="0">Selecione o Fornecedor</option>
                         {contatos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                       </select>
@@ -618,7 +623,7 @@ export default function LactoDespesas() {
                     <div className="input-group">
                       <label>Vendedor</label>
 
-                      <select name="id_vendedor" value={formData.id_vendedor} onChange={handleHeaderChange} required>
+                      <select name="id_vendedor" value={formData.id_vendedor} onChange={handleHeaderChange} required disabled={modalMode === 'view'}>
                         <option value="0">Selecione...</option>
                         {vendedores.map(v => <option key={v.id} value={v.id}>{v.nome}</option>)}
                       </select>
@@ -638,10 +643,12 @@ export default function LactoDespesas() {
 
                 <section className="modal-section mt-4">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <p className="divider-label">Itens da Despesa</p>
-                    <button type="button" className="btn-primary" onClick={() => openItemModal(null)}>
-                      <Plus size={16} /> Adicionar Item
-                    </button>
+                    <p className="divider-label">Produtos / Serviços</p>
+                    {modalMode !== 'view' && (
+                      <button type="button" className="btn-primary" onClick={() => openItemModal(null)}>
+                        <Plus size={16} /> Adicionar Item
+                      </button>
+                    )}
                   </div>
 
                   <div className="table-responsive">
@@ -670,11 +677,15 @@ export default function LactoDespesas() {
                             <td>{item.qlitro || 0}</td>
                             <td>R$ {Number(item.vlitro || 0).toFixed(2)}</td>
                             <td style={{ textAlign: 'right', fontWeight: '600' }}>R$ {Number(item.vtotal || 0).toFixed(2)}</td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button type="button" className="icon-btn" onClick={() => openItemModal(idx)}><Edit2 size={14} /></button>
-                                <button type="button" className="icon-btn delete" onClick={() => removeItem(idx)}><Trash2 size={14} /></button>
-                              </div>
+                            <td className="actions-cell">
+                              {modalMode === 'view' ? (
+                                <button type="button" className="icon-btn" onClick={() => openItemModal(idx)} title="Ver Detalhes"><Eye size={16} /></button>
+                              ) : (
+                                <>
+                                  <button type="button" className="icon-btn" onClick={() => openItemModal(idx)} title="Editar"><Edit2 size={16} /></button>
+                                  <button type="button" className="icon-btn delete" onClick={() => removeItem(idx)} title="Remover"><Trash2 size={16} /></button>
+                                </>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -696,13 +707,17 @@ export default function LactoDespesas() {
               </div>
 
               <div className="modal-footer-despesas">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary-despesas" disabled={isSubmitting}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                    {isSubmitting ? <Loader2 className="spinning" /> : <Save size={18} />} 
-                    <span>{modalMode === 'create' ? 'Salvar Lançamento' : 'Salvar Alterações'}</span>
-                  </div>
+                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
+                  {modalMode === 'view' ? 'Fechar' : 'Cancelar'}
                 </button>
+                {modalMode !== 'view' && (
+                  <button type="submit" className="btn-primary-despesas" disabled={isSubmitting}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                      {isSubmitting ? <Loader2 className="spinning" /> : <Save size={18} />} 
+                      <span>{modalMode === 'create' ? 'Salvar Lançamento' : 'Salvar Alterações'}</span>
+                    </div>
+                  </button>
+                )}
               </div>
             </form>
           </div>
