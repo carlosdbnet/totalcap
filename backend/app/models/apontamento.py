@@ -10,7 +10,7 @@ class Apontamento(Base):
     id_pneu = Column(Integer, ForeignKey("pneu.id"), nullable=False)
     id_setor = Column(Integer, ForeignKey("setor.id"), nullable=True)
     id_operador = Column(Integer, ForeignKey("operador.id"), nullable=True)
-    id_retrabalho = Column(Integer, nullable=True)
+    id_retrabalho = Column(Integer, nullable=False, default=0)
     
     inicio = Column(TIMESTAMP, nullable=True)
     termino = Column(TIMESTAMP, nullable=True)

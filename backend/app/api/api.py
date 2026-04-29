@@ -48,7 +48,8 @@ from backend.app.api.endpoints import (
     veiculos,
     exportacao,
     logs,
-    pneus
+    pneus,
+    credencial
 )
 
 api_router = APIRouter()
@@ -85,7 +86,7 @@ api_router.include_router(grupos_produto.router, prefix="/grupos-produto", tags=
 api_router.include_router(faturas.router, prefix="/faturas", tags=["faturas"])
 api_router.include_router(tipos_docto.router, prefix="/tipos-docto", tags=["tipos-docto"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
-api_router.include_router(apontamentos.router, prefix="/apontamentos", tags=["apontamentos"])
+api_router.include_router(apontamentos.router, prefix="/apontamento", tags=["apontamentos"])
 api_router.include_router(falhas.router, prefix="/falhas", tags=["falhas"])
 api_router.include_router(consumo_materia.router, prefix="/consumo-materia", tags=["consumo"])
 api_router.include_router(orcamento.router, prefix="/orcamentos", tags=["orçamentos"])
@@ -97,6 +98,7 @@ api_router.include_router(dispositivos.router, prefix="/dispositivos", tags=["di
 api_router.include_router(veiculos.router, prefix="/veiculos", tags=["veículos"])
 api_router.include_router(logs.router, prefix="/logs", tags=["logs"])
 api_router.include_router(pneus.router, prefix="/pneus", tags=["pneus"])
+api_router.include_router(credencial.router, prefix="/credencial", tags=["credencial"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
     from backend.app.models.usuario import Usuario

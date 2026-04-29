@@ -35,13 +35,32 @@ def list_pneus(
     
     pneus = []
     for p, numos, razaosocial in results:
-        p_dict = {c.name: getattr(p, c.name) for c in p.__table__.columns}
+        # Criar dicionário de retorno de forma segura (mapeando nomes do modelo)
+        p_dict = {
+            "id": p.id,
+            "id_ordem": p.id_ordem,
+            "id_empresa": p.id_empresa,
+            "id_contato": p.id_contato,
+            "id_medida": p.id_medida,
+            "id_produto": p.id_marca, # Mapeia id_marca para id_produto (que o mobile espera)
+            "id_desenho": p.id_desenho,
+            "id_recap": p.id_recap,
+            "id_servico": p.id_servico,
+            "id_vendedor": p.id_vendedor,
+            "codbarra": p.codbarra,
+            "numserie": p.numserie,
+            "numfogo": p.numfogo,
+            "dot": p.dot,
+            "statuspro": p.statuspro,
+            "statusfat": p.statusfat,
+            "placa": p.placa
+        }
         p_dict["numos"] = numos
         p_dict["nome_cliente"] = razaosocial
         pneus.append(p_dict)
     return pneus
 
-@router.get("/buscar", response_model=PneuSchema)
+@router.get("/buscar/", response_model=PneuSchema)
 def buscar_pneu(
     codbarra: str,
     db: Session = Depends(get_db),
@@ -70,59 +89,59 @@ def buscar_pneu(
     
     p, numos, razaosocial, dataentrada, vrtotal_os, medida_desc, desenho_desc = result
     
-    # Criar dicionário de retorno
-    p_dict = {c.name: getattr(p, c.name) for c in p.__table__.columns}
+    # Criar dicionário de retorno de forma segura (mapeando nomes do modelo)
+    p_dict = {
+        "id": p.id,
+        "id_ordem": p.id_ordem,
+        "id_empresa": p.id_empresa,
+        "id_contato": p.id_contato,
+        "id_medida": p.id_medida,
+        "id_produto": p.id_marca, # Mapeia id_marca para id_produto (que o mobile espera)
+        "id_desenho": p.id_desenho,
+        "id_recap": p.id_recap,
+        "id_servico": p.id_servico,
+        "id_vendedor": p.id_vendedor,
+        "codbarra": p.codbarra,
+        "numserie": p.numserie,
+        "numfogo": p.numfogo,
+        "dot": p.dot,
+        "statuspro": p.statuspro,
+        "statusfat": p.statusfat,
+        "placa": p.placa
+    }
     p_dict["numos"] = numos
-    p_dict["nome_cliente"] = razaosocial if razaosocial else "Sem nome cadastrado"
-    p_dict["dataentrada"] = dataentrada
+    p_dict["nome_cliente"] = str(razaosocial) if razaosocial else "Sem nome cadastrado"
+    p_dict["dataentrada"] = dataentrada.isoformat() if dataentrada else None
     p_dict["vrtotal_os"] = float(vrtotal_os) if vrtotal_os else 0.0
-    p_dict["produto_desc"] = f"{medida_desc or ''} {desenho_desc or ''}".strip() or "Descrição não disponível"
+    p_dict["produto_desc"] = str(f"{medida_desc or ''} {desenho_desc or ''}").strip() or "Descrição não disponível"
 
     # Buscar Histórico de Apontamentos (Produção)
-    historico = db.query(Apontamento, Setor.descricao, Setor.sequencia)\
-        .join(Setor, Apontamento.id_setor == Setor.id)\
-        .filter(Apontamento.id_pneu == p.id)\
-        .order_by(Setor.sequencia).all()
-    
-    lista_hist = []
-    for h, desc, seq in historico:
-        h_dict = {c.name: getattr(h, c.name) for c in h.__table__.columns}
-        h_dict["nome_setor"] = desc
-        lista_hist.append(h_dict)
-    
-    p_dict["historico"] = lista_hist
+    try:
+        historico = db.query(Apontamento, Setor.descricao, Setor.sequencia)\
+            .join(Setor, Apontamento.id_setor == Setor.id)\
+            .filter(Apontamento.id_pneu == p.id)\
+            .order_by(Setor.sequencia).all()
+        
+        lista_hist = []
+        for h, desc, seq in historico:
+            # Serialização manual para evitar problemas com tipos complexos
+            h_dict = {
+                "id": h.id,
+                "id_pneu": h.id_pneu,
+                "id_setor": h.id_setor,
+                "id_operador": h.id_operador,
+                "status": h.status,
+                "inicio": h.inicio.isoformat() if h.inicio else None,
+                "termino": h.termino.isoformat() if h.termino else None,
+                "tempo": float(h.tempo) if h.tempo else 0.0,
+                "nome_setor": str(desc)
+            }
+            lista_hist.append(h_dict)
+        
+        p_dict["historico"] = lista_hist
+    except Exception as e:
+        print(f"Erro ao buscar historico: {e}")
+        p_dict["historico"] = []
 
+    print(f"Pneu encontrado: {p.codbarra} - Cliente: {p_dict['nome_cliente']}")
     return p_dict
-
-# --- COMPATIBILIDADE COM APP MOBILE (ROTAS DE CREDENCIAL) ---
-
-from pydantic import BaseModel
-
-class CredencialRequest(BaseModel):
-    android_id: str
-    id_setor: int
-
-@router.post("/credencial")
-def solicitar_credencial(
-    req: CredencialRequest,
-    db: Session = Depends(get_db)
-):
-    """
-    Endpoint de compatibilidade para solicitação de credencial do App Mobile.
-    """
-    existente = db.query(Dispositivo).filter(Dispositivo.android_id == req.android_id).first()
-    if existente:
-        return existente
-    
-    novo = Dispositivo(android_id=req.android_id, id_setor=req.id_setor, autorizado=False)
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-@router.get("/credencial/{android_id}")
-def check_credencial(android_id: str, db: Session = Depends(get_db)):
-    """
-    Endpoint de compatibilidade para verificação de credencial do App Mobile.
-    """
-    return db.query(Dispositivo).filter(Dispositivo.android_id == android_id).first()

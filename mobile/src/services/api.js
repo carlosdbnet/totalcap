@@ -24,8 +24,8 @@ api.interceptors.request.use(
       if (ip.includes('vercel.app') || ip.startsWith('http')) {
         baseURL = ip.startsWith('http') ? ip : `https://${ip}`;
       } else {
-        const portSuffix = port ? `:${port}` : '';
-        baseURL = `http://${ip}${portSuffix}`;
+        const portSuffix = port ? `:${port}` : ':8000';
+        baseURL = `http://${ip}${portSuffix}/api/v1/`;
       }
       
       config.baseURL = baseURL;
@@ -33,7 +33,7 @@ api.interceptors.request.use(
       return config;
     } catch (error) {
       console.error('Erro ao recuperar configurações de IP:', error);
-      config.baseURL = 'http://192.168.15.98:8082'; // fallback local
+      config.baseURL = 'http://192.168.15.99:8000/api/v1/'; // fallback local
       return config;
     }
   },
