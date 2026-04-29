@@ -1,0 +1,35 @@
+The field "cli.appVersionSource" is not set, but it will be required in the future. Learn more: https://docs.expo.dev/build-reference/app-versions/
+Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
+No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
+
+
+
+The field "cli.appVersionSource" is not set, but it will be required in the future. Learn more: https://docs.expo.dev/build-reference/app-versions/
+√ Using remote Android credentials (Expo server)
+
+Compressing project files and uploading to EAS Build. Learn more: https://expo.fyi/eas-build-archive
+⌛️ Computing the project fingerprint is taking longer than expected...
+⏩ To skip this step, set the environment variable: EAS_SKIP_AUTO_FINGERPRINT=1
+
+See logs: https://expo.dev/accounts/suportedbnet/projects/mobcap/builds/53b7a0cc-d94c-4d30-b773-b1d469ce7425
+
+Waiting for build to complete. You can press Ctrl+C to exit.
+
+Start builds sooner in the priority queue.
+Sign up for a paid plan at https://expo.dev/accounts/suportedbnet/settings/billing
+
+Waiting in Free tier queue
+
+🤖 Android app:
+https://expo.dev/artifacts/eas/bkAfK6UwvheoLJKH8XmsAr.apk
+
+[?25l[2K[1G[36m?[39m [1mInstall and run the Android build on an emulator?[22m [90m»[39m [90m(Y/n)[39m[2K[1G[2K[1G[32m√[39m [1mInstall and run the Android build on an emulator?[22m [90m...[39m yes
+[?25h
+
+Using open emulator: emulador34
+
+Installing your app...
+√ Successfully installed your app!
+
+Starting your app...
+√ Successfully started your app!

@@ -47,7 +47,8 @@ from backend.app.api.endpoints import (
     dispositivos,
     veiculos,
     exportacao,
-    logs
+    logs,
+    pneus
 )
 
 api_router = APIRouter()
@@ -95,6 +96,7 @@ api_router.include_router(registro_falhas.router, prefix="/registro-falhas", tag
 api_router.include_router(dispositivos.router, prefix="/dispositivos", tags=["dispositivos"])
 api_router.include_router(veiculos.router, prefix="/veiculos", tags=["veículos"])
 api_router.include_router(logs.router, prefix="/logs", tags=["logs"])
+api_router.include_router(pneus.router, prefix="/pneus", tags=["pneus"])
 @api_router.get("/status")
 def get_status(db: Session = Depends(get_db)):
     from backend.app.models.usuario import Usuario
