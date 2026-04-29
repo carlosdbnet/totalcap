@@ -103,3 +103,12 @@ def get_relatorio_consumo(
         }
         for r in results
     ]
+@router.delete("/{id}")
+def delete_consumo(id: int, db: Session = Depends(get_db)):
+    reg = db.query(ConsumoMateria).filter(ConsumoMateria.id == id).first()
+    if not reg:
+        raise HTTPException(status_code=404, detail="Registro não encontrado")
+    
+    db.delete(reg)
+    db.commit()
+    return {"status": "success"}

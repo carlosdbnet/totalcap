@@ -205,18 +205,20 @@ export default function TiposDocto() {
                         </span>
                       </td>
                       <td>
-                        <div className="action-buttons">
+                        <div className="action-buttons" style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                           <button 
-                            className="icon-btn edit" 
+                            className="btn-icon-premium edit" 
                             onClick={() => openModal('edit', tipo)}
                             title="Editar"
+                            style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Edit2 size={16} />
                           </button>
                           <button 
-                            className="icon-btn delete" 
+                            className="btn-icon-premium delete" 
                             onClick={() => handleDelete(tipo.id, tipo.descricao || tipo.codigo)}
                             title="Excluir"
+                            style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Trash2 size={16} />
                           </button>

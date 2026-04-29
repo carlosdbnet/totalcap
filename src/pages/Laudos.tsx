@@ -460,8 +460,22 @@ export default function Laudos() {
                       >
                         <Eye size={18} />
                       </button>
-                      <button className="icon-btn edit" onClick={() => openModal('edit', l)} title="Editar"><Edit2 size={16} /></button>
-                      <button className="icon-btn delete" onClick={() => handleDelete(l.id!)} title="Excluir"><Trash2 size={16} /></button>
+                      <button 
+                        className="btn-icon-premium" 
+                        onClick={() => openModal('edit', l)} 
+                        title="Editar"
+                        style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        className="btn-icon-premium" 
+                        onClick={() => handleDelete(l.id!)} 
+                        title="Excluir"
+                        style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </td>
                 </tr>

@@ -291,9 +291,21 @@ export default function Apontamento() {
                         </span>
                       </td>
                       <td>
-                        <div className="action-buttons">
-                          <button className="icon-btn edit" onClick={() => openModal('edit', a)}><Edit2 size={16} /></button>
-                          <button className="icon-btn delete" onClick={() => handleDelete(a.id)}><Trash2 size={16} /></button>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                          <button 
+                            className="btn-icon-premium" 
+                            onClick={() => openModal('edit', a)}
+                            style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            className="btn-icon-premium" 
+                            onClick={() => handleDelete(a.id)}
+                            style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>

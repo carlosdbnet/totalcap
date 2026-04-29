@@ -73,7 +73,7 @@ export default function RegistroFalhas() {
   const fetchRegistros = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/falhas/registrofalha/');
+      const response = await api.get('/registro-falhas/');
       setRegistros(response.data);
     } catch (err) {
       console.error("Erro ao buscar registros:", err);
@@ -150,9 +150,9 @@ export default function RegistroFalhas() {
       };
 
       if (modalMode === 'create') {
-        await api.post('/falhas/registrofalha/', payload);
+        await api.post('/registro-falhas/', payload);
       } else {
-        await api.put(`/falhas/registrofalha/${currentId}`, payload);
+        await api.put(`/registro-falhas/${currentId}`, payload);
       }
       
       setShowModal(false);
@@ -167,7 +167,7 @@ export default function RegistroFalhas() {
   const handleDelete = async (id: number) => {
     if (!window.confirm("Tem certeza que deseja excluir este registro?")) return;
     try {
-      await api.delete(`/falhas/registrofalha/${id}`);
+      await api.delete(`/registro-falhas/${id}`);
       fetchRegistros();
     } catch (err) {
       alert("Erro ao excluir registro.");
@@ -216,11 +216,21 @@ export default function RegistroFalhas() {
                   <td>{r.obs}</td>
                   <td style={{ textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button className="btn-icon" onClick={() => openModal('edit', r)} title="Editar">
-                        <Edit2 size={16} style={{ color: '#64748b' }} />
+                      <button 
+                        className="btn-icon-premium" 
+                        onClick={() => openModal('edit', r)} 
+                        title="Editar"
+                        style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Edit2 size={16} />
                       </button>
-                      <button className="btn-icon" onClick={() => handleDelete(r.id)} title="Excluir">
-                        <Trash2 size={16} style={{ color: '#ef4444' }} />
+                      <button 
+                        className="btn-icon-premium" 
+                        onClick={() => handleDelete(r.id)} 
+                        title="Excluir"
+                        style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

@@ -9,6 +9,9 @@ class RegiaoRepository:
     def get_by_codigo(self, db: Session, codigo: str) -> Regiao | None:
         return db.query(Regiao).filter(Regiao.codigo == codigo).first()
 
+    def get_by_nome(self, db: Session, nome: str) -> Regiao | None:
+        return db.query(Regiao).filter(Regiao.nome == nome).first()
+
     def get_multi(self, db: Session, skip: int = 0, limit: int = 100) -> list[Regiao]:
         return db.query(Regiao).offset(skip).limit(limit).all()
 

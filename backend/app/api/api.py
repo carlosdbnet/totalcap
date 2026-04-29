@@ -43,6 +43,7 @@ from backend.app.api.endpoints import (
     notadesp,
     laudos,
     fatura_laudos,
+    registro_falhas,
     dispositivos,
     veiculos,
     exportacao,
@@ -90,6 +91,7 @@ api_router.include_router(orcamento.router, prefix="/orcamentos", tags=["orçame
 api_router.include_router(notadesp.router, prefix="/notadesp", tags=["despesas"])
 api_router.include_router(laudos.router, prefix="/laudos", tags=["laudos"])
 api_router.include_router(fatura_laudos.router, prefix="/fatura-laudos", tags=["fatura-laudos"])
+api_router.include_router(registro_falhas.router, prefix="/registro-falhas", tags=["registro-falhas"])
 api_router.include_router(dispositivos.router, prefix="/dispositivos", tags=["dispositivos"])
 api_router.include_router(veiculos.router, prefix="/veiculos", tags=["veículos"])
 api_router.include_router(logs.router, prefix="/logs", tags=["logs"])

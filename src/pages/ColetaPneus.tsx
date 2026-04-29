@@ -1070,38 +1070,38 @@ export default function ColetaPneus() {
                       <td style={{ textAlign: 'center' }} className="no-print">
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
                           <button 
-                            className={`icon-btn warning ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
+                            className={`btn-icon-premium warning ${coleta.status === 'GOS' ? 'disabled' : ''}`} 
                             onClick={(e) => { e.stopPropagation(); handleGenerateOS(coleta.id); }} 
                             title="Gerar Ordem de Serviço" 
                             disabled={coleta.status === 'GOS'}
-                            style={{ minWidth: '95px', background: '#f59e0b' }}
+                            style={{ minWidth: '95px', background: '#f59e0b', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                           >
                             <FilePlus size={18} />
                             <span>Gera OS</span>
                           </button>
                           <button 
-                            className="icon-btn success" 
+                            className="btn-icon-premium success" 
                             onClick={(e) => { e.stopPropagation(); openModal('view', coleta); }} 
                             title="Visualizar Detalhes"
-                            style={{ background: '#10b981' }}
+                            style={{ background: '#10b981', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Eye size={18} />
                           </button>
                           <button 
-                            className={`icon-btn edit ${coleta.status === 'GOS' ? 'disabled' : ''}`}
+                            className={`btn-icon-premium edit ${coleta.status === 'GOS' ? 'disabled' : ''}`}
                             onClick={(e) => { e.stopPropagation(); openModal('edit', coleta); }} 
                             title="Editar Coleta"
                             disabled={coleta.status === 'GOS'}
-                            style={{ background: '#3b82f6' }}
+                            style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Edit2 size={16} />
                           </button>
                           <button 
-                            className={`icon-btn delete ${coleta.status === 'GOS' ? 'disabled' : ''}`}
+                            className={`btn-icon-premium delete ${coleta.status === 'GOS' ? 'disabled' : ''}`}
                             onClick={(e) => { e.stopPropagation(); handleDelete(coleta.id); }} 
                             title="Excluir Coleta"
                             disabled={coleta.status === 'GOS'}
-                            style={{ background: '#ef4444' }}
+                            style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -1293,12 +1293,26 @@ export default function ColetaPneus() {
                               </td>
                               <td style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{p.medidanova || '---'}</td>
                               <td style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{p.desenhonovo || '---'}</td>
-                              <td>
-                                <div style={{ display: 'flex', gap: '5px' }}>
-                                  <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)}><Edit2 size={16} /></button>
-                                  <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)}><Trash2 size={16} /></button>
-                                </div>
-                              </td>
+                                <td>
+                                  <div style={{ display: 'flex', gap: '5px' }}>
+                                    <button 
+                                      type="button" 
+                                      className="btn-icon-premium" 
+                                      onClick={() => openPneuModal(idx)}
+                                      style={{ background: '#3b82f6', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      className="btn-icon-premium" 
+                                      onClick={() => removePneu(idx)}
+                                      style={{ background: '#ef4444', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </td>
                             </tr>
                           ))
                         )}

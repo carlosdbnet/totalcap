@@ -586,10 +586,31 @@ export default function Clientes() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
-                          <button className="icon-btn" title="Visualizar" onClick={() => openModal('view', c)}><Eye size={16} /></button>
-                          <button className="icon-btn edit" onClick={() => openModal('edit', c)}><Edit2 size={16} /></button>
-                          <button className="icon-btn delete" onClick={() => {/* Delete logic */}}><Trash2 size={16} /></button>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                          <button 
+                            className="btn-icon-premium success" 
+                            title="Visualizar" 
+                            onClick={() => openModal('view', c)}
+                            style={{ background: '#10b981', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button 
+                            className="btn-icon-premium edit" 
+                            title="Editar"
+                            onClick={() => openModal('edit', c)}
+                            style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            className="btn-icon-premium delete" 
+                            title="Excluir"
+                            onClick={() => {/* Delete logic */}}
+                            style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>

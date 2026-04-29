@@ -7,6 +7,6 @@ class Regiao(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     codigo = Column(String, unique=True, index=True, nullable=False)
-    nome = Column(String, index=True, nullable=False)
+    nome = Column(String, unique=True, index=True, nullable=False)
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())

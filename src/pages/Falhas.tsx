@@ -163,12 +163,22 @@ export default function Falhas() {
                     </span>
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button className="btn-icon" onClick={() => openModal('edit', f)} title="Editar">
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <button 
+                        className="btn-icon-premium edit" 
+                        onClick={() => openModal('edit', f)} 
+                        title="Editar"
+                        style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      >
                         <Edit2 size={16} />
                       </button>
-                      <button className="btn-icon" onClick={() => handleDelete(f.id)} title="Excluir">
-                        <Trash2 size={16} style={{ color: '#ef4444' }} />
+                      <button 
+                        className="btn-icon-premium delete" 
+                        onClick={() => handleDelete(f.id)} 
+                        title="Excluir"
+                        style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

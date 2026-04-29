@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, Plus, Search, Calendar, User, Factory, Loader2, Save, Package, X, AlertCircle, Edit2 } from 'lucide-react';
+import { Layers, Plus, Search, Calendar, User, Factory, Loader2, Save, Package, X, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import api, { getErrorMessage } from '../lib/api';
 
 interface ConsumoItem {
@@ -128,6 +128,16 @@ export default function ConsumoMateriaPrima() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Tem certeza que deseja excluir este lançamento?")) return;
+    try {
+      await api.delete(`/consumo-materia/${id}`);
+      fetchRegistros();
+    } catch (err) {
+      alert("Erro ao excluir registro.");
+    }
+  };
+
   const resetForm = () => {
     setDatamov('');
     setIdProduto('');
@@ -178,9 +188,22 @@ export default function ConsumoMateriaPrima() {
                   <td>{r.setor_nome}</td>
                   <td>{r.operador_nome}</td>
                   <td>
-                    <button className="btn-icon" onClick={() => openModal('edit', r)}>
-                      <Edit2 size={16} style={{ color: '#64748b' }} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        className="btn-icon-premium" 
+                        onClick={() => openModal('edit', r)}
+                        style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        className="btn-icon-premium" 
+                        onClick={() => handleDelete(r.id)}
+                        style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

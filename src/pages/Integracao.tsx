@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx';
 import './Integracao.css';
 
 const TABELAS = [
+  { value: 'areas', label: 'Areas', icon: Ruler, dbTable: 'area' },
+  { value: 'regioes', label: 'Regioes', icon: Ruler, dbTable: 'regiao' },
   { value: 'medidas', label: 'Medidas', icon: Ruler, dbTable: 'medida' },
   { value: 'desenhos', label: 'Desenhos', icon: PenTool, dbTable: 'desenho' },
   { value: 'cidades', label: 'Cidades', icon: MapPin, dbTable: 'cidade' },
@@ -17,6 +19,10 @@ const TABELAS = [
   { value: 'servicos', label: 'Serviços', icon: Database, dbTable: 'servico' },
   { value: 'bancos', label: 'Bancos', icon: Database, dbTable: 'banco' },
   { value: 'veiculos', label: 'Veículos', icon: Database, dbTable: 'veiculo' },
+  { value: 'mobpneus', label: 'Mobpneus', icon: Database, dbTable: 'mobpneu' },
+  { value: 'fatura-laudos', label: 'Fatura Laudos', icon: Database, dbTable: 'fatura_laudo' },
+  { value: 'registro-falhas', label: 'Registro Falhas', icon: Database, dbTable: 'registro_falha' },
+  { value: 'dispositivos', label: 'Dispositivos', icon: Database, dbTable: 'dispositivos' },
 ];
 
 type StatusImportacao = 'idle' | 'loading' | 'success' | 'error';
@@ -50,6 +56,10 @@ export default function Integracao() {
       cidades: ['nome', 'cidade', 'Cidade', 'nomecidade'],
       estados: ['nome', 'estado', 'UF', 'uf', 'Sigla'],
       contatos: ['nome', 'Nome', 'razaosocial', 'Razão Social', 'cpfcnpj', 'cpf', 'cnpj', 'documento'],
+      areas: ['nome', 'area', 'Area', 'descricao'],
+      regioes: ['nome', 'regiao', 'Regiao', 'descricao'],
+      'fatura-laudos': ['valor', 'id_laudo', 'id_fatura'],
+      'registro-falhas': ['obs', 'id_falha', 'id_operador', 'id_setor'],
     };
 
     const campos = mapeamentos[tabela] || [];
@@ -59,51 +69,75 @@ export default function Integracao() {
     const encontrarCampo = (padroes: string[]) => {
       for (const padrao of padroes) {
         const encontrado = chaves.find(c => 
-          normalizarNome(c).includes(normalizarNome(padrao)) || 
-          normalizarNome(padrao).includes(normalizarNome(c))
+          normalizarNome(c) === normalizarNome(padrao) || 
+          normalizarNome(c).includes(normalizarNome(padrao))
         );
         if (encontrado) return encontrado;
       }
-      return chaves[0];
+      return null;
     };
 
     const campoPrincipal = encontrarCampo(campos);
     
     // Se não encontrou campo pré-definido, tenta mapear as chaves originais para chaves amigáveis ao banco
-    if (!mapeamentos[tabela]) {
+    if (!mapeamentos[tabela] || (tabela !== 'cidades' && tabela !== 'estados' && tabela !== 'contatos' && tabela !== 'areas')) {
       return dados.map(row => {
         const item: any = { ativo: true };
         Object.keys(row).forEach(key => {
           const keyLimpa = normalizarNome(key);
-          // Mapeamento dinâmico básico
-          if (keyLimpa === 'descricao' || keyLimpa === 'desc' || keyLimpa === 'nome') item.descricao = row[key];
-          else if (keyLimpa === 'medida') item.medida = row[key];
-          else if (keyLimpa === 'banda') item.banda = row[key];
+          // Mapeamento dinâmico básico - Corrigido para não sobrescrever nome/codigo
+          if (keyLimpa === 'codigo' || keyLimpa === 'cod') item.codigo = row[key]?.toString();
+          else if (keyLimpa === 'nome') item.nome = row[key]?.toString();
+          else if (keyLimpa === 'descricao' || keyLimpa === 'desc') item.descricao = row[key]?.toString();
+          else if (keyLimpa === 'medida') item.medida = row[key]?.toString();
+          else if (keyLimpa === 'banda') item.banda = row[key]?.toString();
           else if (keyLimpa === 'valor' || keyLimpa === 'preco') item.valor = row[key];
-          else item[keyLimpa] = row[key]; // Tenta usar o nome da coluna original em minúsculo
+          else item[keyLimpa] = row[key];
         });
         return item;
       });
     }
 
-    if (!campoPrincipal) return [];
-
     return dados.map((row) => {
-      const valor = row[campoPrincipal];
-      if (!valor) return null;
-
+      const valor = row[campoPrincipal || ''];
+      
       const item: any = { ativo: true };
 
-      if (tabela === 'cidades') {
+      if (tabela === 'areas' || tabela === 'regioes' || tabela === 'fatura-laudos' || tabela === 'registro-falhas') {
+        const findKey = (patterns: string[]) => chaves.find(c => patterns.some(p => normalizarNome(c) === normalizarNome(p)));
+        
+        const keyCodigo = findKey(['codigo', 'cod', 'id', 'idarea', 'idregiao']);
+        const keyNome = findKey(['nome', 'area', 'regiao', 'descricao', 'desc', 'obs']);
+        
+        if (tabela === 'fatura-laudos') {
+          item.id_fatura = parseInt(row[findKey(['id_fatura', 'fatura']) || ''] || '0');
+          item.id_laudo = parseInt(row[findKey(['id_laudo', 'laudo']) || ''] || '0');
+          item.valor = parseFloat(row[findKey(['valor', 'vrtotal', 'preco']) || ''] || '0');
+        } else if (tabela === 'registro-falhas') {
+          item.id_setor = parseInt(row[findKey(['id_setor', 'setor']) || ''] || '0');
+          item.id_operador = parseInt(row[findKey(['id_operador', 'operador']) || ''] || '0');
+          item.id_falha = parseInt(row[findKey(['id_falha', 'falha']) || ''] || '0');
+          item.id_pneu = parseInt(row[findKey(['id_pneu', 'pneu']) || ''] || '0');
+          item.obs = row[findKey(['obs', 'observacao', 'desc']) || '']?.toString() || '';
+        } else {
+          item.codigo = keyCodigo ? row[keyCodigo]?.toString() : (row[chaves[0]]?.toString() || '0');
+          item.nome = keyNome ? row[keyNome]?.toString() : (valor?.toString() || '');
+        }
+        
+        if (!item.nome && tabela !== 'fatura-laudos' && tabela !== 'registro-falhas') return null;
+      } else if (tabela === 'cidades') {
+        if (!valor) return null;
         item.nome = valor.toString();
         const ufField = chaves.find(c => normalizarNome(c) === 'uf' || normalizarNome(c) === 'estado' || normalizarNome(c).includes('sigla'));
         item.uf = ufField ? row[ufField]?.toString() : '';
         const ibgeField = chaves.find(c => normalizarNome(c).includes('ibge'));
         if (ibgeField) item.codigoibge = parseInt(row[ibgeField]) || null;
       } else if (tabela === 'estados') {
+        if (!valor) return null;
         item.uf = valor.toString().substring(0, 2);
         item.nome = valor.toString();
       } else if (tabela === 'contatos') {
+        if (!valor) return null;
         item.nome = valor.toString();
         
         const cpfCnpj = chaves.find(c => 
@@ -148,22 +182,8 @@ export default function Integracao() {
         
         const estado = findField(['uf', 'estado', 'state']);
         if (estado) item.uf = row[estado]?.toString() || '';
-        
-        const rg = findField(['rg']);
-        if (rg) item.rg = row[rg]?.toString() || '';
-        
-        const ie = findField(['insc', 'estadual']);
-        if (ie) item.inscestadual = row[ie]?.toString() || '';
-        
-        const im = findField(['municipal', 'inscmunicipio']);
-        if (im) item.inscmunicipio = row[im]?.toString() || '';
-        
-        const contatoCom = findField(['contato', 'comercial']);
-        if (contatoCom) item.contato_comercial = row[contatoCom]?.toString() || '';
-        
-        const contatoFin = findField(['financeiro']);
-        if (contatoFin) item.contato_financeiro = row[contatoFin]?.toString() || '';
       } else {
+        if (!valor) return null;
         item.descricao = valor.toString();
       }
 

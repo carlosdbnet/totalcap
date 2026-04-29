@@ -507,10 +507,38 @@ export default function Orcamento() {
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
-                      <button className="btn-icon" title="Imprimir Proposta" onClick={() => handlePrintProposta(o)} style={{ padding: '4px' }}><FileText size={16} /></button>
-                      <button className="btn-icon" title="Visualizar" onClick={() => handleOpenModal(o, true)} style={{ padding: '4px' }}><Eye size={16} /></button>
-                      <button className="btn-icon" title="Editar" onClick={() => handleOpenModal(o, false)} style={{ padding: '4px' }}><Edit2 size={16} /></button>
-                      <button className="btn-icon text-red-500" title="Excluir" onClick={() => handleDeleteOrcamento(o.id)} style={{ padding: '4px' }}><Trash2 size={16} /></button>
+                      <button 
+                        className="icon-btn" 
+                        title="Imprimir Proposta" 
+                        onClick={() => handlePrintProposta(o)}
+                        style={{ background: '#8b5cf6', color: 'white', border: 'none', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <FileText size={16} />
+                      </button>
+                      <button 
+                        className="icon-btn" 
+                        title="Visualizar" 
+                        onClick={() => handleOpenModal(o, true)}
+                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button 
+                        className="icon-btn" 
+                        title="Editar" 
+                        onClick={() => handleOpenModal(o, false)}
+                        style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        className="icon-btn" 
+                        title="Excluir" 
+                        onClick={() => handleDeleteOrcamento(o.id)}
+                        style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -690,8 +718,22 @@ export default function Orcamento() {
                           <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--primary-color)' }}>R$ {parseFloat(String(item.vrtotal)).toFixed(2)}</td>
                           <td style={{ textAlign: 'center' }}>
                             <div className="flex justify-center gap-2">
-                              <button className="text-slate-400 hover:text-primary" onClick={() => handleOpenItemModal(idx)}><Edit2 size={14} /></button>
-                              <button className="text-red-400 hover:text-red-600" onClick={() => removeItem(idx)}><Trash2 size={14} /></button>
+                              <button 
+                                className="icon-btn" 
+                                onClick={() => handleOpenItemModal(idx)}
+                                title="Editar Item"
+                                style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '4px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button 
+                                className="icon-btn" 
+                                onClick={() => removeItem(idx)}
+                                title="Excluir Item"
+                                style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                           </td>
                         </tr>

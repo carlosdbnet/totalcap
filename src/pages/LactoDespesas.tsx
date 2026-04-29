@@ -578,9 +578,32 @@ export default function LactoDespesas() {
                   R$ {Number(n.vtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="actions-cell">
-                  <button className="icon-btn" style={{ background: '#10b981' }} onClick={(e) => { e.stopPropagation(); openModal('view', n); }} title="Visualizar"><Eye size={16} /></button>
-                  <button className="icon-btn" onClick={(e) => { e.stopPropagation(); openModal('edit', n); }} title="Editar"><Edit2 size={16} /></button>
-                  <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); deleteNota(n.id); }} title="Excluir"><Trash2 size={16} /></button>
+                  <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                    <button 
+                      className="btn-icon-premium" 
+                      style={{ background: '#10b981', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }} 
+                      onClick={(e) => { e.stopPropagation(); openModal('view', n); }} 
+                      title="Visualizar"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button 
+                      className="btn-icon-premium" 
+                      style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); openModal('edit', n); }} 
+                      title="Editar"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      className="btn-icon-premium" 
+                      style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); deleteNota(n.id); }} 
+                      title="Excluir"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -678,14 +701,40 @@ export default function LactoDespesas() {
                             <td>R$ {Number(item.vlitro || 0).toFixed(2)}</td>
                             <td style={{ textAlign: 'right', fontWeight: '600' }}>R$ {Number(item.vtotal || 0).toFixed(2)}</td>
                             <td className="actions-cell">
-                              {modalMode === 'view' ? (
-                                <button type="button" className="icon-btn" style={{ background: '#10b981' }} onClick={() => openItemModal(idx)} title="Ver Detalhes"><Eye size={16} /></button>
-                              ) : (
-                                <>
-                                  <button type="button" className="icon-btn" onClick={() => openItemModal(idx)} title="Editar"><Edit2 size={16} /></button>
-                                  <button type="button" className="icon-btn delete" onClick={() => removeItem(idx)} title="Remover"><Trash2 size={16} /></button>
-                                </>
-                              )}
+                              <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                {modalMode === 'view' ? (
+                                  <button 
+                                    type="button" 
+                                    className="btn-icon-premium" 
+                                    style={{ background: '#10b981', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none' }} 
+                                    onClick={() => openItemModal(idx)} 
+                                    title="Ver Detalhes"
+                                  >
+                                    <Eye size={14} />
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button 
+                                      type="button" 
+                                      className="btn-icon-premium" 
+                                      style={{ background: '#3b82f6', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none' }}
+                                      onClick={() => openItemModal(idx)} 
+                                      title="Editar"
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      className="btn-icon-premium" 
+                                      style={{ background: '#ef4444', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none' }}
+                                      onClick={() => removeItem(idx)} 
+                                      title="Remover"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}

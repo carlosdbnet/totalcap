@@ -1373,10 +1373,31 @@ export default function Faturamento() {
                                    <td style={{ fontWeight: '600' }}>{f.contato_nome}</td>
                                    <td style={{ fontWeight: '700', color: '#10b981' }}>R$ {parseFloat(f.vrtotal || 0).toFixed(2)}</td>
                                    <td>
-                                      <div className="action-buttons" onClick={e => e.stopPropagation()}>
-                                         <button className="icon-btn success" title="Visualizar Detalhes" onClick={() => handleOpenFaturaModal(f, 'view')} style={{ background: '#10b981' }}><Eye size={18} /></button>
-                                         <button className="icon-btn edit" title="Editar Fatura" onClick={() => handleOpenFaturaModal(f, 'edit')}><Edit size={18} /></button>
-                                         <button className="icon-btn delete" title="Excluir Fatura" onClick={() => handleDeleteFatura(f.id)}><Trash2 size={16} /></button>
+                                      <div className="action-buttons" onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                                         <button 
+                                           className="btn-icon-premium success" 
+                                           title="Visualizar Detalhes" 
+                                           onClick={() => handleOpenFaturaModal(f, 'view')} 
+                                           style={{ background: '#10b981', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                         >
+                                           <Eye size={18} />
+                                         </button>
+                                         <button 
+                                           className="btn-icon-premium edit" 
+                                           title="Editar Fatura" 
+                                           onClick={() => handleOpenFaturaModal(f, 'edit')}
+                                           style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                         >
+                                           <Edit size={18} />
+                                         </button>
+                                         <button 
+                                           className="btn-icon-premium delete" 
+                                           title="Excluir Fatura" 
+                                           onClick={() => handleDeleteFatura(f.id)}
+                                           style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                         >
+                                           <Trash2 size={16} />
+                                         </button>
                                       </div>
                                    </td>
                                 </tr>

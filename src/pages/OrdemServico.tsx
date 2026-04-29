@@ -763,10 +763,31 @@ export default function OrdemServico() {
                           <td><span className="os-pneus-count">{(os.pneus || []).length} pneus</span></td>
                           <td><span className="os-value">R$ {Number(os.vrtotal || 0).toFixed(2)}</span></td>
                           <td>
-                            <div className="action-buttons" translate="no">
-                              <button className="icon-btn success" onClick={() => openModal('view', os)} title="Visualizar" style={{ background: '#10b981' }}><span><Eye size={18} /></span></button>
-                              <button className="icon-btn edit" onClick={() => openModal('edit', os)} title="Editar"><span><Edit2 size={16} /></span></button>
-                              <button className="icon-btn delete" onClick={() => handleDelete(os.id, os.numos)} title="Excluir"><span><Trash2 size={16} /></span></button>
+                            <div className="action-buttons" translate="no" style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                              <button 
+                                className="btn-icon-premium success" 
+                                onClick={() => openModal('view', os)} 
+                                title="Visualizar" 
+                                style={{ background: '#10b981', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                              >
+                                <Eye size={18} />
+                              </button>
+                              <button 
+                                className="btn-icon-premium edit" 
+                                onClick={() => openModal('edit', os)} 
+                                title="Editar"
+                                style={{ background: '#3b82f6', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                              <button 
+                                className="btn-icon-premium delete" 
+                                onClick={() => handleDelete(os.id, os.numos)} 
+                                title="Excluir"
+                                style={{ background: '#ef4444', color: 'white', padding: '0.4rem', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -992,10 +1013,36 @@ export default function OrdemServico() {
                                 </div>
                               </td>
                               <td>
-                                <div className="action-buttons-inline">
-                                  <button type="button" className="icon-btn print" onClick={() => handlePrintFicha(p)} title="Imprimir Ficha"><Printer size={16} /></button>
-                                  <button type="button" className="icon-btn edit" onClick={() => openPneuModal(idx)} title={modalMode === 'view' ? "Visualizar" : "Editar"}>{modalMode === 'view' ? <Search size={16} /> : <Edit2 size={16} />}</button>
-                                  {modalMode !== 'view' && <button type="button" className="icon-btn delete" onClick={() => removePneu(idx)} title="Excluir"><Trash2 size={16} /></button>}
+                                <div className="action-buttons-inline" style={{ display: 'flex', gap: '4px' }}>
+                                  <button 
+                                    type="button" 
+                                    className="btn-icon-premium print" 
+                                    onClick={() => handlePrintFicha(p)} 
+                                    title="Imprimir Ficha"
+                                    style={{ background: '#64748b', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+                                  >
+                                    <Printer size={14} />
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    className="btn-icon-premium edit" 
+                                    onClick={() => openPneuModal(idx)} 
+                                    title={modalMode === 'view' ? "Visualizar" : "Editar"}
+                                    style={{ background: '#3b82f6', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+                                  >
+                                    {modalMode === 'view' ? <Search size={14} /> : <Edit2 size={14} />}
+                                  </button>
+                                  {modalMode !== 'view' && (
+                                    <button 
+                                      type="button" 
+                                      className="btn-icon-premium delete" 
+                                      onClick={() => removePneu(idx)} 
+                                      title="Excluir"
+                                      style={{ background: '#ef4444', color: 'white', padding: '0.3rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>

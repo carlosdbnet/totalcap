@@ -35,3 +35,5 @@ scratch/
 scratch_*.py
 verify_servico_fix.py
 update_faturas_parcela_logic.py
+
+.vercel
