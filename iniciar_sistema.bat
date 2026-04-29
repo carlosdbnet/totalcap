@@ -26,14 +26,14 @@ goto menu
 :backend
 cls
 echo Iniciando apenas o Backend na aba atual...
-.venv\Scripts\uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+backend\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 pause
 exit
 
 :frontend
 cls
 echo Iniciando apenas o Frontend na aba atual...
-npm run dev -- --host
+cd frontend && npm run dev -- --host
 pause
 exit
 
@@ -44,7 +44,7 @@ echo        Iniciando Servicos com Verificacao de Saude
 echo ==========================================================
 echo.
 echo [1/2] Iniciando o Backend em nova janela...
-start "Totalcap - Backend" cmd /c ".venv\Scripts\uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+start "Totalcap - Backend" cmd /c "backend\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
 
 echo.
 echo Aguardando o Backend carregar (http://localhost:8000/api/v1/status)...
@@ -70,7 +70,7 @@ echo.
 echo [OK] Backend Online!
 echo.
 echo [2/2] Iniciando o Frontend em nova janela...
-start "Totalcap - Frontend" cmd /c "npm run dev -- --host"
+start "Totalcap - Frontend" cmd /c "cd frontend && npm run dev -- --host"
 
 echo.
 echo ==========================================================

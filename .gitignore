@@ -1,13 +1,15 @@
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
-backend/__pycache__/
-backend/app/**/__pycache__/
 .venv/
+backend/.venv/
+backend/venv/
 env/
 venv/
 .env
+backend/.env
 
 # NodeJS
 node_modules/
@@ -28,12 +30,14 @@ dist/
 Thumbs.db
 desktop.ini
 
-.vercel
+# Vercel
+.vercel/
 
 # Scratch files
 scratch/
 scratch_*.py
 verify_servico_fix.py
-update_faturas_parcela_logic.py
-
-.vercel
+update_faturas_parcela_logic*.py
+apply_servico_id_fix.py
+verify_admin.py
+*.log

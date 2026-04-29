@@ -14,7 +14,7 @@ router = APIRouter()
 def exportar_tabela_dinamica(
     table_name: str,
     db: Session = Depends(get_db),
-    format: str = Query("csv", regex="^(csv|json)$")
+    format: str = Query("csv", pattern="^(csv|json)$")
 ) -> Any:
     """
     Exporta todos os campos de uma tabela qualquer informando apenas o nome.
