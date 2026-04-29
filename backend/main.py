@@ -3,7 +3,12 @@ import sys
 from contextlib import asynccontextmanager
 
 # Garante que a raiz do projeto está no path para evitar ModuleNotFoundError
-sys.path.append(os.getcwd())
+# Funciona tanto na raiz quanto dentro da pasta backend
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+if os.getcwd() not in sys.path:
+    sys.path.append(os.getcwd())
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware

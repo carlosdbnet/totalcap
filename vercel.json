@@ -7,22 +7,22 @@
       "config": { "distDir": "dist" }
     },
     {
-      "src": "api/index.py",
+      "src": "backend/main.py",
       "use": "@vercel/python"
     }
   ],
   "rewrites": [
     {
       "source": "/api/v1/(.*)",
-      "destination": "/api/index.py"
+      "destination": "backend/main.py"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "destination": "backend/main.py"
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "frontend/dist/index.html"
     }
   ]
 }
