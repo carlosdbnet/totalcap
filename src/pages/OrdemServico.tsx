@@ -140,6 +140,20 @@ export default function OrdemServico() {
   const barcodeRef1 = useRef<SVGSVGElement>(null);
   const barcodeRef2 = useRef<SVGSVGElement>(null);
 
+  const [clienteSearchTerm, setClienteSearchTerm] = useState('');
+  const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+  const clienteSearchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clienteSearchRef.current && !clienteSearchRef.current.contains(event.target as Node)) {
+        setShowClienteDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   useEffect(() => {
     let timer: any;
     if (pneusForPrint.length > 0) {
@@ -312,7 +326,10 @@ export default function OrdemServico() {
     // Carregamento resiliente: se um falhar, os outros continuam
     const loadResource = async (path: string, setter: (data: any[]) => void, label: string) => {
       try {
-        const response = await api.get(path);
+        // Adiciona timestamp para evitar cache do navegador
+        const timestamp = new Date().getTime();
+        const sep = path.includes('?') ? '&' : '?';
+        const response = await api.get(`${path}${sep}t=${timestamp}`);
         setter(response.data);
       } catch (error) {
         console.error(`Erro ao buscar ${label}:`, error);
@@ -343,6 +360,8 @@ export default function OrdemServico() {
     setFormError('');
     if ((mode === 'edit' || mode === 'view') && os) {
       setCurrentId(os.id);
+      const clienteNome = clientes.find(c => c.id === os.id_contato)?.nome || '';
+      setClienteSearchTerm(clienteNome);
       setFormData({
         numos: os.numos,
         dataprevisao: os.dataprevisao ? os.dataprevisao.split('T')[0] : '',
@@ -363,6 +382,7 @@ export default function OrdemServico() {
       });
     } else {
       setCurrentId(null);
+      setClienteSearchTerm('');
       setFormData({
         numos: '',
         dataprevisao: '',
@@ -388,6 +408,27 @@ export default function OrdemServico() {
   const handleMasterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [id]: value }));
+  };
+
+  const handleClienteSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setClienteSearchTerm(value);
+    
+    if (value.length >= 3) {
+      setShowClienteDropdown(true);
+    } else {
+      setShowClienteDropdown(false);
+    }
+  };
+
+  const handleSelectCliente = (cliente: any) => {
+    setClienteSearchTerm(cliente.nome);
+    setShowClienteDropdown(false);
+    setFormData((prev: any) => ({ 
+      ...prev, 
+      id_contato: cliente.id,
+      id_vendedor: cliente.id_vendedor && cliente.id_vendedor !== 0 ? cliente.id_vendedor : prev.id_vendedor
+    }));
   };
 
   const openPneuModal = (index: number | null) => {
@@ -764,7 +805,7 @@ export default function OrdemServico() {
               <div className="modal-body scrollable">
                 <div className="premium-master-panel">
                   <div className="premium-section-title"><User size={18} /> Dados Principais e Cliente</div>
-                  <div className="form-grid-os">
+                  <div className="form-grid-os" style={{ gridTemplateColumns: '0.8fr 2.5fr 1fr 1fr' }}>
                     <div className="form-group">
                       <div className="input-with-icon">
                         <Hash size={18} className="field-icon" />
@@ -773,15 +814,34 @@ export default function OrdemServico() {
                       <input className="form-input" id="numos" value={formData.numos} onChange={handleMasterChange} placeholder="Ex: 12345" required disabled={modalMode === 'view'} />
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" ref={clienteSearchRef} style={{ position: 'relative' }}>
                       <div className="input-with-icon">
                         <User size={18} className="field-icon" />
-                        <label htmlFor="id_contato">Cliente *</label>
+                        <label>Cliente *</label>
                       </div>
-                      <select className="form-select" id="id_contato" value={formData.id_contato} onChange={handleMasterChange} required disabled={modalMode === 'view'}>
-                        <option value="0">Selecione o Cliente</option>
-                        {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                      </select>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Digite 3 letras para buscar..." 
+                        value={clienteSearchTerm} 
+                        onChange={handleClienteSearchChange} 
+                        disabled={modalMode === 'view'}
+                        autoComplete="off"
+                        required
+                      />
+                      {showClienteDropdown && clienteSearchTerm.length >= 3 && (
+                        <div className="autocomplete-dropdown">
+                          {clientes.filter(c => c.nome.toLowerCase().includes(clienteSearchTerm.toLowerCase())).length > 0 ? (
+                            clientes.filter(c => c.nome.toLowerCase().includes(clienteSearchTerm.toLowerCase())).map(c => (
+                              <div key={c.id} className="autocomplete-item" onClick={() => handleSelectCliente(c)}>
+                                {c.nome}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="autocomplete-item no-results">Nenhum cliente encontrado</div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-group">
@@ -868,11 +928,12 @@ export default function OrdemServico() {
                           </th>
                           <th style={{ width: '60px' }}>ID</th>
                           <th>Medida / Marca</th>
-                          <th>Desenho / Serviço</th>
+                          <th>Desenho</th>
                           <th>Recapagem</th>
                           <th>Série / DOT / Fogo</th>
                           <th>Valor (R$)</th>
-                          <th>Status</th>
+                          <th>Status Pro.</th>
+                          <th>Status Fat.</th>
                           <th style={{ width: '100px' }}>Ações</th>
                         </tr>
                       </thead>
@@ -892,14 +953,15 @@ export default function OrdemServico() {
                               <td style={{ fontWeight: 'bold', color: '#64748b', fontSize: '0.85rem' }}>{p.id || 'NEW'}</td>
                               <td>
                                 <div className="pneu-info-cell">
-                                  <span className="primary-info">{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</span>
-                                  <span className="secondary-info">{marcas.find(m => m.id === parseInt(p.id_marca))?.descricao || '---'}</span>
+                                  <span className="primary-info">{p.medida_nome || medidas.find(m => String(m.id) === String(p.id_medida))?.descricao || '---'}</span>
+                                  <span className="secondary-info">{p.marca_nome || marcas.find(m => String(m.id) === String(p.id_marca))?.descricao || '---'}</span>
                                 </div>
                               </td>
                               <td>
                                 <div className="pneu-info-cell">
-                                  <span className="primary-info">{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</span>
-                                  <span className="secondary-info">{servicos.find(s => s.id === parseInt(p.id_servico))?.descricao || '---'}</span>
+                                  <span className="primary-info">
+                                    {p.desenho_nome || desenhos.find(d => String(d.id) === String(p.id_desenho))?.descricao || '---'}
+                                  </span>
                                 </div>
                               </td>
                               <td style={{ color: '#2563eb', fontWeight: '500' }}>{tiposRecap.find(tr => tr.id === parseInt(p.id_recap))?.descricao || '---'}</td>
@@ -912,14 +974,20 @@ export default function OrdemServico() {
                               </td>
                               <td className="valor-cell-readonly">R$ {parseFloat(p.valor).toFixed(2)}</td>
                               <td>
-                                <div className="status-group-cell" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <div className="status-group-cell">
                                   {p.statuspro ? (
-                                    <span className="status-badge-item status-processo" style={{ fontSize: '10px' }}>StatPro</span>
+                                    <span className="status-badge-item status-processo" style={{ fontSize: '10px' }}>Produzido</span>
                                   ) : (
-                                    !p.statusfat && <span className="status-badge-item status-aguardando" style={{ fontSize: '10px' }}>Aguardando</span>
+                                    <span className="status-badge-item status-aguardando" style={{ fontSize: '10px' }}>Aguardando</span>
                                   )}
-                                  {p.statusfat && (
-                                    <span className="status-badge-item status-pronto" style={{ fontSize: '10px' }}>StatFat</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="status-group-cell">
+                                  {p.statusfat ? (
+                                    <span className="status-badge-item status-pronto" style={{ fontSize: '10px' }}>Faturado</span>
+                                  ) : (
+                                    <span className="status-badge-item status-aguardando" style={{ fontSize: '10px' }}>Aguardando</span>
                                   )}
                                 </div>
                               </td>
@@ -1166,9 +1234,15 @@ export default function OrdemServico() {
                     </div>
                   </div>
 
-                  <div className="full-row-field" style={{ borderBottom: '1px solid #000' }}>
-                    <span className="id-label">Cliente</span>
-                    <span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span>
+                  <div className="full-row-field" style={{ borderBottom: '1px solid #000', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ flex: 2 }}>
+                      <span className="id-label">Cliente</span>
+                      <span className="id-value">{clientes.find(c => String(c.id) === String(formData.id_contato))?.nome || '---'}</span>
+                    </div>
+                    <div style={{ flex: 1, borderLeft: '1px solid #000', paddingLeft: '5px' }}>
+                      <span className="id-label">Cidade</span>
+                      <span className="id-value">{clientes.find(c => String(c.id) === String(formData.id_contato))?.cidade || '---'}</span>
+                    </div>
                   </div>
 
                   <div className="technical-row">
@@ -1207,7 +1281,12 @@ export default function OrdemServico() {
                     </div>
 
                     <div className="side-panel">
-                      <div className="side-item"><span className="id-label">DESENHO DA REFORMA</span><span className="id-value">---</span></div>
+                      <div className="side-item">
+                        <span className="id-label">DESENHO DA REFORMA</span>
+                        <span className="id-value">
+                          {p.desenho_nome || desenhos.find(d => String(d.id) === String(p.id_desenho))?.descricao || '---'}
+                        </span>
+                      </div>
                       <div className="side-item check"><div className="mini-box"></div> <span>RECAPAGEM</span></div>
                       <div className="side-item check"><div className="mini-box"></div> <span>RECAUCHUTAGEM</span></div>
                       <div className="side-item check"><div className="mini-box"></div> <span>VULCANIZAÇÃO</span></div>
@@ -1243,8 +1322,16 @@ export default function OrdemServico() {
                     <div className="recusa-fields">
                       <div className="id-box" style={{ borderRight: 'none' }}><span className="id-label">Cliente</span><span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.nome || '---'}</span></div>
                       <div className="technical-row" style={{ gridTemplateColumns: '1.5fr 1.5fr', borderRight: 'none' }}>
-                        <div className="id-box" style={{ borderBottom: 'none' }}><span className="id-label">Cidade</span><span className="id-value">{clientes.find(c => c.id === parseInt(formData.id_contato))?.cidade || '---'}</span></div>
-                        <div className="id-box" style={{ borderRight: 'none', borderBottom: 'none' }}><span className="id-label">Desenho da Reforma</span><span className="id-value">{desenhos.find(d => d.id === parseInt(p.id_desenho))?.descricao || '---'}</span></div>
+                        <div className="id-box" style={{ borderBottom: 'none' }}>
+                          <span className="id-label">Cidade</span>
+                          <span className="id-value">{clientes.find(c => String(c.id) === String(formData.id_contato))?.cidade || '---'}</span>
+                        </div>
+                        <div className="id-box" style={{ borderRight: 'none', borderBottom: 'none' }}>
+                          <span className="id-label">Desenho da Reforma</span>
+                          <span className="id-value">
+                            {p.desenho_nome || desenhos.find(d => String(d.id) === String(p.id_desenho))?.descricao || '---'}
+                          </span>
+                        </div>
                       </div>
                       <div className="id-box" style={{ borderTop: '1px solid #000', borderRight: 'none' }}><span className="id-label">Bitola / Medida</span><span className="id-value">{medidas.find(m => m.id === parseInt(p.id_medida))?.descricao || '---'}</span></div>
                       <div className="id-box no-bottom" style={{ borderRight: 'none' }}><span className="id-label">Série</span><span className="id-value">{p.numserie || '---'}</span></div>
@@ -1302,7 +1389,7 @@ export default function OrdemServico() {
                 <div><strong>Cliente:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.nome || '---'}</div>
                 <div><strong>CPF/CNPJ:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.cpfcnpj || '---'}</div>
                 <div><strong>Endereço:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.rua || '---'}, {clientes.find(c => c.id === osToPrint.id_contato)?.numcasa || ''}</div>
-                <div><strong>Cidade:</strong> {clientes.find(c => c.id === osToPrint.id_contato)?.cidade || '---'} - {clientes.find(c => c.id === osToPrint.id_contato)?.uf || '--'}</div>
+                <div><strong>Cidade:</strong> {clientes.find(c => String(c.id) === String(osToPrint.id_contato))?.cidade || '---'} - {clientes.find(c => String(c.id) === String(osToPrint.id_contato))?.uf || '--'}</div>
               </div>
               <div className="info-box">
                 <div><strong>Data Entrada:</strong> {osToPrint.dataentrada ? new Date(osToPrint.dataentrada).toLocaleDateString('pt-BR') : '---'}</div>
@@ -1329,7 +1416,7 @@ export default function OrdemServico() {
                   <tr key={idx}>
                     <td>{idx + 1}</td>
                     <td>{medidas.find(m => m.id === p.id_medida)?.descricao || '---'}</td>
-                    <td>{marcas.find(m => m.id === p.id_marca)?.descricao || '-'} / {desenhos.find(d => d.id === p.id_desenho)?.descricao || '-'}</td>
+                    <td>{p.marca_nome || marcas.find(m => String(m.id) === String(p.id_marca))?.descricao || '-'} / {p.desenho_nome || desenhos.find(d => String(d.id) === String(p.id_desenho))?.descricao || '-'}</td>
                     <td>{servicos.find(s => s.id === p.id_servico)?.descricao || '---'}</td>
                     <td>{p.numserie || '-'} / {p.numfogo || '-'}</td>
                     <td style={{ textAlign: 'right' }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor)}</td>

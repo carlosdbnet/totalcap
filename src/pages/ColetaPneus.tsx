@@ -135,6 +135,20 @@ export default function ColetaPneus() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
+  const [clienteSearchTerm, setClienteSearchTerm] = useState('');
+  const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+  const clienteSearchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clienteSearchRef.current && !clienteSearchRef.current.contains(event.target as Node)) {
+        setShowClienteDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Form State (MobOS)
   const [formData, setFormData] = useState<any>({
     id_contato: 0,
@@ -348,6 +362,7 @@ export default function ColetaPneus() {
     setIsModalOpen(true);
     if ((mode === 'edit' || mode === 'view') && coleta) {
       setCurrentId(coleta.id);
+      setClienteSearchTerm(coleta.contato?.nome || coleta.nome || '');
       setFormData({
         id: coleta.id,
         id_contato: coleta.id_contato,
@@ -372,6 +387,7 @@ export default function ColetaPneus() {
       });
     } else {
       setCurrentId(null);
+      setClienteSearchTerm('');
       setFormData({
         id_contato: 0,
         msgmob: '',
@@ -397,40 +413,47 @@ export default function ColetaPneus() {
     setIsModalOpen(true);
   };
 
-  const handleClienteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleClienteSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    const clienteId = parseInt(value);
+    setClienteSearchTerm(value);
     
-    if (clienteId === 0) {
-      setFormData((prev: any) => ({ 
-        ...prev, 
-        id_contato: 0,
-        nome: '',
-        cpfcnpj: '',
-        fone: '',
-        endereco: '',
-        cidade: '',
-        uf: ''
-      }));
-      return;
-    }
-
-    const cliente = clientes.find(c => c.id === clienteId);
-    if (cliente) {
-      setFormData((prev: any) => ({ 
-        ...prev, 
-        id_contato: clienteId,
-        nome: cliente.nome,
-        cpfcnpj: cliente.cpfcnpj || '',
-        fone: cliente.foneprincipal || '',
-        endereco: `${cliente.rua || ''}${cliente.numcasa ? ', ' + cliente.numcasa : ''}${cliente.bairro ? ' - ' + cliente.bairro : ''}`,
-        cidade: cliente.cidade || '',
-        uf: cliente.uf || '',
-        id_vendedor: cliente.id_vendedor && cliente.id_vendedor !== 0 ? cliente.id_vendedor : prev.id_vendedor
-      }));
+    if (value.length >= 3) {
+      setShowClienteDropdown(true);
     } else {
-      setFormData((prev: any) => ({ ...prev, id_contato: clienteId }));
+      setShowClienteDropdown(false);
     }
+  };
+
+  const handleSelectCliente = (cliente: any) => {
+    setClienteSearchTerm(cliente.nome);
+    setShowClienteDropdown(false);
+    
+    setFormData((prev: any) => ({ 
+      ...prev, 
+      id_contato: cliente.id,
+      nome: cliente.nome,
+      cpfcnpj: cliente.cpfcnpj || '',
+      fone: cliente.foneprincipal || '',
+      endereco: `${cliente.rua || ''}${cliente.numcasa ? ', ' + cliente.numcasa : ''}${cliente.bairro ? ' - ' + cliente.bairro : ''}`.trim().replace(/^,|,$/g, ''),
+      cidade: cliente.cidade || '',
+      uf: cliente.uf || '',
+      id_vendedor: cliente.id_vendedor && cliente.id_vendedor !== 0 ? cliente.id_vendedor : prev.id_vendedor
+    }));
+  };
+
+  const maskCPFCNPJ = (value: string) => {
+    let v = value.replace(/\D/g, "");
+    if (v.length <= 11) {
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+      v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+      v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+      v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+      v = v.replace(/(\d{4})(\d)/, "$1-$2");
+    }
+    return v.substring(0, 18);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -441,8 +464,41 @@ export default function ColetaPneus() {
     if (type === 'number') {
       finalValue = value === '' ? null : (value.includes('.') ? parseFloat(value) : parseInt(value));
     }
+
+    let updates: any = {};
+
+    if (fieldName === 'cpfcnpj' && typeof finalValue === 'string') {
+      finalValue = maskCPFCNPJ(finalValue);
+      
+      const rawInput = finalValue.replace(/\D/g, "");
+      if (rawInput.length === 11 || rawInput.length === 14) {
+        const matchedCliente = clientes.find(c => {
+          const dbRaw = String(c.cpfcnpj || "").replace(/\D/g, "");
+          return dbRaw === rawInput;
+        });
+        
+        if (matchedCliente) {
+          updates = {
+            id_contato: matchedCliente.id,
+            nome: matchedCliente.nome,
+            fone: matchedCliente.foneprincipal || '',
+            endereco: `${matchedCliente.rua || ''}${matchedCliente.numcasa ? ', ' + matchedCliente.numcasa : ''}${matchedCliente.bairro ? ' - ' + matchedCliente.bairro : ''}`.trim().replace(/^,|,$/g, ''),
+            cidade: matchedCliente.cidade || '',
+            uf: matchedCliente.uf || ''
+          };
+          
+          if (matchedCliente.id_vendedor && matchedCliente.id_vendedor !== 0) {
+            updates.id_vendedor = matchedCliente.id_vendedor;
+          }
+
+          // Notifica o usuário para que ele saiba que a busca funcionou
+          alert(`✅ Cliente "${matchedCliente.nome}" localizado automaticamente pelo documento!`);
+          setClienteSearchTerm(matchedCliente.nome);
+        }
+      }
+    }
     
-    setFormData((prev: any) => ({ ...prev, [fieldName]: finalValue }));
+    setFormData((prev: any) => ({ ...prev, [fieldName]: finalValue, ...updates }));
   };
 
   // Pneus Sub-Modal Logic
@@ -1116,12 +1172,30 @@ export default function ColetaPneus() {
                 <div className="premium-master-panel">
                   <div className="premium-section-title"><User size={18} /> Dados do Cliente</div>
                   <div className="grid-4">
-                    <div className="form-group span-2">
+                    <div className="form-group span-2" ref={clienteSearchRef} style={{ position: 'relative' }}>
                       <label>Cliente</label>
-                      <select className="form-input" id="id_contato" name="id_contato" value={formData.id_contato} onChange={handleClienteChange} disabled={modalMode === 'view'}>
-                        <option value={0}>Selecione...</option>
-                        {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                      </select>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Digite 3 letras para buscar..." 
+                        value={clienteSearchTerm} 
+                        onChange={handleClienteSearchChange} 
+                        disabled={modalMode === 'view'}
+                        autoComplete="off"
+                      />
+                      {showClienteDropdown && clienteSearchTerm.length >= 3 && (
+                        <div className="autocomplete-dropdown">
+                          {clientes.filter(c => c.nome.toLowerCase().includes(clienteSearchTerm.toLowerCase())).length > 0 ? (
+                            clientes.filter(c => c.nome.toLowerCase().includes(clienteSearchTerm.toLowerCase())).map(c => (
+                              <div key={c.id} className="autocomplete-item" onClick={() => handleSelectCliente(c)}>
+                                {c.nome}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="autocomplete-item no-results">Nenhum cliente encontrado</div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="form-group">
                       <label>CPF/CNPJ</label>

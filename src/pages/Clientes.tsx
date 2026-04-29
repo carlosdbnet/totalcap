@@ -76,7 +76,7 @@ interface Cliente {
   ref_fin: string;
   ref_com: string;
   ref_prod: string;
-  id_cidade?: number;
+  codigoibge?: number;
   id_area?: number;
   id_regiao?: number;
   id_vendedor?: number;
@@ -97,6 +97,7 @@ interface Cliente {
 interface LookupItem {
   id: number;
   nome: string;
+  codigoibge?: number;
 }
 
 export default function Clientes() {
@@ -107,6 +108,7 @@ export default function Clientes() {
   const [activeTab, setActiveTab] = useState('geral');
   const [selectedClienteIds, setSelectedClienteIds] = useState<number[]>([]);
   const [searchingCEP, setSearchingCEP] = useState(false);
+  const [searchingCNPJ, setSearchingCNPJ] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,7 +182,7 @@ export default function Clientes() {
     ref_fin: '',
     ref_com: '',
     ref_prod: '',
-    id_cidade: '',
+    codigoibge: undefined,
     id_area: '',
     id_regiao: '',
     id_vendedor: '',
@@ -222,7 +224,8 @@ export default function Clientes() {
       setListAreas(area.data);
       setListRegioes(reg.data);
       setListVendedores(vend.data);
-      setListAtividades(ativ.data);
+      // Atividades use 'descricao' instead of 'nome', so map it to LookupItem format
+      setListAtividades(ativ.data.map((item: any) => ({ id: item.id, nome: item.descricao })));
       setListBancos(bank.data);
     } catch (error) {
       console.error("Erro ao buscar lookups:", error);
@@ -272,6 +275,44 @@ export default function Clientes() {
       setSelectedClienteIds([]);
     } else {
       setSelectedClienteIds(filteredClientes.map(c => c.id));
+    }
+  };
+
+  const handleCNPJSearch = async () => {
+    const doc = formData.cpfcnpj?.replace(/\D/g, '');
+    if (!doc || doc.length !== 14) {
+      alert("Busca de dados disponível apenas para CNPJ (14 dígitos).");
+      return;
+    }
+
+    setSearchingCNPJ(true);
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${doc}`);
+      if (!response.ok) {
+        alert("CNPJ não encontrado ou erro na consulta.");
+        return;
+      }
+      const data = await response.json();
+      
+      setFormData(prev => ({
+        ...prev,
+        nome: data.razao_social || prev.nome,
+        razaosocial: data.nome_fantasia || prev.razaosocial,
+        rua: data.logradouro || prev.rua,
+        numcasa: data.numero || prev.numcasa,
+        complemento: data.complemento || prev.complemento,
+        bairro: data.bairro || prev.bairro,
+        cep: data.cep ? data.cep.replace(/\D/g, '') : prev.cep,
+        cidade: data.municipio || prev.cidade,
+        uf: data.uf || prev.uf,
+        foneprincipal: data.ddd_telefone_1 || prev.foneprincipal,
+        email: data.email || prev.email
+      }));
+    } catch (error) {
+      console.error("Erro ao buscar CNPJ:", error);
+      alert("Erro ao consultar CNPJ. Tente novamente mais tarde.");
+    } finally {
+      setSearchingCNPJ(false);
     }
   };
 
@@ -362,14 +403,36 @@ export default function Clientes() {
     setIsModalOpen(true);
   };
 
+
+  const maskCPFCNPJ = (value: string) => {
+    let v = value.replace(/\D/g, "");
+    if (v.length <= 11) {
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+      v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+      v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+      v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+      v = v.replace(/(\d{4})(\d)/, "$1-$2");
+    }
+    return v.substring(0, 18);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (modalMode === 'view') return;
     const { id, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
+    let finalValue: any = type === 'checkbox' ? checked : value;
+
+    if (id === 'cpfcnpj' && typeof finalValue === 'string') {
+      finalValue = maskCPFCNPJ(finalValue);
+    }
+
     setFormData(prev => ({
       ...prev,
-      [id]: type === 'checkbox' ? checked : value
+      [id]: finalValue
     }));
   };
 
@@ -623,13 +686,14 @@ export default function Clientes() {
                                 <option value="J">Jurídica</option>
                             </select>
                         </div>
-                        <div className="form-group">
-                            <label>Tipo Doc.</label>
-                            <input className="form-input" id="tipodoc" value={formData.tipodoc || ''} onChange={handleChange} placeholder="Ex: CPF, CNPJ" />
-                        </div>
-                        <div className="form-group">
+                        <div className="form-group span-2">
                             <label>CPF / CNPJ *</label>
-                            <input className="form-input" id="cpfcnpj" value={formData.cpfcnpj || ''} onChange={handleChange} required />
+                            <div className="input-with-button">
+                                <input className="form-input" id="cpfcnpj" value={formData.cpfcnpj || ''} onChange={handleChange} required />
+                                <button type="button" className="btn-search-premium" onClick={handleCNPJSearch} disabled={searchingCNPJ} title="Buscar CNPJ">
+                                    {searchingCNPJ ? '...' : <Search size={16} />}
+                                </button>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>RG / Documento</label>
@@ -668,12 +732,27 @@ export default function Clientes() {
                         
                         <div className="form-group"><label>Bairro</label><input className="form-input" id="bairro" value={formData.bairro || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>Complemento</label><input className="form-input" id="complemento" value={formData.complemento || ''} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Cidade</label><input className="form-input" id="cidade" value={formData.cidade || ''} onChange={handleChange} /></div>
-                        <div className="form-group"><label>UF</label><input className="form-input" id="uf" value={formData.uf || ''} onChange={handleChange} maxLength={2} /></div>
+                        <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '1rem' }}>
+                            <div className="form-group"><label>Cidade</label><input className="form-input" id="cidade" value={formData.cidade || ''} onChange={handleChange} /></div>
+                            <div className="form-group"><label>UF</label><input className="form-input" id="uf" value={formData.uf || ''} onChange={handleChange} maxLength={2} /></div>
+                        </div>
+                        <div className="form-group">
+                            <label>Codigo IBGE</label>
+                            <input 
+                              type="number" 
+                              className="form-input" 
+                              id="codigoibge"
+                              value={formData.codigoibge || ''} 
+                              onChange={handleChange}
+                              disabled={modalMode === 'view'}
+                            />
+                        </div>
                         
                         <div className="form-group"><label>CX Postal</label><input className="form-input" id="cxpostal" value={formData.cxpostal || ''} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Cód. Pais</label><input className="form-input" id="codigopais" value={formData.codigopais || ''} onChange={handleChange} /></div>
-                        <div className="form-group span-2"><label>Nome Pais</label><input className="form-input" id="nomepais" value={formData.nomepais || ''} onChange={handleChange} /></div>
+                        <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '1rem' }}>
+                            <div className="form-group"><label>Cód. Pais</label><input className="form-input" id="codigopais" value={formData.codigopais || ''} onChange={handleChange} /></div>
+                            <div className="form-group"><label>Nome Pais</label><input className="form-input" id="nomepais" value={formData.nomepais || ''} onChange={handleChange} /></div>
+                        </div>
                         
                         <div className="form-group"><label>Fone Principal</label><input className="form-input" id="foneprincipal" value={formData.foneprincipal || ''} onChange={handleChange} /></div>
                         <div className="form-group"><label>Contato Comercial</label><input className="form-input" id="contato_comercial" value={formData.contato_comercial || ''} onChange={handleChange} /></div>
@@ -694,13 +773,6 @@ export default function Clientes() {
                     <div className="premium-section-title"><Users size={18} /> Parâmetros de Sistema e Flags</div>
   
                   <div className="grid-4" style={{ marginBottom: '2rem' }}>
-                        <div className="form-group">
-                            <label>Cidade (Associação)</label>
-                            <select className="form-select" id="id_cidade" value={formData.id_cidade || ''} onChange={handleChange}>
-                                <option value="">Selecione...</option>
-                                {listCidades.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                            </select>
-                        </div>
                         <div className="form-group">
                             <label>Área</label>
                             <select className="form-select" id="id_area" value={formData.id_area || ''} onChange={handleChange}>

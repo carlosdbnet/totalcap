@@ -420,7 +420,7 @@ export default function Faturamento() {
     }
 
     if (valor > parseFloat(selectedLaudoForLinking.vrsaldo || 0)) {
-      alert("O valor aplicado não pode ser maior que o saldo disponÃƒÂ­vel do laudo.");
+      alert("O valor aplicado não pode ser maior que o saldo disponível do laudo.");
       return;
     }
 
@@ -461,7 +461,7 @@ export default function Faturamento() {
       setIsLaudoModalOpen(false);
       setSelectedLaudoForLinking(null);
       setLaudoSearchQuery('');
-      alert("Laudo adicionado ÃƒÂ  fatura (será vinculado ao salvar a fatura).");
+      alert("Laudo adicionado à fatura (será vinculado ao salvar a fatura).");
     }
   };
 
@@ -492,8 +492,8 @@ export default function Faturamento() {
       await api.delete(`/fatura-laudos/${id}`);
       if (editingFatura) fetchFaturaLaudos(editingFatura.id);
     } catch (err) {
-      console.error("Erro ao deletar vÃƒÂ­nculo", err);
-      alert("Erro ao remover vÃƒÂ­nculo.");
+      console.error("Erro ao deletar vínculo", err);
+      alert("Erro ao remover vínculo.");
     }
   };
 
@@ -569,7 +569,7 @@ export default function Faturamento() {
 
       // Varre a lista de pneus marcados
       for (const pid of selectedPneusForFatura) {
-        // LÃƒÂª os serviços informados na tabela pneu_servico
+        // lê os serviços informados na tabela pneu_servico
         const res = await api.get(`/pneu-servicos/pneu/${pid}`);
         const services = res.data;
         allServices.push(...services);
@@ -696,7 +696,7 @@ export default function Faturamento() {
         errorMessage = data.message;
       }
       
-      alert(`Ã¢Å¡Â Ã¯Â¸Â Erro ao salvar fatura:\n${errorMessage}`);
+      alert(`⚠️ Erro ao salvar fatura:\n${errorMessage}`);
     }
   };
 
@@ -1024,7 +1024,7 @@ export default function Faturamento() {
             </form>
           </div>
 
-          {/* Resultado ÃƒÅ¡nico da Busca por Pneu - Apenas Campos */}
+          {/* Resultado Único da Busca por Pneu - Apenas Campos */}
           {pneuResults.length > 0 && (
             <div className="animate-fade-in">
               <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', paddingLeft: '0.5rem' }}>
@@ -1048,8 +1048,8 @@ export default function Faturamento() {
                     </div>
 
                     <div className="form-group">
-                      <label><FileText size={14} /> NÃ‚Âº Ordem de Serviço</label>
-                      <input type="text" className="form-input" value={p.numos > 0 ? p.numos : 'NÃƒÆ’O VINCULADA'} readOnly style={{ fontWeight: 'bold', color: p.numos > 0 ? 'var(--primary-color)' : '#94a3b8' }} />
+                      <label><FileText size={14} /> Nº Ordem de Serviço</label>
+                      <input type="text" className="form-input" value={p.numos > 0 ? p.numos : 'NÃO VINCULADA'} readOnly style={{ fontWeight: 'bold', color: p.numos > 0 ? 'var(--primary-color)' : '#94a3b8' }} />
                     </div>
 
                     <div className="form-group">
@@ -1192,13 +1192,14 @@ export default function Faturamento() {
 
       {/* Modal para Adicionar Serviço */}
       {isServicoModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 2000 }}>
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
-            <div className="modal-header">
+        <div className="os-modal-overlay" onClick={() => setIsServicoModalOpen(false)}>
+          <div className="premium-modal-content medium" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="premium-modal-header">
               <h2>{editingServico ? 'Alterar Serviço' : 'Lançar Novo Serviço'}</h2>
               <button className="close-btn" onClick={() => setIsServicoModalOpen(false)}><X size={24} /></button>
             </div>
-            <div className="modal-body" style={{ padding: '2rem' }}>
+            <div className="modal-body" style={{ padding: '2rem', background: '#f8fafc' }}>
+              <div className="premium-master-panel" style={{ padding: '1.5rem', marginBottom: 0 }}>
               <div className="form-group" style={{ marginBottom: '1.5rem', position: 'relative' }}>
                 <label>Descrição do Serviço</label>
                 <div style={{ position: 'relative' }}>
@@ -1259,7 +1260,8 @@ export default function Faturamento() {
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
+            </div>
+            <div className="premium-modal-footer">
               <button className="btn-secondary" onClick={() => setIsServicoModalOpen(false)}>Cancelar</button>
               <button className="btn-primary" onClick={handleAddServico} disabled={!newServico.id_servico}>Gravar Serviço</button>
             </div>
@@ -1271,7 +1273,7 @@ export default function Faturamento() {
         <div className="tab-content animate-fade-in">
            {/* Master View: List of Faturas */}
             <div className="search-section glass-panel" style={{ marginBottom: '2rem' }}>
-              <div className="search-grid" style={{ gridTemplateColumns: '1fr auto auto', gap: '1rem' }}>
+              <div className="search-grid" style={{ gridTemplateColumns: '1fr auto', gap: '1.5rem', alignItems: 'flex-end' }}>
                 <div className="form-group">
                   <label><Search size={14} /> Buscar Fatura (Número ou Cliente)</label>
                   <div className="input-with-button">
@@ -1281,14 +1283,19 @@ export default function Faturamento() {
                       placeholder="Digite o número da fatura ou nome do cliente..." 
                       value={faturaSearchQuery}
                       onChange={(e) => setFaturaSearchQuery(e.target.value)}
+                      style={{ height: '52px', fontSize: '1.05rem' }}
                     />
-                    <button className="btn-search-producao" onClick={fetchFaturas}>
+                    <button 
+                      className="btn-search-producao" 
+                      onClick={fetchFaturas}
+                      style={{ height: '52px', padding: '0 2rem' }}
+                    >
                       {faturaLoading ? '...' : <><Search size={22} /> Buscar</>}
                     </button>
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.8rem', paddingBottom: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.8rem' }}>
                   <button 
                     className="btn-primary" 
                     onClick={() => {
@@ -1454,19 +1461,23 @@ export default function Faturamento() {
 
       {/* Modal para Cálculo de Fatura */}
       {isBillingModalOpen && selectedOSForBilling && (
-        <div className="modal-overlay" style={{ zIndex: 2000 }}>
-          <div className="modal-content" style={{ maxWidth: '700px' }}>
-            <div className="modal-header" style={{ background: 'var(--primary-color)', color: 'white' }}>
+        <div className="os-modal-overlay" onClick={() => setIsBillingModalOpen(false)}>
+          <div className="premium-modal-content medium" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+            <div className="premium-modal-header">
               <h2>Cálculo de Fatura - OS #{selectedOSForBilling.numos}</h2>
-              <button className="close-btn" style={{ color: 'white' }} onClick={() => setIsBillingModalOpen(false)}><X size={24} /></button>
+              <button className="close-btn" onClick={() => setIsBillingModalOpen(false)}><X size={24} /></button>
             </div>
             
-            <div className="modal-body" style={{ padding: '1.5rem' }}>
-              <div className="glass-panel" style={{ marginBottom: '1.5rem', background: 'rgba(37, 99, 235, 0.05)' }}>
-                <p style={{ margin: 0, fontWeight: '600', color: '#1e293b' }}>Cliente: {selectedOSForBilling.contato_nome}</p>
+            <div className="modal-body scrollable" style={{ padding: '1.5rem', background: '#E5E5E5' }}>
+              <div className="premium-master-panel" style={{ marginBottom: '1.5rem' }}>
+                <p style={{ margin: 0, fontWeight: '700', color: '#1e293b', fontSize: '1.1rem' }}>
+                  <User size={18} style={{ marginRight: '0.5rem' }} />
+                  Cliente: {selectedOSForBilling.contato_nome}
+                </p>
               </div>
 
-              <div className="billing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div className="premium-master-panel">
+                <div className="premium-section-title"><DollarSign size={18} /> Composição de Valores</div>
                 <div className="form-group">
                   <label><Settings size={14} /> Total de Serviços (R$)</label>
                   <input type="number" className="form-input" value={billingFinancials.vrservico} readOnly style={{ background: '#f1f5f9' }} />
@@ -1503,13 +1514,13 @@ export default function Faturamento() {
                 </div>
               </div>
 
-              <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#1e293b', borderRadius: '12px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#1e293b', borderRadius: '12px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
                 <span style={{ fontSize: '1.1rem', opacity: 0.9 }}>Valor Total da Fatura:</span>
-                <span style={{ fontSize: '1.8rem', fontWeight: '800' }}>R$ {calculateBillingTotal().toFixed(2)}</span>
+                <span style={{ fontSize: '2rem', fontWeight: '900', color: '#10b981' }}>R$ {calculateBillingTotal().toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="premium-modal-footer">
               <button className="btn-secondary" onClick={() => setIsBillingModalOpen(false)}>Cancelar</button>
               <button className="btn-primary" style={{ background: '#10b981' }} onClick={handleFinalizeBilling}>
                 <CheckCircle size={20} /> Finalizar Faturamento
@@ -1575,7 +1586,7 @@ export default function Faturamento() {
                           <input 
                             type="text" 
                             className="form-input" 
-                            placeholder="NÃ‚Âº"
+                            placeholder="Nº"
                             value={searchParams.numos}
                             onChange={(e) => setSearchParams({...searchParams, numos: e.target.value})}
                             disabled={faturaModalMode === 'view'}
@@ -1711,7 +1722,7 @@ export default function Faturamento() {
                               <td style={{ fontWeight: '700', color: '#10b981' }}>R$ {parseFloat(p.vrservico || 0).toFixed(2)}</td>
                               <td style={{ textAlign: 'center' }}>
                                 <span className={`status-badge status-${p.statusfat ? 'finalizada' : 'aberta'}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
-                                  {p.statusfat ? 'SIM' : 'NÃƒÆ’O'}
+                                  {p.statusfat ? 'SIM' : 'NÃO'}
                                 </span>
                               </td>
                             </tr>
@@ -1820,7 +1831,7 @@ export default function Faturamento() {
                         <thead style={{ background: '#f8fafc' }}>
                           <tr style={{ background: '#f1f5f9' }}>
                             <th style={{ padding: '1rem 0.5rem' }}>ID Laudo</th>
-                            <th style={{ padding: '1rem 0.5rem' }}>NÃ‚Âº Laudo</th>
+                            <th style={{ padding: '1rem 0.5rem' }}>Nº Laudo</th>
                             <th style={{ padding: '1rem 0.5rem' }}>Pneu</th>
                             <th style={{ textAlign: 'right', padding: '1rem 0.5rem' }}>Vr. Crédito</th>
                             <th style={{ textAlign: 'right', padding: '1rem 0.5rem' }}>Saldo</th>
@@ -1869,7 +1880,7 @@ export default function Faturamento() {
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
                                   {faturaModalMode !== 'view' && (
-                                    <button className="icon-btn delete" onClick={() => handleDeleteFaturaLaudo(item.id)} title="Remover VÃƒÂ­nculo">
+                                    <button className="icon-btn delete" onClick={() => handleDeleteFaturaLaudo(item.id)} title="Remover vínculo">
                                       <Trash2 size={14} />
                                     </button>
                                   )}
@@ -1922,7 +1933,7 @@ export default function Faturamento() {
                       </div>
                     </div>
                     <div className="form-group">
-                      <label>BÃƒÂ´nus / Desconto</label>
+                      <label>Bônus / Desconto</label>
                       <input type="number" className="form-input" value={faturaForm.vrbonus} onChange={e => setFaturaForm({...faturaForm, vrbonus: parseFloat(e.target.value) || 0})} style={{ color: '#dc2626', fontWeight: '700' }} disabled={faturaModalMode === 'view'} />
                     </div>
                     <div className="form-group span-2">
@@ -2082,51 +2093,50 @@ export default function Faturamento() {
     
       {/* Modal de Edição de Parcela */}
       {isEditParcelaModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 3000 }}>
-          <div className="modal-content" style={{ maxWidth: '400px' }}>
-            <div className="modal-header" style={{ borderBottom: '1px solid #e2e8f0', padding: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Editar Parcela {editingParcelaData.num_parcela}ª</h3>
-              <button className="close-btn" onClick={() => setIsEditParcelaModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
+        <div className="os-modal-overlay" onClick={() => setIsEditParcelaModalOpen(false)}>
+          <div className="premium-modal-content medium" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <div className="premium-modal-header">
+              <h2>Editar Parcela #{editingParcelaData.num_parcela}</h2>
+              <button className="close-btn" onClick={() => setIsEditParcelaModalOpen(false)}><X size={24} /></button>
             </div>
-            <div className="modal-body" style={{ padding: '1.5rem' }}>
-              <div className="form-group" style={{ marginBottom: '1.2rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '500' }}>Data de Vencimento</label>
-                <input 
-                  type="date" 
-                  className="form-input" 
-                  style={{ width: '100%', padding: '0.6rem', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                  value={editingParcelaData.vencto} 
-                  onChange={e => setEditingParcelaData({...editingParcelaData, vencto: e.target.value})} 
-                />
+            <div className="modal-body" style={{ padding: '2rem', background: '#f8fafc' }}>
+              <div className="premium-master-panel" style={{ padding: '1.5rem', marginBottom: 0 }}>
+                <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+                  <label><Calendar size={14} /> Data de Vencimento</label>
+                  <input 
+                    type="date" 
+                    className="form-input" 
+                    value={editingParcelaData.vencto} 
+                    onChange={e => setEditingParcelaData({...editingParcelaData, vencto: e.target.value})} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label><DollarSign size={14} /> Valor da Parcela (R$)</label>
+                  <input 
+                    type="number" 
+                    className="form-input" 
+                    value={editingParcelaData.valor} 
+                    onChange={e => setEditingParcelaData({...editingParcelaData, valor: parseFloat(e.target.value) || 0})} 
+                  />
+                </div>
+                <div className="form-group" style={{ marginTop: '1.2rem' }}>
+                  <label><FileText size={14} /> Tipo de Documento</label>
+                  <select 
+                    className="form-input" 
+                    value={String(editingParcelaData.id_tipodocto ?? "")} 
+                    onChange={e => setEditingParcelaData({...editingParcelaData, id_tipodocto: e.target.value === "" ? null : parseInt(e.target.value)})}
+                  >
+                    <option value="">Selecione o tipo...</option>
+                    {tiposDocto.map(t => (
+                      <option key={t.id} value={String(t.id)}>{t.descricao}</option>
+                    ))}
+                  </select>
+                </div>
+                </div>
               </div>
-              <div className="form-group">
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '500' }}>Valor da Parcela (R$)</label>
-                <input 
-                  type="number" 
-                  className="form-input" 
-                  style={{ width: '100%', padding: '0.6rem', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                  value={editingParcelaData.valor} 
-                  onChange={e => setEditingParcelaData({...editingParcelaData, valor: parseFloat(e.target.value) || 0})} 
-                />
-              </div>
-              <div className="form-group" style={{ marginTop: '1.2rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '500' }}>Tipo de Documento</label>
-                <select 
-                  className="form-input" 
-                  style={{ width: '100%', padding: '0.6rem', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                  value={String(editingParcelaData.id_tipodocto ?? "")} 
-                  onChange={e => setEditingParcelaData({...editingParcelaData, id_tipodocto: e.target.value === "" ? null : parseInt(e.target.value)})}
-                >
-                  <option value="">Selecione o tipo...</option>
-                  {tiposDocto.map(t => (
-                    <option key={t.id} value={String(t.id)}>{t.descricao}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="modal-footer" style={{ padding: '1rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '1rem', background: '#f8fafc' }}>
-              <button className="btn-secondary" onClick={() => setIsEditParcelaModalOpen(false)} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>Cancelar</button>
-              <button className="btn-primary" onClick={handleSaveEditedParcela} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none' }}>Salvar Parcela</button>
+            <div className="premium-modal-footer">
+              <button className="btn-secondary" onClick={() => setIsEditParcelaModalOpen(false)}>Cancelar</button>
+              <button className="btn-primary" onClick={handleSaveEditedParcela}>Salvar Parcela</button>
             </div>
           </div>
         </div>
@@ -2134,13 +2144,14 @@ export default function Faturamento() {
 
       {/* Modal para Vincular Laudo */}
       {isLaudoModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 3000 }}>
-          <div className="modal-content" style={{ maxWidth: '450px', minHeight: '400px' }}>
-            <div className="modal-header">
-              <h3>Vincular Laudo de Garantia</h3>
+        <div className="os-modal-overlay" onClick={() => { setIsLaudoModalOpen(false); setSelectedLaudoForLinking(null); setLaudoSearchQuery(''); }}>
+          <div className="premium-modal-content medium" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px', minHeight: '400px' }}>
+            <div className="premium-modal-header">
+              <h2>Vincular Laudo de Garantia</h2>
               <button className="close-btn" onClick={() => { setIsLaudoModalOpen(false); setSelectedLaudoForLinking(null); setLaudoSearchQuery(''); }}><X size={24} /></button>
             </div>
-            <div className="modal-body" style={{ padding: '1.5rem' }}>
+            <div className="modal-body" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+              <div className="premium-master-panel" style={{ padding: '1.5rem', marginBottom: 0 }}>
               <div className="form-group">
                 <label style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem', display: 'block' }}>ID do Laudo</label>
                 <div style={{ position: 'relative', display: 'flex', gap: '0.5rem' }}>
@@ -2202,11 +2213,11 @@ export default function Faturamento() {
                 <div className="animate-fade-in" style={{ marginTop: '1.5rem', padding: '1.2rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                     <div>
-                      <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>NÃ‚Âº Laudo</label>
+                      <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Nº Laudo</label>
                       <span style={{ fontWeight: '700', fontSize: '1rem' }}>{selectedLaudoForLinking.numlaudo}</span>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Saldo DisponÃƒÂ­vel</label>
+                      <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Saldo Disponível</label>
                       <span style={{ fontWeight: '700', fontSize: '1rem', color: '#10b981' }}>R$ {parseFloat(selectedLaudoForLinking.vrsaldo || 0).toFixed(2)}</span>
                     </div>
                   </div>
@@ -2243,6 +2254,10 @@ export default function Faturamento() {
                   Aguardando ID válido ou laudo não encontrado...
                 </div>
               )}
+                </div>
+              </div>
+            <div className="premium-modal-footer">
+              <button className="btn-secondary" onClick={() => { setIsLaudoModalOpen(false); setSelectedLaudoForLinking(null); setLaudoSearchQuery(''); }}>Fechar</button>
             </div>
           </div>
         </div>
@@ -2436,3 +2451,4 @@ export default function Faturamento() {
     </div>
   );
 }
+

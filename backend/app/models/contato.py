@@ -74,7 +74,7 @@ class Contato(Base):
     ref_prod = Column(Text, nullable=True)
     
     # FKs Auxiliares
-    id_cidade = Column(Integer, ForeignKey("cidade.id"), nullable=True)
+    codigoibge = Column(Integer, nullable=True)
     id_area = Column(Integer, ForeignKey("area.id"), nullable=True)
     id_regiao = Column(Integer, ForeignKey("regiao.id"), nullable=True)
     id_vendedor = Column(Integer, ForeignKey("vendedor.id"), nullable=True)
@@ -91,7 +91,7 @@ class Contato(Base):
     ativo = Column(Boolean, default=True)
     
     # Relationships
-    cidade_rel = relationship("Cidade")
+    # cidade_rel removido pois usamos codigoibge diretamente
     area_rel = relationship("Area")
     regiao_rel = relationship("Regiao")
     vendedor_rel = relationship("Vendedor")

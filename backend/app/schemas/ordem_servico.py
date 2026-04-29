@@ -40,6 +40,11 @@ class OSPneuResponse(OSPneuBase):
     id_ordem: int
     datalan: datetime
     statuspro_label: Optional[str] = "AGUARDANDO"
+    medida_nome: Optional[str] = None
+    marca_nome: Optional[str] = None
+    desenho_nome: Optional[str] = None
+    servico_nome: Optional[str] = None
+    tiporecap_nome: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)
 

@@ -48,8 +48,19 @@ def map_os_to_response(os):
             pneu.statuspro_label = "PROCESSO"
         else:
             pneu.statuspro_label = "AGUARDANDO"
-        if pneu.servico:
+            
+        # Resolve nomes para o frontend não precisar fazer .find em listas grandes
+        if hasattr(pneu, 'medida') and pneu.medida:
+            pneu.medida_nome = pneu.medida.descricao
+        if hasattr(pneu, 'marca') and pneu.marca:
+            pneu.marca_nome = pneu.marca.descricao
+        if hasattr(pneu, 'desenho') and pneu.desenho:
+            pneu.desenho_nome = pneu.desenho.descricao
+        if hasattr(pneu, 'servico') and pneu.servico:
             pneu.servico_nome = pneu.servico.descricao
+        if hasattr(pneu, 'tiporecap') and pneu.tiporecap:
+            pneu.tiporecap_nome = pneu.tiporecap.descricao
+            
     return os
 
 @router.get("/", response_model=List[OrdemServicoResponse])
@@ -60,7 +71,14 @@ def read_ordens_servico(
     q: Optional[str] = None,
     latest: Optional[bool] = False
 ) -> Any:
-    query = db.query(OSModel).options(joinedload(OSModel.pneus).joinedload(PneuModel.servico), joinedload(OSModel.contato))
+    query = db.query(OSModel).options(
+        joinedload(OSModel.pneus).joinedload(PneuModel.servico),
+        joinedload(OSModel.pneus).joinedload(PneuModel.medida),
+        joinedload(OSModel.pneus).joinedload(PneuModel.marca),
+        joinedload(OSModel.pneus).joinedload(PneuModel.desenho),
+        joinedload(OSModel.pneus).joinedload(PneuModel.tiporecap),
+        joinedload(OSModel.contato)
+    )
     
     if q:
         from backend.app.models.contato import Contato
@@ -375,7 +393,13 @@ def read_ordem_servico(
     id: int,
     db: Session = Depends(get_db),
 ) -> Any:
-    db_obj = db.query(OSModel).options(joinedload(OSModel.pneus)).filter(OSModel.id == id).first()
+    db_obj = db.query(OSModel).options(
+        joinedload(OSModel.pneus).joinedload(PneuModel.servico),
+        joinedload(OSModel.pneus).joinedload(PneuModel.medida),
+        joinedload(OSModel.pneus).joinedload(PneuModel.marca),
+        joinedload(OSModel.pneus).joinedload(PneuModel.desenho),
+        joinedload(OSModel.pneus).joinedload(PneuModel.tiporecap)
+    ).filter(OSModel.id == id).first()
     if not db_obj:
         raise HTTPException(status_code=404, detail="Ordem de serviço não encontrada")
     return map_os_to_response(db_obj)

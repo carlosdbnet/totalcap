@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class CidadeBase(BaseModel):
     nome: str
     uf: str
-    codibge: Optional[str] = None
+    codigoibge: Optional[int] = None
     ativo: Optional[bool] = True
 
 class CidadeCreate(CidadeBase):
@@ -13,7 +13,7 @@ class CidadeCreate(CidadeBase):
 class CidadeUpdate(BaseModel):
     nome: Optional[str] = None
     uf: Optional[str] = None
-    codibge: Optional[str] = None
+    codigoibge: Optional[int] = None
     ativo: Optional[bool] = None
 
 class Cidade(CidadeBase):

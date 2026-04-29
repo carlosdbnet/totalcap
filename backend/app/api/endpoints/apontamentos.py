@@ -103,7 +103,7 @@ def get_pneu_by_barcode(barcode: str, db: Session = Depends(get_db)) -> Any:
     Busca os dados do pneu e OS através do código de barras.
     """
     from backend.app.models.ordem_servico import OSPneu, OrdemServico
-    from backend.app.models.cliente import Cliente
+    from backend.app.models.contato import Contato
     from backend.app.models.medida import Medida
     from backend.app.models.desenho import Desenho
 
@@ -112,14 +112,14 @@ def get_pneu_by_barcode(barcode: str, db: Session = Depends(get_db)) -> Any:
         OSPneu.numserie,
         OSPneu.numfogo,
         OrdemServico.numos,
-        Cliente.nome.label("cliente_nome"),
+        Contato.nome.label("cliente_nome"),
         Medida.descricao.label("medida_desc"),
         Desenho.descricao.label("desenho_desc")
     ).join(OrdemServico, OSPneu.id_ordem == OrdemServico.id)\
-     .join(Cliente, OrdemServico.id_cliente == Cliente.id)\
+     .join(Contato, OrdemServico.id_contato == Contato.id)\
      .outerjoin(Medida, OSPneu.id_medida == Medida.id)\
      .outerjoin(Desenho, OSPneu.id_desenho == Desenho.id)\
-     .filter(OSPneu.codbarras == barcode).first()
+     .filter(OSPneu.codbarra == barcode).first()
 
     if not result:
         # Tenta buscar pelo numfogo se não achou pelo barcode (fallback comum)
@@ -128,11 +128,11 @@ def get_pneu_by_barcode(barcode: str, db: Session = Depends(get_db)) -> Any:
             OSPneu.numserie,
             OSPneu.numfogo,
             OrdemServico.numos,
-            Cliente.nome.label("cliente_nome"),
+            Contato.nome.label("cliente_nome"),
             Medida.descricao.label("medida_desc"),
             Desenho.descricao.label("desenho_desc")
         ).join(OrdemServico, OSPneu.id_ordem == OrdemServico.id)\
-         .join(Cliente, OrdemServico.id_cliente == Cliente.id)\
+         .join(Contato, OrdemServico.id_contato == Contato.id)\
          .outerjoin(Medida, OSPneu.id_medida == Medida.id)\
          .outerjoin(Desenho, OSPneu.id_desenho == Desenho.id)\
          .filter(OSPneu.numfogo == barcode).first()

@@ -5,11 +5,18 @@ import * as XLSX from 'xlsx';
 import './Integracao.css';
 
 const TABELAS = [
-  { value: 'medidas', label: 'Medidas', icon: Ruler },
-  { value: 'desenhos', label: 'Desenho', icon: PenTool },
-  { value: 'cidades', label: 'Cidade', icon: MapPin },
-  { value: 'estados', label: 'Estado', icon: Database },
-  { value: 'contatos', label: 'Contato', icon: Upload },
+  { value: 'medidas', label: 'Medidas', icon: Ruler, dbTable: 'medida' },
+  { value: 'desenhos', label: 'Desenhos', icon: PenTool, dbTable: 'desenho' },
+  { value: 'cidades', label: 'Cidades', icon: MapPin, dbTable: 'cidade' },
+  { value: 'estados', label: 'Estados', icon: Database, dbTable: 'estado' },
+  { value: 'contatos', label: 'Contatos', icon: Upload, dbTable: 'contato' },
+  { value: 'produtos', label: 'Produtos', icon: Database, dbTable: 'produto' },
+  { value: 'marcas', label: 'Marcas', icon: Database, dbTable: 'marca' },
+  { value: 'vendedores', label: 'Vendedores', icon: Database, dbTable: 'vendedor' },
+  { value: 'setores', label: 'Setores', icon: Database, dbTable: 'setor' },
+  { value: 'servicos', label: 'Serviços', icon: Database, dbTable: 'servico' },
+  { value: 'bancos', label: 'Bancos', icon: Database, dbTable: 'banco' },
+  { value: 'veiculos', label: 'Veículos', icon: Database, dbTable: 'veiculo' },
 ];
 
 type StatusImportacao = 'idle' | 'loading' | 'success' | 'error';
@@ -89,7 +96,10 @@ export default function Integracao() {
 
       if (tabela === 'cidades') {
         item.nome = valor.toString();
-        item.uf = '';
+        const ufField = chaves.find(c => normalizarNome(c) === 'uf' || normalizarNome(c) === 'estado' || normalizarNome(c).includes('sigla'));
+        item.uf = ufField ? row[ufField]?.toString() : '';
+        const ibgeField = chaves.find(c => normalizarNome(c).includes('ibge'));
+        if (ibgeField) item.codigoibge = parseInt(row[ibgeField]) || null;
       } else if (tabela === 'estados') {
         item.uf = valor.toString().substring(0, 2);
         item.nome = valor.toString();
@@ -252,8 +262,12 @@ export default function Integracao() {
     setMensagemExport('Preparando exportação Excel...');
 
     try {
+      // Busca o nome real da tabela no banco de dados (geralmente singular)
+      const selectedTabela = TABELAS.find(t => t.value === tabelaExportar);
+      const tableName = selectedTabela ? selectedTabela.dbTable : tabelaExportar.trim();
+
       // Solicita formato JSON do backend
-      const response = await api.get(`/exportacao/dinamica/${tabelaExportar.trim()}?format=json`);
+      const response = await api.get(`/exportacao/dinamica/${tableName}?format=json`);
       const dados = response.data;
 
       if (!Array.isArray(dados) || dados.length === 0) {
@@ -301,15 +315,21 @@ export default function Integracao() {
             <div className="form-group">
               <label style={{ fontWeight: '600', color: '#475569', marginBottom: '0.5rem', display: 'block' }}>Tabela de Destino</label>
               <div className="input-with-icon" style={{ position: 'relative' }}>
-                <Database size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input 
-                  type="text" 
+                <Database size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 5 }} />
+                <select 
                   className="form-input"
-                  placeholder="Ex: medidas, desenhos, produtos..." 
-                  style={{ width: '100%', padding: '0.875rem 1rem 0.875rem 3rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc' }}
+                  style={{ width: '100%', padding: '0.875rem 1rem 0.875rem 3rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', appearance: 'none' }}
                   value={tabelaSelecionada}
                   onChange={(e) => setTabelaSelecionada(e.target.value)}
-                />
+                >
+                  <option value="">Selecione a tabela de destino...</option>
+                  {TABELAS.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                  <Search size={16} color="#94a3b8" />
+                </div>
               </div>
             </div>
  
@@ -365,16 +385,21 @@ export default function Integracao() {
             <div className="form-group">
               <label style={{ fontWeight: '600', color: '#475569', marginBottom: '0.5rem', display: 'block' }}>Tabela de Origem</label>
               <div className="input-with-icon" style={{ position: 'relative' }}>
-                <Database size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input 
-                  type="text" 
+                <Database size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 5 }} />
+                <select 
                   className="form-input"
-                  placeholder="Ex: produtos, marcas, clientes..." 
-                  style={{ width: '100%', padding: '0.875rem 1rem 0.875rem 3rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc' }}
+                  style={{ width: '100%', padding: '0.875rem 1rem 0.875rem 3rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', appearance: 'none' }}
                   value={tabelaExportar}
                   onChange={(e) => setTabelaExportar(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleExportarDinamico()}
-                />
+                >
+                  <option value="">Selecione a tabela de origem...</option>
+                  {TABELAS.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                  <Search size={16} color="#94a3b8" />
+                </div>
               </div>
             </div>
  

@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session, joinedload
 from backend.app.api import deps
 from backend.app.models.mobos import MobOS, MobPneu
 from backend.app.models.ordem_servico import OrdemServico, OSPneu
-from backend.app.models.cliente import Cliente
 from backend.app.schemas.mobos import MobOSCreate, MobOSUpdate, MobOS as MobOSSchema
 from backend.app.schemas.ordem_servico import OrdemServicoResponse
 from backend.database import get_db

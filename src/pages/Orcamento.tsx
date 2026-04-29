@@ -458,15 +458,19 @@ export default function Orcamento() {
   return (
     <div className="p-6">
       {/* Conteúdo da Tela */}
-      <div className="flex flex-row justify-between items-center w-full mb-6 text-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary-light p-2 rounded-lg text-primary"><Calculator size={28} /></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ background: 'var(--primary-color)', padding: '0.75rem', borderRadius: '12px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}>
+            <Calculator size={28} />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold">Orçamentos Comercial</h1>
-            <p className="text-slate-500 text-sm">Controle de propostas e faturamento integrado</p>
+            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800', color: '#1e293b' }}>Orçamentos Comercial</h1>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Controle de propostas e faturamento integrado</p>
           </div>
         </div>
-        <button className="btn-primary" onClick={() => handleOpenModal()}><Plus size={20} /> Novo Orçamento</button>
+        <button className="btn-primary" onClick={() => handleOpenModal()} style={{ height: '52px', padding: '0 2rem', fontSize: '1rem', fontWeight: '700' }}>
+          <Plus size={22} /> Novo Orçamento
+        </button>
       </div>
 
       <div className="glass-panel overflow-hidden p-0">
@@ -517,15 +521,15 @@ export default function Orcamento() {
       </div>
 
       {isModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 1000 }}>
-          <div className="modal-content" style={{ maxWidth: '1200px', height: '95vh' }}>
-            <div className="modal-header">
+        <div className="os-modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="premium-modal-content full-screen" onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{editingOrcamento ? (viewMode ? `Visualizar Orçamento #${editingOrcamento?.id || '?'}` : `Editar Orçamento #${editingOrcamento?.id || '?'}`) : 'Novo Orçamento'}</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
             </div>
 
-            <div className="modal-body overflow-y-auto overflow-x-hidden p-6">
-              <div className="section-title">Dados do Cliente e Identificação</div>
+            <div className="modal-body scrollable">
+              <div className="premium-section-title"><User size={18} /> Dados do Cliente e Identificação</div>
               <div className="form-grid-os mb-6">
                 <div className="form-group span-1">
                   <label><Hash size={14} /> ID Ordem (OS)</label>
@@ -592,7 +596,7 @@ export default function Orcamento() {
                 </div>
               </div>
 
-              <div className="section-title">Endereço de Entrega / Faturamento</div>
+              <div className="premium-section-title"><MapPin size={18} /> Endereço de Entrega / Faturamento</div>
               <div className="form-grid-os mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="form-group span-3">
                   <label>Rua / Logradouro</label>
@@ -628,7 +632,7 @@ export default function Orcamento() {
                 </div>
               </div>
 
-              <div className="section-title">Contatos Adicionais</div>
+              <div className="premium-section-title"><Phone size={18} /> Contatos Adicionais</div>
               <div className="form-grid-os mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="form-group span-1">
                   <label><Phone size={14} /> Fone Residencial</label>
@@ -656,9 +660,9 @@ export default function Orcamento() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mb-2">
-                <div className="section-title mb-0">Itens e Serviços</div>
-                <button className="btn-primary" onClick={() => handleOpenItemModal()}>
+              <div className="flex justify-between items-center mb-4">
+                <div className="premium-section-title mb-0" style={{ borderBottom: 'none', marginBottom: 0 }}><Package size={18} /> Itens e Serviços</div>
+                <button className="btn-primary" onClick={() => handleOpenItemModal()} style={{ height: '42px' }}>
                    <Plus size={16} /> Novo Item
                 </button>
               </div>
@@ -703,31 +707,35 @@ export default function Orcamento() {
               </div>
             </div>
 
-            <div className="modal-footer bg-slate-50 border-t">
-              <div className="flex flex-col items-end mr-auto">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Total Geral</span>
-                <span className="text-2xl font-bold text-primary">R$ {Number(formData.vtotal || 0).toFixed(2)}</span>
+            <div className="premium-modal-footer">
+              <div style={{ marginRight: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Total Geral do Orçamento</span>
+                <span style={{ fontSize: '2rem', fontStyle: 'normal', fontWeight: '900', color: 'var(--primary-color)' }}>R$ {Number(formData.vtotal || 0).toFixed(2)}</span>
               </div>
-              <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>{viewMode ? 'Fechar' : 'Cancelar'}</button>
+              <button className="btn-secondary" onClick={() => setIsModalOpen(false)} style={{ height: '52px', padding: '0 1.5rem' }}>{viewMode ? 'Fechar' : 'Cancelar'}</button>
               {editingOrcamento && !viewMode && (
-                <button type="button" className="btn-secondary border-primary text-primary hover:bg-primary-light" onClick={() => handlePrintProposta(formData)}>
+                <button type="button" className="btn-print" onClick={() => handlePrintProposta(formData)} style={{ height: '52px', padding: '0 1.5rem' }}>
                   <FileText size={18} /> Proposta
                 </button>
               )}
-              {!viewMode && <button className="btn-primary bg-emerald-500 hover:bg-emerald-600" onClick={handleSaveOrcamento}><CheckCircle size={18} /> Salvar Orçamento</button>}
+              {!viewMode && (
+                <button className="btn-primary" onClick={handleSaveOrcamento} style={{ height: '52px', padding: '0 2rem', background: '#10b981', borderColor: '#059669' }}>
+                  <CheckCircle size={18} /> Salvar Orçamento
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {isItemModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 1100 }}>
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
-            <div className="modal-header">
+        <div className="os-modal-overlay" style={{ zIndex: 1100 }} onClick={() => setIsItemModalOpen(false)}>
+          <div className="premium-modal-content medium" onClick={e => e.stopPropagation()}>
+            <div className="premium-modal-header">
               <h2>{editingItemIndex !== null ? 'Editar Item' : 'Novo Item'}</h2>
               <button className="close-btn" onClick={() => setIsItemModalOpen(false)}><X size={24} /></button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body scrollable">
               <div className="grid grid-cols-1 gap-4">
                 <div className="form-group">
                   <label>Medida do Pneu / Peça</label>
@@ -756,7 +764,7 @@ export default function Orcamento() {
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="premium-modal-footer">
               <button className="btn-secondary" onClick={() => setIsItemModalOpen(false)}>Cancelar</button>
               <button className="btn-primary" onClick={saveItem}><Save size={18} /> Confirmar Item</button>
             </div>

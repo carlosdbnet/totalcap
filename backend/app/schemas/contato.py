@@ -76,12 +76,6 @@ class ContatoBase(BaseModel):
     uf: Optional[str] = None
     
     foneprincipal: Optional[str] = None
-    foneauxiliar: Optional[str] = None
-    fonecomercial: Optional[str] = None
-    celular: Optional[str] = None
-    fax: Optional[str] = None
-    contato: Optional[str] = None
-    
     email: Optional[str] = None
     emailnfe: Optional[str] = None
     site: Optional[str] = None
@@ -119,7 +113,7 @@ class ContatoBase(BaseModel):
     ref_com: Optional[str] = None
     ref_prod: Optional[str] = None
 
-    id_cidade: Optional[int] = None
+    codigoibge: Optional[int] = None
     id_area: Optional[int] = None
     id_regiao: Optional[int] = None
     id_vendedor: Optional[int] = None
