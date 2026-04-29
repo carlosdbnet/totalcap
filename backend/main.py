@@ -16,44 +16,9 @@ from backend.app.core.security import get_password_hash
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inicialização do Banco de Dados
-    print("Iniciando lifespan: Verificando Banco de Dados...")
-    # Pula criação automática em produção se já estiver configurado (opcional)
-    if os.getenv("VERCEL") and os.getenv("SKIP_DB_INIT"):
-        print("Pulando inicialização do banco no Vercel (SKIP_DB_INIT=1)")
-    else:
-        try:
-            # Tenta criar as tabelas se não existirem
-            Base.metadata.create_all(bind=engine)
-            db = SessionLocal()
-            admin = db.query(Usuario).filter(Usuario.email == settings.FIRST_SUPERUSER).first()
-            
-            # Hash da senha padrão
-            hashed_pw = get_password_hash(settings.FIRST_SUPERUSER_PASSWORD)
-            
-            if not admin:
-                print(f"Criando admin inicial: {settings.FIRST_SUPERUSER}")
-                new_admin = Usuario(
-                    nome="Administrator",
-                    email=settings.FIRST_SUPERUSER,
-                    hashed_password=hashed_pw,
-                    is_active=True,
-                    is_superuser=True
-                )
-                db.add(new_admin)
-                db.commit()
-                print("Admin inicial criado com sucesso.")
-            else:
-                # Atualiza senha apenas se necessário ou em dev
-                if not os.getenv("VERCEL"):
-                    admin.hashed_password = hashed_pw
-                    db.commit()
-                print(f"Admin verificado.")
-                
-            db.close()
-        except Exception as e:
-            print(f"ALERTA na inicialização do DB (pode ser timeout no Vercel): {e}")
-    
+    # Inicialização do Banco de Dados comentada para evitar timeout no Vercel
+    # Base.metadata.create_all(bind=engine)
+    print("Backend Totalcap iniciado.")
     yield
     print("Encerrando lifespan.")
 
