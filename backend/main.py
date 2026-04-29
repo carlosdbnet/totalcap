@@ -13,7 +13,7 @@ if os.getcwd() not in sys.path:
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from backend.database import SessionLocal, engine, Base
+from backend.database import SessionLocal, engine, Base, get_db
 from backend.config import settings
 from backend.app.api.api import api_router
 from backend.app.models.usuario import Usuario
