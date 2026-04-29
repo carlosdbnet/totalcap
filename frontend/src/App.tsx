@@ -23,6 +23,7 @@ import Produtos from './pages/Produtos';
 import Setores from './pages/Setores';
 import Operadores from './pages/Operadores';
 import Login from './pages/Login';
+import Usuarios from './pages/Usuarios';
 import Veiculos from './pages/Veiculos';
 import Faturamento from './pages/Faturamento';
 import Orcamento from './pages/Orcamento';
@@ -169,6 +170,7 @@ function App() {
               <Route path="/produtos" element={<Produtos />} />
               <Route path="setores" element={<Setores />} />
               <Route path="operadores" element={<Operadores />} />
+              <Route path="usuarios" element={<Usuarios />} />
               <Route path="configuracoes" element={<Configuracoes />} />
               <Route path="integracao" element={<Integracao />} />
               <Route path="/grupos-produto" element={<GruposProduto />} />

@@ -117,6 +117,7 @@ const menuItems = [
         ]
       },
       { label: 'Empresa', path: '/empresas' },
+      { label: 'Usuários', path: '/usuarios' },
     ]
   },
   { icon: Plug2, label: 'Integração', path: '/integracao' },
@@ -124,7 +125,7 @@ const menuItems = [
 ];
 
 export default function MainLayout() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const location = useLocation();
   const [openSubMenus, setOpenSubMenus] = useState<string[]>(['Cadastros']);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -210,6 +211,9 @@ export default function MainLayout() {
                               )}
                             </div>
                           );
+                        }
+                        if (sub.label === 'Usuários' && user?.email !== 'admin@totalcap.com') {
+                          return null;
                         }
                         return (
                           <NavLink

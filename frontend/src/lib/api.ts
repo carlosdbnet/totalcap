@@ -6,11 +6,25 @@ const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
 
 const api = axios.create({
   baseURL: baseURL,
-  timeout: 60000, // 60 segundos para operações de IA
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Interceptor para adicionar o token em todas as requisições
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('totalcap_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Extrai uma mensagem de erro amigável de uma resposta da API (FastAPI/Pydantic)
