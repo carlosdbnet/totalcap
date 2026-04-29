@@ -82,6 +82,27 @@ def health_check():
 def read_root():
     return {"message": "Bem-vindo ao Backend do Totalcap!"}
 
+@app.get("/api/v1/db-check")
+def db_check(db: Session = Depends(get_db)):
+    try:
+        from sqlalchemy import text
+        result = db.execute(text("SELECT 1")).fetchone()
+        user_count = db.query(Usuario).count()
+        return {
+            "status": "success", 
+            "db_connect": "ok", 
+            "result": result[0],
+            "total_users": user_count,
+            "database_url_prefix": settings.POSTGRES_URL[:20] + "..."
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
+
 @app.get("/api/v1/ping")
 def ping():
     return {"status": "ok", "message": "Backend respondendo corretamente na Vercel!"}
