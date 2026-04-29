@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 # Garante que a raiz do projeto está no path para evitar ModuleNotFoundError
 sys.path.append(os.getcwd())
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal, engine, Base
