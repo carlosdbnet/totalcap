@@ -30,3 +30,7 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+# Limpa caracteres invisíveis que podem vir de env vars (ex: \r vindo de Windows)
+if settings.POSTGRES_URL:
+    settings.POSTGRES_URL = settings.POSTGRES_URL.replace("\r", "").replace("\n", "").strip()
+
