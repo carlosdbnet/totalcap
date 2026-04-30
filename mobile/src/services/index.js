@@ -77,16 +77,16 @@ export const auxService = {
 
 export const producaoService = {
   listar: async () => {
-    const { data } = await api.get('apontamento/');
+    const { data } = await api.get('apontamentos/');
     return data;
   },
   criar: async (apontamento) => {
-    const { data } = await api.post('apontamento/', apontamento);
+    const { data } = await api.post('apontamentos/', apontamento);
     return data;
   },
-  buscarExistente: (id_pneu, id_setor) => api.get(`apontamento/buscar/?id_pneu=${id_pneu}&id_setor=${id_setor}`).then(r => r.data),
-  excluir: (id) => api.delete(`apontamento/${id}/`).then(r => r.data),
-  atualizar: (id, p) => api.put(`apontamento/${id}/`, p).then(r => r.data),
+  buscarExistente: (id_pneu, id_setor) => api.get(`apontamentos/buscar/?id_pneu=${id_pneu}&id_setor=${id_setor}`).then(r => r.data),
+  excluir: (id) => api.delete(`apontamentos/${id}/`).then(r => r.data),
+  atualizar: (id, p) => api.put(`apontamentos/${id}/`, p).then(r => r.data),
   buscarPneu: async (barcode) => {
     try {
       const data = await pneuService.buscar(barcode);

@@ -86,7 +86,7 @@ api_router.include_router(grupos_produto.router, prefix="/grupos-produto", tags=
 api_router.include_router(faturas.router, prefix="/faturas", tags=["faturas"])
 api_router.include_router(tipos_docto.router, prefix="/tipos-docto", tags=["tipos-docto"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
-api_router.include_router(apontamentos.router, prefix="/apontamento", tags=["apontamentos"])
+api_router.include_router(apontamentos.router, prefix="/apontamentos", tags=["apontamentos"])
 api_router.include_router(falhas.router, prefix="/falhas", tags=["falhas"])
 api_router.include_router(consumo_materia.router, prefix="/consumo-materia", tags=["consumo"])
 api_router.include_router(orcamento.router, prefix="/orcamentos", tags=["orçamentos"])
