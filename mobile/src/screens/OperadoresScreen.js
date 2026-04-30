@@ -27,24 +27,31 @@ export default function OperadoresScreen() {
     fetchOperadores();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={[styles.avatar, { backgroundColor: colors.primary + '15' }]}>
-        <MaterialCommunityIcons name="account" size={24} color={colors.primary} />
+  const renderItem = ({ item }) => {
+    const nome = (item.nome || item.NOME || '').trim();
+    const cargo = (item.cargo || item.CARGO || '').trim();
+    const setorDesc = item.setor?.descricao || item.setor?.DESCRICAO || item.codset || item.CODSET;
+    const ativo = item.ativo === true || item.ATIVO === 'S';
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primary + '15' }]}>
+          <MaterialCommunityIcons name="account" size={24} color={colors.primary} />
+        </View>
+        <View style={styles.cardInfo}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{nome}</Text>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+            {cargo} | Setor: {setorDesc}
+          </Text>
+        </View>
+        <View style={[styles.badge, { backgroundColor: ativo ? colors.success + '20' : colors.error + '20' }]}>
+          <Text style={{ color: ativo ? colors.success : colors.error, fontSize: 10, fontWeight: 'bold' }}>
+            {ativo ? 'ATIVO' : 'INATIVO'}
+          </Text>
+        </View>
       </View>
-      <View style={styles.cardInfo}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>{(item.NOME || '').trim()}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          {(item.CARGO || '').trim()} | Setor: {item.setor?.DESCRICAO || item.codset || item.CODSET}
-        </Text>
-      </View>
-      <View style={[styles.badge, { backgroundColor: item.ATIVO === 'S' ? colors.success + '20' : colors.error + '20' }]}>
-        <Text style={{ color: item.ATIVO === 'S' ? colors.success : colors.error, fontSize: 10, fontWeight: 'bold' }}>
-          {item.ATIVO === 'S' ? 'ATIVO' : 'INATIVO'}
-        </Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -60,7 +67,7 @@ export default function OperadoresScreen() {
       ) : (
         <FlatList
           data={operadores}
-          keyExtractor={(item) => item.ID.toString()}
+          keyExtractor={(item) => (item.id || item.ID || Math.random()).toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchOperadores(); }} />}

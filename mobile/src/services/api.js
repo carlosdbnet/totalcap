@@ -16,13 +16,23 @@ api.interceptors.request.use(
       const savedIp = await AsyncStorage.getItem('server_ip');
       const savedPort = await AsyncStorage.getItem('server_port');
       
-      const ip = savedIp || 'totalcap.vercel.app/api/v1'; 
+      const ip = savedIp || 'totalcap.vercel.app/api/v1/'; 
       const port = savedPort || '';
 
       let baseURL;
       
       if (ip.includes('vercel.app') || ip.startsWith('http')) {
         baseURL = ip.startsWith('http') ? ip : `https://${ip}`;
+        
+        // Garante que o baseURL termine com / para facilitar verificações
+        if (!baseURL.endsWith('/')) baseURL += '/';
+
+        // Se for Vercel e não tiver /api/ nem /api/v1, adiciona /api/v1/
+        const hasApiPrefix = baseURL.includes('/api/v1') || baseURL.includes('/api/');
+        
+        if (ip.includes('vercel.app') && !hasApiPrefix) {
+          baseURL += 'api/v1/';
+        }
       } else {
         const portSuffix = port ? `:${port}` : ':8000';
         baseURL = `http://${ip}${portSuffix}/api/v1/`;
@@ -33,7 +43,7 @@ api.interceptors.request.use(
       return config;
     } catch (error) {
       console.error('Erro ao recuperar configurações de IP:', error);
-      config.baseURL = 'http://192.168.15.99:8000/api/v1/'; // fallback local
+      config.baseURL = 'https://totalcap.vercel.app/api/v1/'; // fallback seguro
       return config;
     }
   },

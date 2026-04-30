@@ -27,21 +27,29 @@ export default function ServicosScreen() {
     fetchServicos();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={styles.cardInfo}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>{(item.DESCRICAO || '').trim()}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          Código: {item.CODSERVICO} | Tipo: {item.CODRECAP}
-        </Text>
-        <View style={styles.specRow}>
-           <Text style={[styles.specText, { color: colors.textSecondary }]}>Medida: {item.MEDIDA}</Text>
-           <Text style={[styles.specText, { color: colors.textSecondary, marginLeft: 15 }]}>Desenho: {item.DESENHO}</Text>
+  const renderItem = ({ item }) => {
+    const descricao = (item.descricao || item.DESCRICAO || '').trim();
+    const codservico = item.codservico || item.CODSERVICO;
+    const codrecap = item.codrecap || item.CODRECAP;
+    const medida = item.medida || item.MEDIDA;
+    const desenho = item.desenho || item.DESENHO;
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.cardInfo}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{descricao}</Text>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+            Código: {codservico} | Tipo: {codrecap}
+          </Text>
+          <View style={styles.specRow}>
+             <Text style={[styles.specText, { color: colors.textSecondary }]}>Medida: {medida}</Text>
+             <Text style={[styles.specText, { color: colors.textSecondary, marginLeft: 15 }]}>Desenho: {desenho}</Text>
+          </View>
         </View>
+        <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textSecondary} />
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textSecondary} />
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -57,7 +65,7 @@ export default function ServicosScreen() {
       ) : (
         <FlatList
           data={servicos}
-          keyExtractor={(item) => item.ID.toString()}
+          keyExtractor={(item) => (item.id || item.ID || Math.random()).toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchServicos(); }} />}

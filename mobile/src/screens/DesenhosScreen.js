@@ -27,22 +27,29 @@ export default function DesenhosScreen() {
     fetchDesenhos();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={[styles.iconContainer, { backgroundColor: colors.primary + '10' }]}>
-        <MaterialCommunityIcons name="brush" size={24} color={colors.primary} />
+  const renderItem = ({ item }) => {
+    const descricao = (item.descricao || item.DESCRICAO || '').trim();
+    const codigo = item.codigo || item.CODIGO;
+    const largura = item.largura || item.LARGURA || 'N/A';
+    const tipo = item.tipo || item.TIPO;
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '10' }]}>
+          <MaterialCommunityIcons name="brush" size={24} color={colors.primary} />
+        </View>
+        <View style={styles.cardInfo}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{descricao}</Text>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+            Código: {codigo} | Largura: {largura}
+          </Text>
+        </View>
+        <View style={[styles.typeBadge, { backgroundColor: colors.border }]}>
+          <Text style={{ color: colors.text, fontSize: 10 }}>TIPO {tipo}</Text>
+        </View>
       </View>
-      <View style={styles.cardInfo}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>{(item.DESCRICAO || '').trim()}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          Código: {item.CODIGO} | Largura: {item.LARGURA || 'N/A'}
-        </Text>
-      </View>
-      <View style={[styles.typeBadge, { backgroundColor: colors.border }]}>
-        <Text style={{ color: colors.text, fontSize: 10 }}>TIPO {item.TIPO}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -58,7 +65,7 @@ export default function DesenhosScreen() {
       ) : (
         <FlatList
           data={desenhos}
-          keyExtractor={(item) => item.ID.toString()}
+          keyExtractor={(item) => (item.id || item.ID || Math.random()).toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchDesenhos(); }} />}

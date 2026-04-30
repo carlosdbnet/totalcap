@@ -87,6 +87,14 @@ export default function ConfiguracaoScreen() {
     // Detectando se é uma URL completa ou apenas um IP local
     if (ip.includes('vercel.app') || ip.startsWith('http')) {
       fullUrl = ip.startsWith('http') ? ip : `https://${ip}`;
+      
+      // Se for Vercel e não tiver /api/ nem /api/v1, adiciona /api/v1/
+      const hasApiPrefix = fullUrl.includes('/api/v1') || fullUrl.includes('/api/');
+      if (ip.includes('vercel.app') && !hasApiPrefix) {
+        if (!fullUrl.endsWith('/')) fullUrl += '/';
+        fullUrl += 'api/v1/';
+      }
+      
       if (!fullUrl.endsWith('/')) fullUrl += '/';
     } else {
       fullUrl = `http://${ip}:${porta}/`;
@@ -101,7 +109,12 @@ export default function ConfiguracaoScreen() {
     setTested(false);
     try {
       console.log(`Testando conexão em: ${fullUrl}`);
-      const response = await axios.get(fullUrl, { timeout: 20000 });
+      let response;
+      if (fullUrl.includes('/api/v1/')) {
+        response = await axios.get(`${fullUrl}ping`, { timeout: 10000 });
+      } else {
+        response = await axios.get(fullUrl, { timeout: 10000 });
+      }
       if (response.status === 200) {
         await AsyncStorage.setItem('server_ip', ip);
         await AsyncStorage.setItem('server_port', porta);

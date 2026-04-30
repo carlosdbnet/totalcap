@@ -76,3 +76,7 @@ def db_check():
 @app.get("/api/v1/ping")
 def ping():
     return {"status": "ok", "message": "Backend respondendo corretamente na Vercel!"}
+
+@app.get("/api/v1")
+def api_v1_root():
+    return {"status": "ok", "message": "Totalcap API v1 Root"}

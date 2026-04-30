@@ -27,21 +27,28 @@ export default function MedidasScreen() {
     fetchMedidas();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={styles.cardInfo}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>{(item.DESCRICAO || '').trim()}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          Código: {(item.CODIGO || '').trim()} | Tipo: {(item.TIPO || '').trim()}
-        </Text>
+  const renderItem = ({ item }) => {
+    const descricao = (item.descricao || item.DESCRICAO || '').trim();
+    const codigo = (item.codigo || item.CODIGO || '').trim();
+    const tipo = (item.tipo || item.TIPO || '').trim();
+    const ativo = item.ativo === true || item.ATIVO === 'S';
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.cardInfo}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{descricao}</Text>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+            Código: {codigo} | Tipo: {tipo}
+          </Text>
+        </View>
+        <View style={[styles.badge, { backgroundColor: ativo ? colors.success + '20' : colors.error + '20' }]}>
+          <Text style={{ color: ativo ? colors.success : colors.error, fontSize: 10, fontWeight: 'bold' }}>
+            {ativo ? 'ATIVO' : 'INATIVO'}
+          </Text>
+        </View>
       </View>
-      <View style={[styles.badge, { backgroundColor: item.ATIVO === 'S' ? colors.success + '20' : colors.error + '20' }]}>
-        <Text style={{ color: item.ATIVO === 'S' ? colors.success : colors.error, fontSize: 10, fontWeight: 'bold' }}>
-          {item.ATIVO === 'S' ? 'ATIVO' : 'INATIVO'}
-        </Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -57,7 +64,7 @@ export default function MedidasScreen() {
       ) : (
         <FlatList
           data={medidas}
-          keyExtractor={(item) => item.ID.toString()}
+          keyExtractor={(item) => (item.id || item.ID || Math.random()).toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchMedidas(); }} />}

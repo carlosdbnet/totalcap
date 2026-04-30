@@ -9,7 +9,8 @@ echo ==========================================================
 echo.
 echo [1] Iniciar apenas o Backend (Python/FastAPI)
 echo [2] Iniciar apenas o Frontend (Vite/React)
-echo [3] Iniciar AMBOS (Frontend e Backend simultaneamente)
+echo [3] Iniciar AMBOS (Frontend Web e Backend)
+echo [4] Iniciar Backend e Mobile (Expo)
 echo [0] Sair
 echo.
 set /p choice="Digite o numero da opcao desejada e aperte ENTER: "
@@ -17,6 +18,7 @@ set /p choice="Digite o numero da opcao desejada e aperte ENTER: "
 if "%choice%"=="1" goto backend
 if "%choice%"=="2" goto frontend
 if "%choice%"=="3" goto all
+if "%choice%"=="4" goto mobile_all
 if "%choice%"=="0" exit
 
 echo Opcao invalida. Tente novamente.
@@ -71,6 +73,48 @@ echo [OK] Backend Online!
 echo.
 echo [2/2] Iniciando o Frontend em nova janela...
 start "Totalcap - Frontend" cmd /c "cd frontend && npm run dev -- --host"
+
+echo.
+echo ==========================================================
+echo    Tudo pronto! Voce pode fechar esta janela agora.
+echo ==========================================================
+pause >nul
+exit
+
+:mobile_all
+cls
+echo ==========================================================
+echo        Iniciando Servicos (Backend + Mobile)
+echo ==========================================================
+echo.
+echo [1/2] Iniciando o Backend em nova janela...
+start "Totalcap - Backend" cmd /c "backend\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+
+echo.
+echo Aguardando o Backend carregar (http://localhost:8000/api/v1/status)...
+set counter=0
+
+:wait_backend_mobile
+timeout /t 2 >nul
+curl.exe -s http://localhost:8000/api/v1/status | findstr "online" >nul
+if errorlevel 1 (
+    set /a counter+=1
+    echo [tentativa %counter%] Ainda aguardando backend...
+    if %counter% gtr 30 (
+        echo.
+        echo ERROR: O Backend demorou demais para responder. 
+        echo Verifique a janela do Backend por erros.
+        pause
+        goto menu
+    )
+    goto wait_backend_mobile
+)
+
+echo.
+echo [OK] Backend Online!
+echo.
+echo [2/2] Iniciando o Mobile Frontend em nova janela...
+start "Totalcap - Mobile" cmd /c "cd mobile && npx expo start"
 
 echo.
 echo ==========================================================

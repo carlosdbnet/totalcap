@@ -27,19 +27,27 @@ export default function SetoresScreen() {
     fetchSetores();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={styles.cardInfo}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>{item.DESCRICAO}</Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Cod: {item.CODIGO || item.codigo} | Seq: {item.SEQUENCIA}</Text>
+  const renderItem = ({ item }) => {
+    const id = item.id !== undefined ? item.id : item.ID;
+    const descricao = item.descricao || item.DESCRICAO;
+    const codigo = item.codigo || item.CODIGO;
+    const sequencia = item.sequencia !== undefined ? item.sequencia : item.SEQUENCIA;
+    const ativo = item.ativo === true || item.ATIVO === 'S';
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.cardInfo}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{descricao}</Text>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Cod: {codigo} | Seq: {sequencia}</Text>
+        </View>
+        <View style={[styles.badge, { backgroundColor: ativo ? colors.success + '20' : colors.error + '20' }]}>
+          <Text style={{ color: ativo ? colors.success : colors.error, fontSize: 12, fontWeight: 'bold' }}>
+            {ativo ? 'ATIVO' : 'INATIVO'}
+          </Text>
+        </View>
       </View>
-      <View style={[styles.badge, { backgroundColor: item.ATIVO === 'S' ? colors.success + '20' : colors.error + '20' }]}>
-        <Text style={{ color: item.ATIVO === 'S' ? colors.success : colors.error, fontSize: 12, fontWeight: 'bold' }}>
-          {item.ATIVO === 'S' ? 'ATIVO' : 'INATIVO'}
-        </Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -55,7 +63,7 @@ export default function SetoresScreen() {
       ) : (
         <FlatList
           data={setores}
-          keyExtractor={(item) => item.ID.toString()}
+          keyExtractor={(item) => (item.id || item.ID || Math.random()).toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchSetores(); }} />}
