@@ -18,16 +18,6 @@ def login_access_token(
     # Normaliza o email vindo do formulário
     username = form_data.username.strip().lower()
 
-    # USUÁRIO DE EMERGÊNCIA PARA TESTE
-    if username == "teste@totalcap.com" and form_data.password == "123":
-
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        return {
-            "access_token": security.create_access_token(
-                999, expires_delta=access_token_expires
-            ),
-            "token_type": "bearer",
-        }
 
     # Busca o usuário
     user = db.query(Usuario).filter(Usuario.email == username).first()
