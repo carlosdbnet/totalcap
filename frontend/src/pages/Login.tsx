@@ -19,12 +19,13 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('username', email);
-      formData.append('password', password);
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
 
       // Usando a instância de API configurada que respeita a variável de ambiente do Vercel
-      const response = await api.post('login/access-token', formData);
+      const response = await api.post('login/access-token', params);
+
       const { access_token } = response.data;
       
       const userData = { email, nome: 'Usuário Admin' };
