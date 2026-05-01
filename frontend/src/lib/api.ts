@@ -2,10 +2,13 @@ import axios from 'axios';
 
 // Utiliza a variável de ambiente VITE_API_URL em dev (se existir), 
 // caso contrário, usa um caminho relativo '/api/v1' que o Vercel fará o roteamento.
-const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
-
+let baseURL = import.meta.env.VITE_API_URL || '/api/v1';
+if (baseURL.endsWith('/api/v1')) {
+  baseURL += '/';
+}
 const api = axios.create({
   baseURL: baseURL,
+
   timeout: 60000,
   headers: {
     'Content-Type': 'application/json',

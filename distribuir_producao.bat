@@ -47,7 +47,7 @@ git remote add origin %REPO_URL%
 echo [4/4] Criando commit e enviando para GitHub...
 git add .
 git checkout -b main
-git commit -m "Producao: Adiciona nixpacks.toml para corrigir entrypoint do Railway"
+git commit -m "Producao: Deploy Versao 01051000 - Login Fix"
 
 echo.
 echo Tentando enviar para o GitHub de producao...
