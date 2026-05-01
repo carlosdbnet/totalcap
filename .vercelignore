@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+mobile/
+database/
+ImgOS/
+Totalcap_Mobile.apk
+*.db
+.git/
+.venv/
+backend/.venv/
+backend/venv/
+venv/
+mobile/android/
+mobile/ios/

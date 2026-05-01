@@ -15,31 +15,33 @@ router = APIRouter()
 def login_access_token(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
-    """
-    OAuth2 compatible token login, retrieve an access token for future requests
-    """
-    # Garantia para Vercel: se não houver usuários, cria o admin inicial
-    # Já que o 'lifespan' pode não rodar em serverless
-    user_count = db.query(Usuario).count()
-    if user_count == 0:
+    # Normaliza o email vindo do formulário
+    username = form_data.username.strip().lower()
+    
+    # Busca o usuário
+    user = db.query(Usuario).filter(Usuario.email == username).first()
+    
+    # Se não encontrar o admin padrão, vamos criá-lo agora (independente de quantos usuários existam)
+    if not user and username == settings.FIRST_SUPERUSER.lower():
         from backend.app.core.security import get_password_hash
-        admin_user = Usuario(
-            email=settings.FIRST_SUPERUSER,
+        user = Usuario(
+            email=settings.FIRST_SUPERUSER.lower(),
             hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
             nome="Admin Totalcap",
             is_superuser=True,
             is_active=True
         )
-        db.add(admin_user)
+        db.add(user)
         db.commit()
-        db.refresh(admin_user)
+        db.refresh(user)
+        print(f"Admin criado automaticamente no login: {settings.FIRST_SUPERUSER}")
 
-    user = db.query(Usuario).filter(Usuario.email == form_data.username).first()
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email ou senha incorretos",
         )
+
     elif not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

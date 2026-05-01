@@ -2,34 +2,53 @@ import os
 import sys
 from contextlib import asynccontextmanager
 
-# Garante que a raiz do projeto está no path para evitar ModuleNotFoundError
-# Funciona tanto na raiz quanto dentro da pasta backend
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
-if os.getcwd() not in sys.path:
-    sys.path.append(os.getcwd())
+# Ajuste de PATH para garantir que os arquivos locais sejam encontrados
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from backend.database import SessionLocal, engine, Base, get_db
-from backend.config import settings
-from backend.app.api.api import api_router
-from backend.app.models.usuario import Usuario
-from backend.app.core.security import get_password_hash
+
+# Importações inteligentes sem usar importação relativa (.)
+try:
+    # Estrutura Monorepo (Local)
+    from backend.database import SessionLocal, engine, Base, get_db
+    from backend.config import settings
+    from backend.app.api.api import api_router
+except (ModuleNotFoundError, ImportError):
+    # Estrutura Flat (Railway/Deploy)
+    try:
+        from database import SessionLocal, engine, Base, get_db
+        from config import settings
+        from app.api.api import api_router
+    except (ModuleNotFoundError, ImportError):
+        # Fallback via importação direta de módulo
+        import database
+        import config
+        # Tenta importar o roteador da subpasta app
+        try:
+            from app.api.api import api_router
+        except:
+            # Caso extremo
+            sys.path.append(os.path.join(current_dir, "app"))
+            from api.api import api_router
+            
+        SessionLocal = database.SessionLocal
+        engine = database.engine
+        Base = database.Base
+        get_db = database.get_db
+        settings = config.settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inicialização do Banco de Dados comentada para evitar timeout no Vercel
-    # Base.metadata.create_all(bind=engine)
-    print("Backend Totalcap iniciado.")
+    print("Backend Totalcap iniciado com sucesso.")
     yield
     print("Encerrando lifespan.")
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    title="Totalcap API",
     lifespan=lifespan
 )
 
@@ -42,7 +61,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/api/health")
 def health_check():
@@ -52,31 +71,6 @@ def health_check():
 def read_root():
     return {"message": "Bem-vindo ao Backend do Totalcap!"}
 
-@app.get("/api/v1/db-check")
-def db_check():
-    try:
-        from sqlalchemy import text
-        # Testa conexao bruta sem depender de injeção de sessão
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1")).fetchone()
-            return {
-                "status": "success", 
-                "db_connect": "ok", 
-                "result": result[0],
-                "database_url_prefix": settings.POSTGRES_URL[:20] + "..."
-            }
-    except Exception as e:
-        import traceback
-        return {
-            "status": "error",
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
-
 @app.get("/api/v1/ping")
 def ping():
-    return {"status": "ok", "message": "Backend respondendo corretamente na Vercel!"}
-
-@app.get("/api/v1")
-def api_v1_root():
-    return {"status": "ok", "message": "Totalcap API v1 Root"}
+    return {"status": "ok", "message": "Backend respondendo corretamente!"}

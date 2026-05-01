@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../lib/api';
 import logoDbnet from '../assets/images/LogoDbnetLinhas.png';
 import './Login.css';
 
@@ -23,8 +23,8 @@ const Login: React.FC = () => {
       formData.append('username', email);
       formData.append('password', password);
 
-      // Usando URL relativa para permitir acesso via rede local através do proxy
-      const response = await axios.post('/api/v1/login/access-token', formData);
+      // Usando a instância de API configurada que respeita a variável de ambiente do Vercel
+      const response = await api.post('/login/access-token', formData);
       const { access_token } = response.data;
       
       const userData = { email, nome: 'Usuário Admin' };
