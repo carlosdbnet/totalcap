@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../lib/api';
+import api, { getErrorMessage } from '../lib/api';
 import logoDbnet from '../assets/images/LogoDbnetLinhas.png';
 import './Login.css';
 
@@ -33,7 +33,7 @@ const Login: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       console.error("Erro no login:", err);
-      setError(err.response?.data?.detail || 'E-mail ou senha incorretos.');
+      setError(getErrorMessage(err, 'E-mail ou senha incorretos.'));
     } finally {
       setLoading(false);
     }
