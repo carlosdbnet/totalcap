@@ -65,7 +65,7 @@ app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "source": "main_app_root"}
+    return {"status": "ok", "source": "main_app_root_v2"}
 
 @app.get("/")
 def read_root():
