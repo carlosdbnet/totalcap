@@ -17,9 +17,21 @@ def login_access_token(
 ) -> Any:
     # Normaliza o email vindo do formulário
     username = form_data.username.strip().lower()
-    
+
+    # USUÁRIO DE EMERGÊNCIA PARA TESTE
+    if username == "teste@totalcap.com" and form_data.password == "123":
+
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        return {
+            "access_token": security.create_access_token(
+                999, expires_delta=access_token_expires
+            ),
+            "token_type": "bearer",
+        }
+
     # Busca o usuário
     user = db.query(Usuario).filter(Usuario.email == username).first()
+
     
     # Se não encontrar o admin padrão, vamos criá-lo agora (independente de quantos usuários existam)
     if not user and username == settings.FIRST_SUPERUSER.lower():
