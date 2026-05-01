@@ -10,8 +10,9 @@ const api = axios.create({
 
   timeout: 60000,
   headers: {
-    'Content-Type': 'application/json',
+    // Deixamos o Axios detectar o Content-Type automaticamente
   },
+
 });
 
 // Interceptor para adicionar o token em todas as requisições
