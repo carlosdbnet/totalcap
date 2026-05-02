@@ -19,17 +19,14 @@ const TABELAS = [
   { value: 'servicos', label: 'Serviços', icon: Database, dbTable: 'servico' },
   { value: 'bancos', label: 'Bancos', icon: Database, dbTable: 'banco' },
   { value: 'veiculos', label: 'Veículos', icon: Database, dbTable: 'veiculo' },
-  { value: 'mobos', label: 'MOBOS', icon: Upload, dbTable: 'mobos' },
-  { value: 'mobpneus', label: 'Mobpneus', icon: Database, dbTable: 'mobpneu' },
-
+  { value: 'mobos', label: 'Mobile OS', icon: Upload, dbTable: 'mobos' },
+  { value: 'mobpneus', label: 'Mobile Pneus', icon: Database, dbTable: 'mobpneu' },
   { value: 'fatura-laudos', label: 'Fatura Laudos', icon: Database, dbTable: 'fatura_laudo' },
   { value: 'registro-falhas', label: 'Registro Falhas', icon: Database, dbTable: 'registro_falha' },
   { value: 'dispositivos', label: 'Dispositivos', icon: Database, dbTable: 'dispositivos' },
-  { value: 'ordem_servico', label: 'Ordem Serviços', icon: Upload, dbTable: 'ordem_servico' },
-  { value: 'Pneus', label: 'Pneus', icon: Upload, dbTable: 'Pneu' },
-
-
-
+  { value: 'ordem_servico', label: 'Ordem de Serviço', icon: Upload, dbTable: 'ordem_servico' },
+  { value: 'pneus', label: 'Pneus', icon: Upload, dbTable: 'pneu' },
+  { value: 'pneu_servico', label: 'Pneu Serviço', icon: Database, dbTable: 'pneu_servico' },
 ];
 
 type StatusImportacao = 'idle' | 'loading' | 'success' | 'error';
