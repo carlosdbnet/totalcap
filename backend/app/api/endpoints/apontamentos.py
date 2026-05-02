@@ -200,11 +200,13 @@ def update_apontamento(id: int, obj_in: ApontamentoUpdate, db: Session = Depends
     db.refresh(db_obj)
     return ApontamentoResponse.model_validate(db_obj)
 
-@router.delete("/{id}/")
+@router.delete("/{id}")
 def delete_apontamento(id: int, db: Session = Depends(get_db)) -> Any:
     db_obj = db.query(Apontamento).filter(Apontamento.id == id).first()
     if not db_obj:
-        return {"error": "Apontamento não localizado."}
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Apontamento não localizado.")
+
     db.delete(db_obj)
     db.commit()
     return {"success": True}
